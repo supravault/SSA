@@ -1,0 +1,161 @@
+{
+  "badge_tiers": {
+    "positive": [
+      {
+        "tier": "SURFACE_VERIFIED",
+        "label": "SSA · Surface Verified",
+        "eligibility": {
+          "coins": {
+            "min_level": 1,
+            "verdict": "pass",
+            "max_critical": 0,
+            "max_high": 0
+          },
+          "fa": {
+            "min_level": 1,
+            "verdict": "pass",
+            "max_critical": 0,
+            "max_high": 0
+          },
+          "wallet": null
+        },
+        "expiry_days": 14,
+        "icon": "shield",
+        "color": "blue"
+      },
+      {
+        "tier": "SECURITY_VERIFIED",
+        "label": "SSA · Security Verified",
+        "eligibility": {
+          "coins": {
+            "min_level": 3,
+            "verdict": "pass",
+            "max_critical": 0,
+            "max_high": 0
+          },
+          "fa": {
+            "min_level": 3,
+            "verdict": "pass",
+            "max_critical": 0,
+            "max_high": 0
+          },
+          "wallet": null
+        },
+        "expiry_days": 30,
+        "icon": "shield",
+        "color": "green"
+      },
+      {
+        "tier": "CONTINUOUSLY_MONITORED",
+        "label": "SSA · Continuously Monitored",
+        "eligibility": {
+          "coins": {
+            "min_level": 5,
+            "verdict": "pass",
+            "max_critical": 0,
+            "max_high": 0,
+            "monitoring_enabled": true
+          },
+          "fa": {
+            "min_level": 5,
+            "verdict": "pass",
+            "max_critical": 0,
+            "max_high": 0,
+            "monitoring_enabled": true
+          },
+          "wallet": null
+        },
+        "expiry_days": null,
+        "icon": "shield",
+        "color": "green",
+        "rolling": true
+      },
+      {
+        "tier": "WALLET_VERIFIED",
+        "label": "SSA · Wallet Verified",
+        "eligibility": {
+          "coins": null,
+          "fa": null,
+          "wallet": {
+            "min_level": 3,
+            "verdict": "pass",
+            "max_critical": 0
+          }
+        },
+        "expiry_days": 7,
+        "icon": "shield",
+        "color": "blue"
+      }
+    ],
+    "risk": [
+      {
+        "tier": "CRITICAL_RISK",
+        "label": "SSA · Critical Risk",
+        "eligibility": {
+          "coins": {
+            "min_critical": 1
+          },
+          "fa": {
+            "min_critical": 1
+          },
+          "wallet": {
+            "min_critical": 1
+          }
+        },
+        "icon": "warning",
+        "color": "red"
+      },
+      {
+        "tier": "HIGH_RISK",
+        "label": "SSA · High Risk",
+        "eligibility": {
+          "coins": {
+            "min_high": 1,
+            "max_critical": 0
+          },
+          "fa": {
+            "min_high": 1,
+            "max_critical": 0
+          },
+          "wallet": {
+            "min_high": 1,
+            "max_critical": 0
+          }
+        },
+        "icon": "warning",
+        "color": "orange"
+      },
+      {
+        "tier": "MEDIUM_RISK",
+        "label": "SSA · Medium Risk",
+        "eligibility": {
+          "coins": {
+            "min_medium": 1,
+            "max_critical": 0,
+            "max_high": 0
+          },
+          "fa": {
+            "min_medium": 1,
+            "max_critical": 0,
+            "max_high": 0
+          },
+          "wallet": {
+            "min_medium": 1,
+            "max_critical": 0,
+            "max_high": 0
+          }
+        },
+        "icon": "warning",
+        "color": "yellow",
+        "optional": true
+      }
+    ]
+  },
+  "full_integrated": {
+    "note": "Full Integrated is not a badge tier. It is a report status that triggers the red wax seal stamp on the last page when Supra Pulse is attached.",
+    "requirements": {
+      "supra_pulse_attached": true,
+      "ssa_scan_included": true
+    }
+  }
+}
