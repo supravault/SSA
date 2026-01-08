@@ -1,0 +1,24 @@
+{
+  "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v24": [
+    "total_staked",
+    "staked_of",
+    "earned_preview",
+    "reward_per_token_now",
+    "pool_stats",
+    "view_withdraw_requests",
+    "view_claim_requests",
+    "view_withdrawal_amount_of",
+    "view_claim_amount_of",
+    "withdraw_queue_length",
+    "withdraw_queue_at",
+    "claim_queue_length",
+    "claim_queue_at"
+  ],
+  "0x<SECURITY_MANIFEST_ADDR>::security_manifest": [
+    "manifest_version",
+    "entrypoints",
+    "admin_roles",
+    "notes"
+  ]
+}
+
