@@ -1,0 +1,68 @@
+name: SSA Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      scanner_type:
+        description: "wallet | coin | fa"
+        required: true
+        type: string
+      target:
+        description: "Wallet address OR module/coin identifier OR FA address"
+        required: true
+        type: string
+      level:
+        description: "wallet: 1-3, coin/fa: 1-5"
+        required: true
+        type: string
+      project_name:
+        description: "Project name (folder)"
+        required: true
+        type: string
+      project_label:
+        description: "Optional label"
+        required: false
+        type: string
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run SSA Scan
+        env:
+          SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
+        run: |
+          node dist/src/cli/ssa.js scan \
+            --kind "${{ github.event.inputs.scanner_type }}" \
+            --level "${{ github.event.inputs.level }}" \
+            --address "${{ github.event.inputs.target }}" \
+            --rpc "$SUPRA_RPC_URL" \
+            --project "${{ github.event.inputs.project_name }}" \
+            --label "${{ github.event.inputs.project_label }}" \
+            --commit
+
+      - name: Commit & Push
+        run: |
+          git config user.name "ssa-bot"
+          git config user.email "ssa-bot@users.noreply.github.com"
+          git add reports/
+          git commit -m "SSA: scan ${{ github.event.inputs.project_name }} ${{ github.run_id }}" || echo "No changes"
+          git push
