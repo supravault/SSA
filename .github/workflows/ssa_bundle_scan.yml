@@ -1,0 +1,502 @@
+name: SSA Bundle Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_name:
+        description: "Project name (folder under reports/)"
+        required: true
+        type: string
+      project_label:
+        description: "Optional label (affects output folder name)"
+        required: false
+        type: string
+      bundle_json:
+        description: >
+          JSON describing scans. Accepts either:
+          1) Array: [{"kind":"wallet","level":3,"target":"0x..."}, {"kind":"fa","level":2,"target":"0x..."}]
+          2) Object: {"scans":[...]}
+        required: true
+        type: string
+      pulse_url:
+        description: "Optional: URL to Supra Pulse PDF/JSON (Base44 hosted URL or direct)"
+        required: false
+        type: string
+      pulse_tier:
+        description: "Optional: Standard | Premium | Spotlight (used for bundle branding)"
+        required: false
+        type: string
+
+jobs:
+  bundle_scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    concurrency:
+      group: ssa-bundle-${{ github.event.inputs.project_name }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Debug dist output
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "==== dist tree (top 200 files) ===="
+          if [ -d dist ]; then
+            find dist -type f | head -n 200
+          else
+            echo "dist/ does not exist after build!"
+          fi
+
+      - name: Run SSA Bundle Scan
+        shell: bash
+        env:
+          SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
+          PROJECT_NAME: ${{ github.event.inputs.project_name }}
+          PROJECT_LABEL: ${{ github.event.inputs.project_label }}
+          BUNDLE_JSON: ${{ github.event.inputs.bundle_json }}
+          PULSE_URL: ${{ github.event.inputs.pulse_url }}
+          PULSE_TIER: ${{ github.event.inputs.pulse_tier }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${SUPRA_RPC_URL:-}" ]]; then
+            echo "❌ SUPRA_RPC_URL secret is missing or empty."
+            exit 1
+          fi
+
+          project="$(echo "${PROJECT_NAME}" | xargs)"
+          label="$(echo "${PROJECT_LABEL:-}" | xargs)"
+          pulse_url="$(echo "${PULSE_URL:-}" | xargs)"
+          pulse_tier="$(echo "${PULSE_TIER:-}" | xargs)"
+
+          # project folder safety: only allow alnum, dash, underscore, dot
+          if [[ ! "$project" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "❌ project_name contains invalid characters. Allowed: letters, numbers, . _ -"
+            exit 1
+          fi
+
+          # timestamped bundle root folder
+          ts="$(date -u +'%Y%m%dT%H%M%SZ')"
+          safe_label=""
+          if [[ -n "$label" ]]; then
+            safe_label="$(echo "$label" | tr -cd 'a-zA-Z0-9._-')"
+          fi
+
+          if [[ -n "$safe_label" ]]; then
+            bundle_dir="reports/${project}/${ts}_BUNDLE_${safe_label}"
+          else
+            bundle_dir="reports/${project}/${ts}_BUNDLE"
+          fi
+
+          mkdir -p "$bundle_dir"
+          mkdir -p "$bundle_dir/scans"
+          mkdir -p "$bundle_dir/tmp"
+
+          # Resolve compiled CLI path (robust across tsconfig changes)
+          CLI=""
+          if [ -f dist/cli/ssa.js ]; then
+            CLI="dist/cli/ssa.js"
+          elif [ -f dist/src/cli/ssa.js ]; then
+            CLI="dist/src/cli/ssa.js"
+          else
+            echo "❌ SSA CLI not found after build."
+            echo "Searched:"
+            echo "  - dist/cli/ssa.js"
+            echo "  - dist/src/cli/ssa.js"
+            echo ""
+            echo "Available dist files (top 200):"
+            find dist -type f | head -n 200 || true
+            exit 1
+          fi
+
+          echo "✅ Using CLI: $CLI"
+
+          # Normalize bundle_json into a canonical shape: { scans: [...] }
+          # Each scan item must minimally contain: kind, level, target
+          node - <<'NODE'
+          import fs from "node:fs";
+
+          const raw = process.env.BUNDLE_JSON || "";
+          if (!raw.trim()) {
+            console.error("❌ bundle_json is empty");
+            process.exit(1);
+          }
+
+          let parsed;
+          try {
+            parsed = JSON.parse(raw);
+          } catch (e) {
+            console.error("❌ bundle_json is not valid JSON:", e?.message || String(e));
+            process.exit(1);
+          }
+
+          let scans = [];
+          if (Array.isArray(parsed)) scans = parsed;
+          else if (parsed && Array.isArray(parsed.scans)) scans = parsed.scans;
+
+          if (!Array.isArray(scans) || scans.length === 0) {
+            console.error("❌ bundle_json must be a JSON array or an object with {scans:[...]}");
+            process.exit(1);
+          }
+
+          const norm = scans.map((s, idx) => {
+            const kind = String(s.kind || "").toLowerCase().trim();
+            const level = Number(s.level);
+            const target = String(s.target || "").trim();
+
+            // Optional: wallet module allowlist (NOT enforced by CLI unless you add support)
+            const modules = Array.isArray(s.modules) ? s.modules.map(String) : (typeof s.modules === "string" ? s.modules : "");
+
+            if (!["wallet","coin","fa"].includes(kind)) {
+              throw new Error(`scan[${idx}].kind must be wallet|coin|fa`);
+            }
+            if (!Number.isFinite(level) || level < 1 || level > 5) {
+              throw new Error(`scan[${idx}].level must be a number (1-5)`);
+            }
+            if (!target) {
+              throw new Error(`scan[${idx}].target is required`);
+            }
+
+            // Enforce wallet levels 1–3
+            if (kind === "wallet" && (level < 1 || level > 3)) {
+              throw new Error(`scan[${idx}] wallet scans support levels 1–3 only`);
+            }
+
+            return { kind, level, target, modules };
+          });
+
+          fs.writeFileSync(process.env.BUNDLE_OUT || "bundle_scans.json", JSON.stringify({ scans: norm }, null, 2));
+          console.log(`✅ bundle_json normalized (${norm.length} scan(s))`);
+          NODE
+          export BUNDLE_OUT="$bundle_dir/bundle_scans.json"
+          BUNDLE_OUT="$bundle_dir/bundle_scans.json" node - <<'NODE'
+          // rerun normalization with correct output path (keeps bash simple)
+          import fs from "node:fs";
+          const raw = process.env.BUNDLE_JSON || "";
+          let parsed = JSON.parse(raw);
+          let scans = Array.isArray(parsed) ? parsed : parsed?.scans;
+          const norm = scans.map((s) => {
+            const kind = String(s.kind || "").toLowerCase().trim();
+            const level = Number(s.level);
+            const target = String(s.target || "").trim();
+            const modules = Array.isArray(s.modules) ? s.modules.map(String) : (typeof s.modules === "string" ? s.modules : "");
+            return { kind, level, target, modules };
+          });
+          fs.writeFileSync(process.env.BUNDLE_OUT, JSON.stringify({ scans: norm }, null, 2));
+          NODE
+
+          # Persist bundle inputs for Base44 ingestion / auditability
+          report_type="SSA REPORT"
+          if [[ "${pulse_tier,,}" == "premium" || "${pulse_tier,,}" == "spotlight" ]]; then
+            report_type="SSA FULL INTEGRATED REPORT"
+          fi
+
+          cat > "${bundle_dir}/bundle_inputs.json" <<EOF
+          {
+            "run_id": "${{ github.run_id }}",
+            "run_attempt": "${{ github.run_attempt }}",
+            "workflow": "${{ github.workflow }}",
+            "repo": "${{ github.repository }}",
+            "ref": "${{ github.ref }}",
+            "sha": "${{ github.sha }}",
+            "triggered_by": "${{ github.actor }}",
+            "ts_utc": "${ts}",
+            "project_name": "${project}",
+            "project_label": "${label}",
+            "rpc": "${SUPRA_RPC_URL}",
+            "report_type": "${report_type}",
+            "pulse": {
+              "attached": ${pulse_url:+true}${pulse_url:+'',}${pulse_url:-false},
+              "tier": "${pulse_tier}",
+              "url": "${pulse_url}"
+            },
+            "bundle_json": $(cat "$bundle_dir/bundle_scans.json")
+          }
+          EOF
+
+          # If pulse_url provided, download it locally (CLI expects local path)
+          pulse_path=""
+          if [[ -n "$pulse_url" ]]; then
+            echo "⬇️ Downloading Supra Pulse report..."
+            pulse_path="$bundle_dir/tmp/pulse_input"
+            # Try to preserve extension when possible
+            ext="${pulse_url##*.}"
+            if [[ "$ext" =~ ^(pdf|json)$ ]]; then
+              pulse_path="${pulse_path}.${ext}"
+            else
+              pulse_path="${pulse_path}.pdf"
+            fi
+            curl -L --fail --retry 3 --retry-delay 1 -o "$pulse_path" "$pulse_url"
+            echo "✅ Pulse downloaded to: $pulse_path"
+          fi
+
+          # Run scans sequentially
+          idx=0
+          pdf_list="$bundle_dir/tmp/pdfs.txt"
+          : > "$pdf_list"
+
+          total="$(jq -r '.scans | length' "$bundle_dir/bundle_scans.json")"
+          echo "▶ Running bundle scans: $total scan(s)"
+
+          while [[ $idx -lt $total ]]; do
+            kind="$(jq -r ".scans[$idx].kind" "$bundle_dir/bundle_scans.json")"
+            level="$(jq -r ".scans[$idx].level" "$bundle_dir/bundle_scans.json")"
+            target="$(jq -r ".scans[$idx].target" "$bundle_dir/bundle_scans.json")"
+            modules="$(jq -r ".scans[$idx].modules" "$bundle_dir/bundle_scans.json")"
+
+            scan_slug="${kind}_L${level}"
+            scan_dir="$bundle_dir/scans/${idx}_${scan_slug}"
+            mkdir -p "$scan_dir"
+
+            # Map target args to CLI expectation
+            target_args=()
+            if [[ "$kind" == "coin" ]]; then
+              target_args=( --coinType "$target" )
+            elif [[ "$kind" == "fa" ]]; then
+              target_args=( --fa "$target" )
+            else
+              target_args=( --address "$target" )
+            fi
+
+            echo "▶ [$((idx+1))/$total] Scan: kind=${kind} level=${level} target=${target}"
+            echo "    out=${scan_dir}"
+
+            # Optional wallet module allowlist (only meaningful if/when CLI supports it)
+            # We still write it into scan_inputs.json for transparency.
+            cat > "${scan_dir}/scan_inputs.json" <<EOF
+            {
+              "kind": "${kind}",
+              "level": ${level},
+              "target": "${target}",
+              "wallet_modules_allowlist": "${modules}",
+              "rpc": "${SUPRA_RPC_URL}",
+              "pulse_attached": $([[ -n "$pulse_path" ]] && echo true || echo false),
+              "pulse_tier": "${pulse_tier}"
+            }
+            EOF
+
+            # Build pulse args (attach to each scan for now; if you prefer only once, change here)
+            pulse_args=()
+            if [[ -n "$pulse_path" ]]; then
+              pulse_args=( --pulse "$pulse_path" )
+            fi
+
+            node "$CLI" scan \
+              --kind "$kind" \
+              --level "$level" \
+              "${target_args[@]}" \
+              --rpc "$SUPRA_RPC_URL" \
+              --out "$scan_dir" \
+              --pdf \
+              "${pulse_args[@]}"
+
+            # Standardize a per-scan PDF name
+            if [[ -f "$scan_dir/report.pdf" ]]; then
+              mv "$scan_dir/report.pdf" "$scan_dir/${kind}_report.pdf"
+              echo "$scan_dir/${kind}_report.pdf" >> "$pdf_list"
+            else
+              echo "❌ Expected PDF not found at $scan_dir/report.pdf"
+              exit 1
+            fi
+
+            idx=$((idx+1))
+          done
+
+          # Build ONE combined PDF: cover + all scan PDFs in order
+          echo "🧩 Building combined bundle PDF..."
+          python3 - <<'PY'
+          import os, sys, subprocess
+          from pathlib import Path
+
+          bundle_dir = Path(os.environ["BUNDLE_DIR"])
+          pdf_list = (bundle_dir / "tmp" / "pdfs.txt").read_text().splitlines()
+          report_type = os.environ.get("REPORT_TYPE","SSA REPORT")
+          project = os.environ.get("PROJECT","")
+          label = os.environ.get("LABEL","")
+          ts = os.environ.get("TS","")
+          pulse_tier = os.environ.get("PULSE_TIER","")
+
+          # Install minimal libs
+          subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "pypdf", "reportlab"])
+
+          from reportlab.pdfgen import canvas
+          from reportlab.lib.pagesizes import letter
+          from pypdf import PdfReader, PdfWriter
+
+          cover_path = bundle_dir / "cover.pdf"
+          c = canvas.Canvas(str(cover_path), pagesize=letter)
+          w, h = letter
+
+          c.setFont("Helvetica-Bold", 20)
+          c.drawString(72, h - 100, report_type)
+
+          c.setFont("Helvetica", 12)
+          c.drawString(72, h - 140, f"Project: {project}")
+          if label:
+            c.drawString(72, h - 160, f"Label: {label}")
+          c.drawString(72, h - 180, f"Timestamp (UTC): {ts}")
+          if pulse_tier:
+            c.drawString(72, h - 200, f"Supra Pulse Tier: {pulse_tier}")
+
+          c.setFont("Helvetica", 10)
+          c.drawString(72, 80, "Generated by SSA Bundle Scan (GitHub Actions execution engine).")
+          c.showPage()
+          c.save()
+
+          writer = PdfWriter()
+
+          # Add cover
+          for page in PdfReader(str(cover_path)).pages:
+            writer.add_page(page)
+
+          # Add each scan PDF
+          for p in pdf_list:
+            r = PdfReader(p)
+            for page in r.pages:
+              writer.add_page(page)
+
+          out_path = bundle_dir / "combined_report.pdf"
+          with open(out_path, "wb") as f:
+            writer.write(f)
+
+          print("✅ Combined PDF:", out_path)
+          PY
+        env:
+          BUNDLE_DIR: ${{ format('reports/{0}', github.event.inputs.project_name) }}
+        # We need correct env for python block; set them now:
+      - name: Build Combined PDF (env wiring)
+        shell: bash
+        env:
+          PROJECT: ${{ github.event.inputs.project_name }}
+          LABEL: ${{ github.event.inputs.project_label }}
+          PULSE_TIER: ${{ github.event.inputs.pulse_tier }}
+          BUNDLE_JSON: ${{ github.event.inputs.bundle_json }}
+          SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
+        run: |
+          set -euo pipefail
+          # Find the newest bundle dir for this run (created in previous step)
+          latest_bundle="$(ls -1dt reports/"${PROJECT}"/20*_BUNDLE* | head -n 1)"
+          if [[ -z "$latest_bundle" ]]; then
+            echo "❌ Could not locate bundle directory under reports/${PROJECT}"
+            exit 1
+          fi
+
+          ts="$(basename "$latest_bundle" | sed -E 's/^([0-9]{8}T[0-9]{6}Z).*/\1/')"
+
+          report_type="SSA REPORT"
+          tier="$(echo "${PULSE_TIER:-}" | tr '[:upper:]' '[:lower:]')"
+          if [[ "$tier" == "premium" || "$tier" == "spotlight" ]]; then
+            report_type="SSA FULL INTEGRATED REPORT"
+          fi
+
+          export BUNDLE_DIR="$latest_bundle"
+          export REPORT_TYPE="$report_type"
+          export PROJECT="$PROJECT"
+          export LABEL="${LABEL:-}"
+          export TS="$ts"
+          export PULSE_TIER="${PULSE_TIER:-}"
+
+          # Ensure pdf list exists (created in prior step)
+          if [[ ! -f "$BUNDLE_DIR/tmp/pdfs.txt" ]]; then
+            echo "❌ Missing $BUNDLE_DIR/tmp/pdfs.txt"
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          import os, sys, subprocess
+          from pathlib import Path
+
+          bundle_dir = Path(os.environ["BUNDLE_DIR"])
+          pdf_list = (bundle_dir / "tmp" / "pdfs.txt").read_text().splitlines()
+          report_type = os.environ.get("REPORT_TYPE","SSA REPORT")
+          project = os.environ.get("PROJECT","")
+          label = os.environ.get("LABEL","")
+          ts = os.environ.get("TS","")
+          pulse_tier = os.environ.get("PULSE_TIER","")
+
+          subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "pypdf", "reportlab"])
+
+          from reportlab.pdfgen import canvas
+          from reportlab.lib.pagesizes import letter
+          from pypdf import PdfReader, PdfWriter
+
+          cover_path = bundle_dir / "cover.pdf"
+          c = canvas.Canvas(str(cover_path), pagesize=letter)
+          w, h = letter
+
+          c.setFont("Helvetica-Bold", 20)
+          c.drawString(72, h - 100, report_type)
+
+          c.setFont("Helvetica", 12)
+          c.drawString(72, h - 140, f"Project: {project}")
+          if label:
+            c.drawString(72, h - 160, f"Label: {label}")
+          c.drawString(72, h - 180, f"Timestamp (UTC): {ts}")
+          if pulse_tier:
+            c.drawString(72, h - 200, f"Supra Pulse Tier: {pulse_tier}")
+
+          c.setFont("Helvetica", 10)
+          c.drawString(72, 80, "Generated by SSA Bundle Scan (GitHub Actions execution engine).")
+          c.showPage()
+          c.save()
+
+          writer = PdfWriter()
+
+          for page in PdfReader(str(cover_path)).pages:
+            writer.add_page(page)
+
+          for p in pdf_list:
+            r = PdfReader(p)
+            for page in r.pages:
+              writer.add_page(page)
+
+          out_path = bundle_dir / "combined_report.pdf"
+          with open(out_path, "wb") as f:
+            writer.write(f)
+
+          print("✅ Combined PDF:", out_path)
+          PY
+
+      - name: Upload artifacts (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssa-bundle-${{ github.event.inputs.project_name }}-${{ github.run_id }}
+          path: reports/${{ github.event.inputs.project_name }}/
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Commit & Push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "ssa-bot"
+          git config user.email "ssa-bot@users.noreply.github.com"
+
+          git add "reports/${{ github.event.inputs.project_name }}/"
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
+          git push
