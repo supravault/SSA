@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       target:
-        description: "Wallet address OR module/coin identifier OR FA address"
+        description: "wallet address (0x...) OR coin type (0xADDR::MODULE::COIN) OR FA address (0x...)"
         required: true
         type: string
       level:
@@ -16,11 +16,11 @@ on:
         required: true
         type: string
       project_name:
-        description: "Project name (folder)"
+        description: "Project name (folder under reports/)"
         required: true
         type: string
       project_label:
-        description: "Optional label"
+        description: "Optional label (stored in inputs.json + affects output folder name)"
         required: false
         type: string
 
@@ -30,9 +30,16 @@ jobs:
     permissions:
       contents: write
 
+    # Avoid overlapping commits for the same project
+    concurrency:
+      group: ssa-scan-${{ github.event.inputs.project_name }}
+      cancel-in-progress: false
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -47,22 +54,123 @@ jobs:
         run: npm run build
 
       - name: Run SSA Scan
+        shell: bash
         env:
           SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
+          SCANNER_TYPE: ${{ github.event.inputs.scanner_type }}
+          TARGET: ${{ github.event.inputs.target }}
+          LEVEL: ${{ github.event.inputs.level }}
+          PROJECT_NAME: ${{ github.event.inputs.project_name }}
+          PROJECT_LABEL: ${{ github.event.inputs.project_label }}
         run: |
-          node dist/src/cli/ssa.js scan \
-            --kind "${{ github.event.inputs.scanner_type }}" \
-            --level "${{ github.event.inputs.level }}" \
-            --address "${{ github.event.inputs.target }}" \
+          set -euo pipefail
+
+          # --- Basic validation / normalization ---
+          kind="$(echo "${SCANNER_TYPE}" | tr '[:upper:]' '[:lower:]' | xargs)"
+          level="$(echo "${LEVEL}" | xargs)"
+          target="$(echo "${TARGET}" | xargs)"
+          project="$(echo "${PROJECT_NAME}" | xargs)"
+          label="$(echo "${PROJECT_LABEL:-}" | xargs)"
+
+          if [[ ! "$kind" =~ ^(wallet|coin|fa)$ ]]; then
+            echo "❌ scanner_type must be one of: wallet | coin | fa"
+            exit 1
+          fi
+
+          # project folder safety: only allow alnum, dash, underscore, dot
+          if [[ ! "$project" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "❌ project_name contains invalid characters. Allowed: letters, numbers, . _ -"
+            exit 1
+          fi
+
+          # timestamped output folder under reports/
+          ts="$(date -u +'%Y%m%dT%H%M%SZ')"
+          safe_label=""
+          if [[ -n "$label" ]]; then
+            # label safety for folder suffix
+            safe_label="$(echo "$label" | tr -cd 'a-zA-Z0-9._-')"
+          fi
+
+          if [[ -n "$safe_label" ]]; then
+            out_dir="reports/${project}/${ts}_${kind}_L${level}_${safe_label}"
+          else
+            out_dir="reports/${project}/${ts}_${kind}_L${level}"
+          fi
+
+          mkdir -p "$out_dir"
+
+          # Persist dispatch inputs for Base44 ingestion / auditability
+          cat > "${out_dir}/inputs.json" <<EOF
+          {
+            "run_id": "${{ github.run_id }}",
+            "run_attempt": "${{ github.run_attempt }}",
+            "workflow": "${{ github.workflow }}",
+            "repo": "${{ github.repository }}",
+            "ref": "${{ github.ref }}",
+            "sha": "${{ github.sha }}",
+            "triggered_by": "${{ github.actor }}",
+            "ts_utc": "${ts}",
+            "kind": "${kind}",
+            "level": ${level},
+            "target": "${target}",
+            "project_name": "${project}",
+            "project_label": "${label}",
+            "rpc": "${SUPRA_RPC_URL}"
+          }
+          EOF
+
+          # --- Build the correct target flag for the CLI ---
+          # NOTE: SSA CLI uses:
+          #  - --coinType for kind=coin
+          #  - --fa for kind=fa
+          #  - --address for kind=wallet
+          target_args=()
+          if [[ "$kind" == "coin" ]]; then
+            target_args=( --coinType "$target" )
+          elif [[ "$kind" == "fa" ]]; then
+            target_args=( --fa "$target" )
+          else
+            target_args=( --address "$target" )
+          fi
+
+          echo "▶ Running scan: kind=${kind}, level=${level}, out=${out_dir}"
+          node dist/cli/ssa.js scan \
+            --kind "$kind" \
+            --level "$level" \
+            "${target_args[@]}" \
             --rpc "$SUPRA_RPC_URL" \
-            --project "${{ github.event.inputs.project_name }}" \
-            --label "${{ github.event.inputs.project_label }}" \
-            --commit
+            --out "$out_dir" \
+            --pdf
+
+      - name: Upload artifacts (optional but useful for debugging)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssa-${{ github.event.inputs.project_name }}-${{ github.run_id }}
+          path: reports/${{ github.event.inputs.project_name }}/
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Commit & Push
+        shell: bash
         run: |
+          set -euo pipefail
           git config user.name "ssa-bot"
           git config user.email "ssa-bot@users.noreply.github.com"
-          git add reports/
-          git commit -m "SSA: scan ${{ github.event.inputs.project_name }} ${{ github.run_id }}" || echo "No changes"
+
+          git add reports/"${{ github.event.inputs.project_name }}"/
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "SSA: ${{
+            github.event.inputs.project_name
+          }} ${{
+            github.event.inputs.scanner_type
+          }} L${{
+            github.event.inputs.level
+          }} (run ${{ github.run_id }})"
+
           git push
+
