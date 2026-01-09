@@ -75,6 +75,7 @@ jobs:
           BUNDLE_JSON: ${{ github.event.inputs.bundle_json }}
           PULSE_URL: ${{ github.event.inputs.pulse_url }}
           PULSE_TIER: ${{ github.event.inputs.pulse_tier }}
+
           RUN_ID: ${{ github.run_id }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
           WORKFLOW_NAME: ${{ github.workflow }}
@@ -114,7 +115,7 @@ jobs:
 
           mkdir -p "$bundle_dir/scans" "$bundle_dir/tmp"
 
-          # Resolve compiled CLI path (robust across tsconfig changes)
+          # Resolve compiled CLI path
           CLI=""
           if [ -f dist/cli/ssa.js ]; then
             CLI="dist/cli/ssa.js"
@@ -181,7 +182,6 @@ jobs:
           pulse_attached=false
           if [[ -n "$pulse_url" ]]; then pulse_attached=true; fi
 
-          # Persist bundle inputs for Base44 ingestion / auditability
           ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           cat > "${bundle_dir}/bundle_inputs.json" <<EOF
           {
@@ -206,7 +206,7 @@ jobs:
           }
           EOF
 
-          # Download Pulse (local path is most reliable for CLI)
+          # Download pulse if provided
           pulse_path=""
           if [[ -n "$pulse_url" ]]; then
             echo "⬇️ Downloading Supra Pulse report..."
@@ -220,7 +220,6 @@ jobs:
             echo "✅ Pulse saved: $pulse_path"
           fi
 
-          # Run scans sequentially
           : > "$bundle_dir/tmp/pdfs.txt"
           total="$(node -p "JSON.parse(require('fs').readFileSync('$bundle_dir/bundle_scans.json','utf8')).scans.length")"
           echo "▶ Running bundle scans: $total scan(s)"
@@ -279,8 +278,14 @@ jobs:
             echo "$scan_dir/${kind}_report.pdf" >> "$bundle_dir/tmp/pdfs.txt"
           done
 
-          # Combine PDFs: cover + all scan PDFs
           echo "🧩 Building combined_report.pdf..."
+          export BUNDLE_DIR="$bundle_dir"
+          export REPORT_TYPE="$report_type"
+          export PROJECT="$project"
+          export LABEL="$label"
+          export RUN_ID="$RUN_ID"
+          export PULSE_TIER="$pulse_tier"
+
           python3 - <<'PY'
           import os, sys, subprocess
           from pathlib import Path
@@ -338,14 +343,6 @@ jobs:
           print("✅ Combined PDF:", out_path)
           PY
 
-        env:
-          BUNDLE_DIR: reports/${{ github.event.inputs.project_name }}/${{ github.run_id }}_BUNDLE${{ github.event.inputs.project_label && format('_{0}', github.event.inputs.project_label) || '' }}
-          PROJECT: ${{ github.event.inputs.project_name }}
-          LABEL: ${{ github.event.inputs.project_label }}
-          RUN_ID: ${{ github.run_id }}
-          PULSE_TIER: ${{ github.event.inputs.pulse_tier }}
-          REPORT_TYPE: ${{ (github.event.inputs.pulse_tier == 'Premium' || github.event.inputs.pulse_tier == 'Spotlight') && 'SSA_FULL_INTEGRATED_REPORT' || 'SSA_REPORT' }}
-
       - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
         with:
@@ -370,6 +367,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
