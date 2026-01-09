@@ -77,12 +77,24 @@ jobs:
         run: |
           set -euo pipefail
 
+          if [[ -z "${SUPRA_RPC_URL:-}" ]]; then
+            echo "❌ SUPRA_RPC_URL secret is missing or empty."
+            exit 1
+          fi
+
           # --- Basic validation / normalization ---
           kind="$(echo "${SCANNER_TYPE}" | tr '[:upper:]' '[:lower:]' | xargs)"
-          level="$(echo "${LEVEL}" | xargs)"
+          level_raw="$(echo "${LEVEL}" | xargs)"
           target="$(echo "${TARGET}" | xargs)"
           project="$(echo "${PROJECT_NAME}" | xargs)"
           label="$(echo "${PROJECT_LABEL:-}" | xargs)"
+
+          # Normalize level to an integer (guards invalid JSON numbers)
+          if [[ ! "$level_raw" =~ ^[0-9]+$ ]]; then
+            echo "❌ level must be a number"
+            exit 1
+          fi
+          level="$((10#$level_raw))"
 
           if [[ ! "$kind" =~ ^(wallet|coin|fa)$ ]]; then
             echo "❌ scanner_type must be one of: wallet | coin | fa"
@@ -99,7 +111,6 @@ jobs:
           ts="$(date -u +'%Y%m%dT%H%M%SZ')"
           safe_label=""
           if [[ -n "$label" ]]; then
-            # label safety for folder suffix
             safe_label="$(echo "$label" | tr -cd 'a-zA-Z0-9._-')"
           fi
 
@@ -132,10 +143,6 @@ jobs:
           EOF
 
           # --- Build the correct target flag for the CLI ---
-          # NOTE: SSA CLI uses:
-          #  - --coinType for kind=coin
-          #  - --fa for kind=fa
-          #  - --address for kind=wallet
           target_args=()
           if [[ "$kind" == "coin" ]]; then
             target_args=( --coinType "$target" )
@@ -145,25 +152,20 @@ jobs:
             target_args=( --address "$target" )
           fi
 
-          # --- Resolve the actual compiled CLI path (robust across tsconfig changes) ---
+          # --- Resolve the actual compiled CLI path ---
           CLI=""
           if [ -f dist/cli/ssa.js ]; then
             CLI="dist/cli/ssa.js"
           elif [ -f dist/src/cli/ssa.js ]; then
             CLI="dist/src/cli/ssa.js"
-          elif [ -f dist/cli/index.js ]; then
-            CLI="dist/cli/index.js"
           else
             echo "❌ SSA CLI not found after build."
             echo "Searched:"
             echo "  - dist/cli/ssa.js"
             echo "  - dist/src/cli/ssa.js"
-            echo "  - dist/cli/index.js"
             echo ""
             echo "Available dist files (top 200):"
-            if [ -d dist ]; then
-              find dist -type f | head -n 200
-            fi
+            find dist -type f | head -n 200 || true
             exit 1
           fi
 
@@ -191,7 +193,7 @@ jobs:
           git config user.name "ssa-bot"
           git config user.email "ssa-bot@users.noreply.github.com"
 
-          git add reports/"${{ github.event.inputs.project_name }}"/
+          git add "reports/${{ github.event.inputs.project_name }}/"
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
@@ -200,5 +202,6 @@ jobs:
 
           git commit -m "SSA: ${{ github.event.inputs.project_name }} ${{ github.event.inputs.scanner_type }} L${{ github.event.inputs.level }} (run ${{ github.run_id }})"
           git push
+
 
 
