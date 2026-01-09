@@ -75,6 +75,13 @@ jobs:
           BUNDLE_JSON: ${{ github.event.inputs.bundle_json }}
           PULSE_URL: ${{ github.event.inputs.pulse_url }}
           PULSE_TIER: ${{ github.event.inputs.pulse_tier }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
         run: |
           set -euo pipefail
 
@@ -93,16 +100,16 @@ jobs:
             exit 1
           fi
 
-          ts="$(date -u +'%Y%m%dT%H%M%SZ')"
           safe_label=""
           if [[ -n "$label" ]]; then
             safe_label="$(echo "$label" | tr -cd 'a-zA-Z0-9._-')"
           fi
 
+          # Deterministic bundle folder (Base44 can always find it)
           if [[ -n "$safe_label" ]]; then
-            bundle_dir="reports/${project}/${ts}_BUNDLE_${safe_label}"
+            bundle_dir="reports/${project}/${RUN_ID}_BUNDLE_${safe_label}"
           else
-            bundle_dir="reports/${project}/${ts}_BUNDLE"
+            bundle_dir="reports/${project}/${RUN_ID}_BUNDLE"
           fi
 
           mkdir -p "$bundle_dir/scans" "$bundle_dir/tmp"
@@ -121,7 +128,7 @@ jobs:
           fi
           echo "✅ Using CLI: $CLI"
 
-          # Normalize bundle_json -> { scans: [...] }
+          # Normalize bundle_json -> { scans: [...] } and validate scan items
           node - <<'NODE'
           import fs from "node:fs";
 
@@ -146,7 +153,6 @@ jobs:
             const level = Number(s.level);
             const target = String(s.target || "").trim();
 
-            // Optional allowlist (stored, not enforced unless CLI supports it)
             const modulesAllowlist =
               typeof s.modulesAllowlist === "string" ? s.modulesAllowlist :
               Array.isArray(s.modulesAllowlist) ? s.modulesAllowlist.map(String).join(",") :
@@ -166,25 +172,27 @@ jobs:
 
           mv bundle_scans.json "$bundle_dir/bundle_scans.json"
 
-          report_type="SSA REPORT"
           tier_lc="$(echo "${pulse_tier:-}" | tr '[:upper:]' '[:lower:]')"
+          report_type="SSA_REPORT"
           if [[ "$tier_lc" == "premium" || "$tier_lc" == "spotlight" ]]; then
-            report_type="SSA FULL INTEGRATED REPORT"
+            report_type="SSA_FULL_INTEGRATED_REPORT"
           fi
 
           pulse_attached=false
           if [[ -n "$pulse_url" ]]; then pulse_attached=true; fi
 
+          # Persist bundle inputs for Base44 ingestion / auditability
+          ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           cat > "${bundle_dir}/bundle_inputs.json" <<EOF
           {
-            "run_id": "${{ github.run_id }}",
-            "run_attempt": "${{ github.run_attempt }}",
-            "workflow": "${{ github.workflow }}",
-            "repo": "${{ github.repository }}",
-            "ref": "${{ github.ref }}",
-            "sha": "${{ github.sha }}",
-            "triggered_by": "${{ github.actor }}",
-            "ts_utc": "${ts}",
+            "run_id": "${RUN_ID}",
+            "run_attempt": "${RUN_ATTEMPT}",
+            "workflow": "${WORKFLOW_NAME}",
+            "repo": "${REPO}",
+            "ref": "${REF}",
+            "sha": "${SHA}",
+            "triggered_by": "${ACTOR}",
+            "ts_utc": "${ts_utc}",
             "project_name": "${project}",
             "project_label": "${label}",
             "rpc": "${SUPRA_RPC_URL}",
@@ -198,7 +206,7 @@ jobs:
           }
           EOF
 
-          # Download Pulse (CLI supports local path OR URL, but local is more reliable)
+          # Download Pulse (local path is most reliable for CLI)
           pulse_path=""
           if [[ -n "$pulse_url" ]]; then
             echo "⬇️ Downloading Supra Pulse report..."
@@ -214,14 +222,14 @@ jobs:
 
           # Run scans sequentially
           : > "$bundle_dir/tmp/pdfs.txt"
-          total="$(jq -r '.scans | length' "$bundle_dir/bundle_scans.json")"
+          total="$(node -p "JSON.parse(require('fs').readFileSync('$bundle_dir/bundle_scans.json','utf8')).scans.length")"
           echo "▶ Running bundle scans: $total scan(s)"
 
           for idx in $(seq 0 $((total-1))); do
-            kind="$(jq -r ".scans[$idx].kind" "$bundle_dir/bundle_scans.json")"
-            level="$(jq -r ".scans[$idx].level" "$bundle_dir/bundle_scans.json")"
-            target="$(jq -r ".scans[$idx].target" "$bundle_dir/bundle_scans.json")"
-            allowlist="$(jq -r ".scans[$idx].modulesAllowlist" "$bundle_dir/bundle_scans.json")"
+            kind="$(node -p "JSON.parse(require('fs').readFileSync('$bundle_dir/bundle_scans.json','utf8')).scans[$idx].kind")"
+            level="$(node -p "JSON.parse(require('fs').readFileSync('$bundle_dir/bundle_scans.json','utf8')).scans[$idx].level")"
+            target="$(node -p "JSON.parse(require('fs').readFileSync('$bundle_dir/bundle_scans.json','utf8')).scans[$idx].target")"
+            allowlist="$(node -p "JSON.parse(require('fs').readFileSync('$bundle_dir/bundle_scans.json','utf8')).scans[$idx].modulesAllowlist || ''")"
 
             scan_dir="$bundle_dir/scans/${idx}_${kind}_L${level}"
             mkdir -p "$scan_dir"
@@ -280,10 +288,10 @@ jobs:
           bundle_dir = Path(os.environ["BUNDLE_DIR"])
           pdf_list = (bundle_dir / "tmp" / "pdfs.txt").read_text().splitlines()
 
-          report_type = os.environ.get("REPORT_TYPE","SSA REPORT")
+          report_type = os.environ.get("REPORT_TYPE","SSA_REPORT")
           project = os.environ.get("PROJECT","")
           label = os.environ.get("LABEL","")
-          ts = os.environ.get("TS","")
+          run_id = os.environ.get("RUN_ID","")
           pulse_tier = os.environ.get("PULSE_TIER","")
 
           subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "pypdf", "reportlab"])
@@ -296,14 +304,16 @@ jobs:
           c = canvas.Canvas(str(cover_path), pagesize=letter)
           w, h = letter
 
+          title = "SSA FULL INTEGRATED REPORT" if report_type == "SSA_FULL_INTEGRATED_REPORT" else "SSA REPORT"
+
           c.setFont("Helvetica-Bold", 20)
-          c.drawString(72, h - 100, report_type)
+          c.drawString(72, h - 100, title)
 
           c.setFont("Helvetica", 12)
           c.drawString(72, h - 140, f"Project: {project}")
           if label:
             c.drawString(72, h - 160, f"Label: {label}")
-          c.drawString(72, h - 180, f"Timestamp (UTC): {ts}")
+          c.drawString(72, h - 180, f"Run ID: {run_id}")
           if pulse_tier:
             c.drawString(72, h - 200, f"Supra Pulse Tier: {pulse_tier}")
 
@@ -313,7 +323,6 @@ jobs:
           c.save()
 
           writer = PdfWriter()
-
           for page in PdfReader(str(cover_path)).pages:
             writer.add_page(page)
 
@@ -328,13 +337,14 @@ jobs:
 
           print("✅ Combined PDF:", out_path)
           PY
+
         env:
-          BUNDLE_DIR: ${{ format('reports/{0}/{1}', github.event.inputs.project_name, '') }}
+          BUNDLE_DIR: reports/${{ github.event.inputs.project_name }}/${{ github.run_id }}_BUNDLE${{ github.event.inputs.project_label && format('_{0}', github.event.inputs.project_label) || '' }}
           PROJECT: ${{ github.event.inputs.project_name }}
           LABEL: ${{ github.event.inputs.project_label }}
-          TS: ${{ github.run_id }}
+          RUN_ID: ${{ github.run_id }}
           PULSE_TIER: ${{ github.event.inputs.pulse_tier }}
-          REPORT_TYPE: ${{ github.event.inputs.pulse_tier }}
+          REPORT_TYPE: ${{ (github.event.inputs.pulse_tier == 'Premium' || github.event.inputs.pulse_tier == 'Spotlight') && 'SSA_FULL_INTEGRATED_REPORT' || 'SSA_REPORT' }}
 
       - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
@@ -360,6 +370,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
