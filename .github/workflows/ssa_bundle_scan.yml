@@ -55,12 +55,15 @@ jobs:
       - name: Build
         run: npm run build
 
+      # IMPORTANT: with "set -euo pipefail", `find | head` can fail due to SIGPIPE.
+      # So we avoid pipefail here and/or neutralize the pipeline exit code.
       - name: Debug dist output (top 200)
         shell: bash
         run: |
-          set -euo pipefail
+          set -eu
           if [ -d dist ]; then
-            find dist -type f | head -n 200
+            echo "==== dist tree (top 200) ===="
+            (find dist -type f | head -n 200) || true
           else
             echo "dist/ does not exist after build!"
             exit 1
@@ -124,13 +127,13 @@ jobs:
           else
             echo "❌ SSA CLI not found after build."
             echo "Searched: dist/cli/ssa.js, dist/src/cli/ssa.js"
-            find dist -type f | head -n 200 || true
+            (find dist -type f | head -n 200) || true
             exit 1
           fi
           echo "✅ Using CLI: $CLI"
 
           # Normalize bundle_json -> { scans: [...] } and validate scan items
-          node - <<'NODE'
+          node --input-type=module - <<'NODE'
           import fs from "node:fs";
 
           const raw = process.env.BUNDLE_JSON || "";
@@ -367,6 +370,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
