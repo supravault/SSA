@@ -49,21 +49,29 @@ jobs:
           node-version: "20"
           cache: "npm"
 
-      - name: Install
+      - name: Install (npm)
         run: npm install
 
       - name: Build
         run: npm run build
 
-      # IMPORTANT: with "set -euo pipefail", `find | head` can fail due to SIGPIPE.
-      # So we avoid pipefail here and/or neutralize the pipeline exit code.
+      - name: Ensure jq is available
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y jq
+          fi
+          jq --version
+
       - name: Debug dist output (top 200)
         shell: bash
         run: |
           set -eu
           if [ -d dist ]; then
             echo "==== dist tree (top 200) ===="
-            (find dist -type f | head -n 200) || true
+            (find dist -type f -print | head -n 200) || true
           else
             echo "dist/ does not exist after build!"
             exit 1
@@ -127,21 +135,27 @@ jobs:
           else
             echo "❌ SSA CLI not found after build."
             echo "Searched: dist/cli/ssa.js, dist/src/cli/ssa.js"
-            (find dist -type f | head -n 200) || true
+            (find dist -type f -print | head -n 200) || true
             exit 1
           fi
           echo "✅ Using CLI: $CLI"
 
-          # Normalize bundle_json -> { scans: [...] } and validate scan items
+          # Normalize and validate bundle_json into $bundle_dir/bundle_scans.json
           node --input-type=module - <<'NODE'
           import fs from "node:fs";
 
           const raw = process.env.BUNDLE_JSON || "";
-          if (!raw.trim()) { console.error("❌ bundle_json is empty"); process.exit(1); }
+          if (!raw.trim()) {
+            console.error("❌ bundle_json is empty");
+            process.exit(1);
+          }
 
           let parsed;
           try { parsed = JSON.parse(raw); }
-          catch (e) { console.error("❌ bundle_json invalid JSON:", e?.message || String(e)); process.exit(1); }
+          catch (e) {
+            console.error("❌ bundle_json invalid JSON:", e?.message || String(e));
+            process.exit(1);
+          }
 
           let scans = [];
           if (Array.isArray(parsed)) scans = parsed;
@@ -170,83 +184,195 @@ jobs:
             return { kind, level, target, modulesAllowlist };
           });
 
-          fs.writeFileSync("bundle_scans.json", JSON.stringify({ scans: norm }, null, 2));
-          console.log(`✅ Normalized ${norm.length} scan(s)`);
+          const outPath = `${process.env.BUNDLE_DIR}/bundle_scans.json`;
+          fs.writeFileSync(outPath, JSON.stringify({ scans: norm }, null, 2));
+          console.log(`✅ Normalized ${norm.length} scan(s) -> ${outPath}`);
           NODE
+        env:
+          BUNDLE_DIR: ${{ format('reports/{0}/{1}_BUNDLE', github.event.inputs.project_name, github.run_id) }}
 
-          mv bundle_scans.json "$bundle_dir/bundle_scans.json"
+      - name: Execute scans + build bundle files
+        shell: bash
+        env:
+          SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
+          PROJECT_NAME: ${{ github.event.inputs.project_name }}
+          PROJECT_LABEL: ${{ github.event.inputs.project_label }}
+          PULSE_URL: ${{ github.event.inputs.pulse_url }}
+          PULSE_TIER: ${{ github.event.inputs.pulse_tier }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
 
-          tier_lc="$(echo "${pulse_tier:-}" | tr '[:upper:]' '[:lower:]')"
+          project="$(echo "${PROJECT_NAME}" | xargs)"
+          label="$(echo "${PROJECT_LABEL:-}" | xargs)"
+          safe_label=""
+          if [[ -n "$label" ]]; then
+            safe_label="$(echo "$label" | tr -cd 'a-zA-Z0-9._-')"
+          fi
+
+          if [[ -n "$safe_label" ]]; then
+            bundle_dir="reports/${project}/${RUN_ID}_BUNDLE_${safe_label}"
+          else
+            bundle_dir="reports/${project}/${RUN_ID}_BUNDLE"
+          fi
+
+          mkdir -p "$bundle_dir/scans" "$bundle_dir/tmp"
+
+          # Resolve compiled CLI path again (separate step safety)
+          CLI=""
+          if [ -f dist/cli/ssa.js ]; then
+            CLI="dist/cli/ssa.js"
+          elif [ -f dist/src/cli/ssa.js ]; then
+            CLI="dist/src/cli/ssa.js"
+          else
+            echo "❌ SSA CLI not found after build."
+            exit 1
+          fi
+
+          # Determine report_type
+          tier_lc="$(echo "${PULSE_TIER:-}" | tr '[:upper:]' '[:lower:]' | xargs)"
           report_type="SSA_REPORT"
           if [[ "$tier_lc" == "premium" || "$tier_lc" == "spotlight" ]]; then
             report_type="SSA_FULL_INTEGRATED_REPORT"
           fi
 
           pulse_attached=false
-          if [[ -n "$pulse_url" ]]; then pulse_attached=true; fi
+          if [[ -n "${PULSE_URL:-}" ]]; then pulse_attached=true; fi
 
-          ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          cat > "${bundle_dir}/bundle_inputs.json" <<EOF
-          {
-            "run_id": "${RUN_ID}",
-            "run_attempt": "${RUN_ATTEMPT}",
-            "workflow": "${WORKFLOW_NAME}",
-            "repo": "${REPO}",
-            "ref": "${REF}",
-            "sha": "${SHA}",
-            "triggered_by": "${ACTOR}",
-            "ts_utc": "${ts_utc}",
-            "project_name": "${project}",
-            "project_label": "${label}",
-            "rpc": "${SUPRA_RPC_URL}",
-            "report_type": "${report_type}",
-            "pulse": {
-              "attached": ${pulse_attached},
-              "tier": "${pulse_tier}",
-              "url": "${pulse_url}"
+          # Write bundle_inputs.json safely via node (no heredoc)
+          TS_UTC="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          export BUNDLE_DIR="$bundle_dir"
+          node --input-type=module - <<'NODE'
+          import fs from "node:fs";
+
+          const bundleDir = process.env.BUNDLE_DIR!;
+          const scansPath = `${bundleDir}/bundle_scans.json`;
+          const scans = JSON.parse(fs.readFileSync(scansPath, "utf8"));
+
+          const out = {
+            run_id: process.env.RUN_ID,
+            run_attempt: process.env.RUN_ATTEMPT,
+            workflow: process.env.WORKFLOW_NAME,
+            repo: process.env.REPO,
+            ref: process.env.REF,
+            sha: process.env.SHA,
+            triggered_by: process.env.ACTOR,
+            ts_utc: process.env.TS_UTC,
+            project_name: process.env.PROJECT_NAME,
+            project_label: process.env.PROJECT_LABEL || "",
+            rpc: process.env.SUPRA_RPC_URL,
+            report_type: process.env.REPORT_TYPE,
+            pulse: {
+              attached: (process.env.PULSE_ATTACHED === "true"),
+              tier: process.env.PULSE_TIER || "",
+              url: process.env.PULSE_URL || ""
             },
-            "bundle": $(cat "$bundle_dir/bundle_scans.json")
-          }
-          EOF
+            bundle: scans
+          };
+
+          fs.writeFileSync(`${bundleDir}/bundle_inputs.json`, JSON.stringify(out, null, 2));
+          console.log("✅ Wrote bundle_inputs.json");
+          NODE
+        env:
+          SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
+          REPORT_TYPE: ${{ github.event.inputs.pulse_tier }}
+          PULSE_ATTACHED: ${{ github.event.inputs.pulse_url != '' }}
+          TS_UTC: ${{ github.run_id }}
+
+      - name: Run scans + merge PDFs
+        shell: bash
+        env:
+          SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
+          PROJECT_NAME: ${{ github.event.inputs.project_name }}
+          PROJECT_LABEL: ${{ github.event.inputs.project_label }}
+          PULSE_URL: ${{ github.event.inputs.pulse_url }}
+          PULSE_TIER: ${{ github.event.inputs.pulse_tier }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          project="$(echo "${PROJECT_NAME}" | xargs)"
+          label="$(echo "${PROJECT_LABEL:-}" | xargs)"
+          safe_label=""
+          if [[ -n "$label" ]]; then
+            safe_label="$(echo "$label" | tr -cd 'a-zA-Z0-9._-')"
+          fi
+
+          if [[ -n "$safe_label" ]]; then
+            bundle_dir="reports/${project}/${RUN_ID}_BUNDLE_${safe_label}"
+          else
+            bundle_dir="reports/${project}/${RUN_ID}_BUNDLE"
+          fi
+
+          # Resolve CLI
+          CLI=""
+          if [ -f dist/cli/ssa.js ]; then
+            CLI="dist/cli/ssa.js"
+          elif [ -f dist/src/cli/ssa.js ]; then
+            CLI="dist/src/cli/ssa.js"
+          else
+            echo "❌ SSA CLI not found after build."
+            exit 1
+          fi
+
+          # Determine report_type
+          tier_lc="$(echo "${PULSE_TIER:-}" | tr '[:upper:]' '[:lower:]' | xargs)"
+          report_type="SSA_REPORT"
+          if [[ "$tier_lc" == "premium" || "$tier_lc" == "spotlight" ]]; then
+            report_type="SSA_FULL_INTEGRATED_REPORT"
+          fi
 
           # Download pulse if provided
           pulse_path=""
-          if [[ -n "$pulse_url" ]]; then
+          if [[ -n "${PULSE_URL:-}" ]]; then
             echo "⬇️ Downloading Supra Pulse report..."
-            ext="${pulse_url##*.}"
+            ext="${PULSE_URL##*.}"
             if [[ "$ext" =~ ^(pdf|json)$ ]]; then
               pulse_path="$bundle_dir/tmp/pulse_input.${ext}"
             else
               pulse_path="$bundle_dir/tmp/pulse_input.pdf"
             fi
-            curl -L --fail --retry 3 --retry-delay 1 -o "$pulse_path" "$pulse_url"
+            curl -L --fail --retry 3 --retry-delay 1 -o "$pulse_path" "$PULSE_URL"
             echo "✅ Pulse saved: $pulse_path"
           fi
 
           : > "$bundle_dir/tmp/pdfs.txt"
-          total="$(node -p "JSON.parse(require('fs').readFileSync('$bundle_dir/bundle_scans.json','utf8')).scans.length")"
+          total="$(jq -r '.scans | length' "$bundle_dir/bundle_scans.json")"
           echo "▶ Running bundle scans: $total scan(s)"
 
           for idx in $(seq 0 $((total-1))); do
-            kind="$(node -p "JSON.parse(require('fs').readFileSync('$bundle_dir/bundle_scans.json','utf8')).scans[$idx].kind")"
-            level="$(node -p "JSON.parse(require('fs').readFileSync('$bundle_dir/bundle_scans.json','utf8')).scans[$idx].level")"
-            target="$(node -p "JSON.parse(require('fs').readFileSync('$bundle_dir/bundle_scans.json','utf8')).scans[$idx].target")"
-            allowlist="$(node -p "JSON.parse(require('fs').readFileSync('$bundle_dir/bundle_scans.json','utf8')).scans[$idx].modulesAllowlist || ''")"
+            kind="$(jq -r ".scans[$idx].kind" "$bundle_dir/bundle_scans.json")"
+            level="$(jq -r ".scans[$idx].level" "$bundle_dir/bundle_scans.json")"
+            target="$(jq -r ".scans[$idx].target" "$bundle_dir/bundle_scans.json")"
+            allowlist="$(jq -r ".scans[$idx].modulesAllowlist // \"\"" "$bundle_dir/bundle_scans.json")"
 
             scan_dir="$bundle_dir/scans/${idx}_${kind}_L${level}"
             mkdir -p "$scan_dir"
 
-            cat > "${scan_dir}/scan_inputs.json" <<EOF
-            {
-              "kind": "${kind}",
-              "level": ${level},
-              "target": "${target}",
-              "wallet_modules_allowlist": "${allowlist}",
-              "rpc": "${SUPRA_RPC_URL}",
-              "pulse_attached": ${pulse_attached},
-              "pulse_tier": "${pulse_tier}"
-            }
-            EOF
+            # scan_inputs.json via jq (safe)
+            jq -n \
+              --arg kind "$kind" \
+              --arg target "$target" \
+              --arg rpc "$SUPRA_RPC_URL" \
+              --arg pulseTier "${PULSE_TIER:-}" \
+              --arg allowlist "$allowlist" \
+              --argjson level "$level" \
+              --argjson pulseAttached "$( [[ -n "$pulse_path" ]] && echo true || echo false )" \
+              '{
+                kind: $kind,
+                level: $level,
+                target: $target,
+                wallet_modules_allowlist: $allowlist,
+                rpc: $rpc,
+                pulse_attached: $pulseAttached,
+                pulse_tier: $pulseTier
+              }' > "$scan_dir/scan_inputs.json"
 
             target_args=()
             if [[ "$kind" == "coin" ]]; then
@@ -282,12 +408,6 @@ jobs:
           done
 
           echo "🧩 Building combined_report.pdf..."
-          export BUNDLE_DIR="$bundle_dir"
-          export REPORT_TYPE="$report_type"
-          export PROJECT="$project"
-          export LABEL="$label"
-          export RUN_ID="$RUN_ID"
-          export PULSE_TIER="$pulse_tier"
 
           python3 - <<'PY'
           import os, sys, subprocess
@@ -331,6 +451,7 @@ jobs:
           c.save()
 
           writer = PdfWriter()
+
           for page in PdfReader(str(cover_path)).pages:
             writer.add_page(page)
 
@@ -345,6 +466,13 @@ jobs:
 
           print("✅ Combined PDF:", out_path)
           PY
+        env:
+          BUNDLE_DIR: reports/${{ github.event.inputs.project_name }}/${{ github.run_id }}_BUNDLE_${{ github.event.inputs.project_label }}
+          REPORT_TYPE: ${{ github.event.inputs.pulse_tier }}
+          PROJECT: ${{ github.event.inputs.project_name }}
+          LABEL: ${{ github.event.inputs.project_label }}
+          RUN_ID: ${{ github.run_id }}
+          PULSE_TIER: ${{ github.event.inputs.pulse_tier }}
 
       - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
@@ -370,6 +498,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
