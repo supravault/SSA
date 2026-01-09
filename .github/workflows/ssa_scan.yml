@@ -53,6 +53,18 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Helpful when the CLI path breaks again; safe to keep
+      - name: Debug dist output
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "==== dist tree (top 200 files) ===="
+          if [ -d dist ]; then
+            find dist -type f | head -n 200
+          else
+            echo "dist/ does not exist after build!"
+          fi
+
       - name: Run SSA Scan
         shell: bash
         env:
@@ -133,8 +145,30 @@ jobs:
             target_args=( --address "$target" )
           fi
 
-          echo "▶ Running scan: kind=${kind}, level=${level}, out=${out_dir}"
-          node dist/cli/ssa.js scan \
+          # --- Resolve the actual compiled CLI path (robust across tsconfig changes) ---
+          CLI=""
+          if [ -f dist/cli/ssa.js ]; then
+            CLI="dist/cli/ssa.js"
+          elif [ -f dist/src/cli/ssa.js ]; then
+            CLI="dist/src/cli/ssa.js"
+          elif [ -f dist/cli/index.js ]; then
+            CLI="dist/cli/index.js"
+          else
+            echo "❌ SSA CLI not found after build."
+            echo "Searched:"
+            echo "  - dist/cli/ssa.js"
+            echo "  - dist/src/cli/ssa.js"
+            echo "  - dist/cli/index.js"
+            echo ""
+            echo "Available dist files (top 200):"
+            if [ -d dist ]; then
+              find dist -type f | head -n 200
+            fi
+            exit 1
+          fi
+
+          echo "▶ Running scan: kind=${kind}, level=${level}, out=${out_dir}, cli=${CLI}"
+          node "$CLI" scan \
             --kind "$kind" \
             --level "$level" \
             "${target_args[@]}" \
@@ -164,13 +198,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "SSA: ${{
-            github.event.inputs.project_name
-          }} ${{
-            github.event.inputs.scanner_type
-          }} L${{
-            github.event.inputs.level
-          }} (run ${{ github.run_id }})"
-
+          git commit -m "SSA: ${{ github.event.inputs.project_name }} ${{ github.event.inputs.scanner_type }} L${{ github.event.inputs.level }} (run ${{ github.run_id }})"
           git push
+
 
