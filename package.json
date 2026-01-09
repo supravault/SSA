@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "SSA — Supra Security Agent. Supra-native Security-as-an-Agent scanner and verification framework.",
   "main": "dist/src/index.js",
-  "type": "commonjs",
+  "type": "module",
   "bin": {
     "ssa": "./dist/src/cli/ssa.js",
     "ssa-scan": "./dist/src/index.js"
