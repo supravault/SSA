@@ -2,37 +2,37 @@
   "name": "ssa-scanner",
   "version": "0.1.0",
   "description": "SSA — Supra Security Agent. Supra-native Security-as-an-Agent scanner and verification framework.",
-  "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
+  "type": "commonjs",
   "bin": {
-    "ssa": "./dist/cli/ssa.js",
-    "ssa-scan": "./dist/index.js"
+    "ssa": "./dist/src/cli/ssa.js",
+    "ssa-scan": "./dist/src/index.js"
   },
   "scripts": {
     "build": "npx tsc",
     "clean": "rimraf dist",
 
     "dev": "tsx watch src/server.ts",
-    "start": "node server.cjs",
+    "start": "node dist/src/server.js",
 
-    "scan": "tsx src/index.ts",
+    "scan": "node dist/src/index.js",
 
     "test": "vitest",
     "test:coverage": "vitest --coverage",
 
-    "test:scan": "npm run build && node dist/scripts/test-scan.js",
+    "test:scan": "npm run build && node dist/src/scripts/test-scan.js",
     "test:view": "node scripts/test-view.js",
-    "test:rules": "npm run build && node dist/scripts/test-rules-local.js",
+    "test:rules": "npm run build && node dist/src/scripts/test-rules-local.js",
 
-    "test:fa": "npm run build && node dist/scripts/test-fa.js",
-    "test:fa-probe": "npm run build && node dist/scripts/test-fa-view-probe.js",
+    "test:fa": "npm run build && node dist/src/scripts/test-fa.js",
+    "test:fa-probe": "npm run build && node dist/src/scripts/test-fa-view-probe.js",
     "test:fa:resources": "npm run build && node dist/src/scripts/test-fa-resources.js",
     "test:fa:surface": "npm run build && node dist/src/scripts/test-fa-surface.js",
 
-    "test:coin": "npm run build && node dist/scripts/test-coin.js",
+    "test:coin": "npm run build && node dist/src/scripts/test-coin.js",
     "test:coin:surface": "npm run build && node dist/src/scripts/test-coin-surface.js",
 
-    "test:rpc-modules": "npm run build && node dist/scripts/test-rpc-modules.js",
+    "test:rpc-modules": "npm run build && node dist/src/scripts/test-rpc-modules.js",
     "probe-rpc": "npm run build && node dist/src/scripts/probe-rpc-methods.js",
 
     "agent": "npm run build && node dist/src/scripts/ssa-agent.js",
@@ -47,11 +47,11 @@
 
     "prebuild": "npm run guard:rpc && npm run check:contamination",
 
-    "scan:wallet": "npm run build && node dist/cli/ssa.js scan --kind wallet",
-    "scan:coin": "npm run build && node dist/cli/ssa.js scan --kind coin",
-    "scan:fa": "npm run build && node dist/cli/ssa.js scan --kind fa",
+    "scan:wallet": "npm run build && node dist/src/cli/ssa.js scan --kind wallet",
+    "scan:coin": "npm run build && node dist/src/cli/ssa.js scan --kind coin",
+    "scan:fa": "npm run build && node dist/src/cli/ssa.js scan --kind fa",
 
-    "generate:badge-keys": "npm run build && node dist/scripts/generate-badge-keys.js",
+    "generate:badge-keys": "npm run build && node dist/src/scripts/generate-badge-keys.js",
     "verify-report": "npm run build && node dist/src/scripts/verify-report.js"
   },
   "keywords": [
@@ -91,5 +91,7 @@
     "vitest": "4.0.16"
   }
 }
+
+
 
 
