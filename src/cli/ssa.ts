@@ -4,24 +4,28 @@
 
 import { Command } from "commander";
 import dotenv from "dotenv";
-import { mkdirSync, writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
-import { join, dirname, basename, extname } from "path";
-import { createHash } from "crypto";
+import { mkdirSync, writeFileSync, readFileSync } from "fs";
+import { join } from "path";
+import { randomUUID } from "crypto";
+
 import { scanFAToken } from "../core/faScanner.js";
 import { scanCoinToken } from "../core/coinScanner.js";
 import { runScan } from "../core/scanner.js";
 import { buildCoinSnapshot, buildFASnapshot } from "../agent/snapshot.js";
 import { diffSnapshots } from "../agent/diff.js";
+
 import { fetchAccountModulesV3 } from "../rpc/supraAccountsV3.js";
 import { fetchAllModulesV1 } from "../rpc/supraAccountsV1.js";
+import type { RpcClientOptions } from "../rpc/supraRpcClient.js";
+
 import { suprascanGraphql } from "../adapters/suprascanGraphql.js";
 import type { ScanResult, ModuleId } from "../core/types.js";
 import { getIsoTimestamp } from "../utils/time.js";
-import { randomUUID } from "crypto";
-import type { RpcClientOptions } from "../rpc/supraRpcClient.js";
+
 import { generateSummaryJson } from "./summary.js";
 import { generatePdfReport } from "./pdf.js";
 import { attachSupraPulse, type PulseMetadata } from "./pulse.js";
+
 import { deriveBadge } from "../policy/badgePolicy.js";
 import { signBadge, type SignedBadge, type BadgePayload } from "../crypto/badgeSigner.js";
 
@@ -29,10 +33,7 @@ dotenv.config();
 
 const program = new Command();
 
-program
-  .name("ssa")
-  .description("SSA Scanner - Unified security scanning for Supra Move")
-  .version("0.1.0");
+program.name("ssa").description("SSA Scanner - Unified security scanning for Supra Move").version("0.1.0");
 
 /**
  * List all modules for an account address
@@ -70,7 +71,9 @@ async function listAccountModules(
       }
     }
   } catch (error) {
-    console.warn(`RPC v3/v2 module enumeration failed: ${error instanceof Error ? error.message : String(error)}`);
+    console.warn(
+      `RPC v3/v2 module enumeration failed: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 
   // Fallback to RPC v1 if v3 failed or returned empty
@@ -115,13 +118,11 @@ async function listAccountModules(
             };
           };
         };
-      }>(query, {
-        address,
-        blockchainEnvironment: "mainnet",
-      }, {
-        env: "mainnet",
-        timeoutMs: 8000,
-      });
+      }>(
+        query,
+        { address, blockchainEnvironment: "mainnet" },
+        { env: "mainnet", timeoutMs: 8000 }
+      );
 
       // Parse resources to extract module names
       const resourcesStr = data.data?.addressDetail?.addressDetailSupra?.resources;
@@ -149,12 +150,14 @@ async function listAccountModules(
               }
             }
           }
-        } catch (parseError) {
+        } catch {
           // Resources parsing failed, continue
         }
       }
     } catch (error) {
-      console.warn(`SupraScan GraphQL module enumeration failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.warn(
+        `SupraScan GraphQL module enumeration failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -182,12 +185,10 @@ async function scanWallet(
   rpcUrl: string,
   options: Record<string, any> = {}
 ): Promise<ScanResult> {
-  // Enumerate modules
   console.log(`Enumerating modules for wallet ${address}...`);
   const modules = await listAccountModules(rpcUrl, address);
 
   if (modules.length === 0) {
-    // No modules found - return empty scan result
     return {
       request_id: randomUUID(),
       target: {
@@ -196,7 +197,7 @@ async function scanWallet(
         module_name: "",
         module_id: address,
         address,
-      },
+      } as any,
       scan_level: mapLevelToScanLevel(level),
       timestamp_iso: getIsoTimestamp(),
       engine: {
@@ -212,17 +213,11 @@ async function scanWallet(
           kind: "supra_rpc_v3",
           path: `${rpcUrl}/rpc/v3/accounts/${address}/modules`,
         },
-      },
+      } as any,
       summary: {
         risk_score: 0,
         verdict: "pass",
-        severity_counts: {
-          critical: 0,
-          high: 0,
-          medium: 0,
-          low: 0,
-          info: 0,
-        },
+        severity_counts: { critical: 0, high: 0, medium: 0, low: 0, info: 0 },
         badge_eligibility: {
           scanned: true,
           no_critical: true,
@@ -231,26 +226,20 @@ async function scanWallet(
           reasons: ["No modules found at wallet address"],
           expires_at_iso: undefined,
         },
-        capabilities: {
-          poolStats: false,
-          totalStaked: false,
-          queue: false,
-          userViews: false,
-        },
-      },
+        capabilities: { poolStats: false, totalStaked: false, queue: false, userViews: false },
+      } as any,
       findings: [],
       meta: {
         scan_options: options,
         rpc_url: rpcUrl,
         duration_ms: 0,
         wallet_modules: [],
-      },
+      } as any,
     };
   }
 
   console.log(`Found ${modules.length} module(s). Scanning each...`);
 
-  // Scan each module
   const moduleScans: Array<{
     module_id: string;
     summary: any;
@@ -260,21 +249,11 @@ async function scanWallet(
 
   const allFindings: any[] = [];
   let maxRiskScore = 0;
-  const aggregatedSeverityCounts = {
-    critical: 0,
-    high: 0,
-    medium: 0,
-    low: 0,
-    info: 0,
-  };
-
+  const aggregatedSeverityCounts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
   let verdict: "pass" | "warn" | "fail" | "inconclusive" = "pass";
 
   for (const module of modules) {
-    const moduleId: ModuleId = {
-      address: module.module_address,
-      module_name: module.module_name,
-    };
+    const moduleId: ModuleId = { address: module.module_address, module_name: module.module_name };
 
     try {
       console.log(`  Scanning ${moduleId.address}::${moduleId.module_name}...`);
@@ -284,27 +263,20 @@ async function scanWallet(
         proxy_base: options.proxy_base,
       });
 
-      // Aggregate findings with module_id annotation
-      const annotatedFindings = scanResult.findings.map((f) => ({
+      const annotatedFindings = (scanResult.findings || []).map((f: any) => ({
         ...f,
         module_id: `${moduleId.address}::${moduleId.module_name}`,
       }));
       allFindings.push(...annotatedFindings);
 
-      // Aggregate severity counts
       for (const severity of ["critical", "high", "medium", "low", "info"] as const) {
-        aggregatedSeverityCounts[severity] += scanResult.summary.severity_counts[severity];
+        aggregatedSeverityCounts[severity] += scanResult.summary.severity_counts?.[severity] ?? 0;
       }
 
-      // Track max risk score
-      maxRiskScore = Math.max(maxRiskScore, scanResult.summary.risk_score);
+      maxRiskScore = Math.max(maxRiskScore, scanResult.summary.risk_score ?? 0);
 
-      // Determine overall verdict (fail > warn > pass)
-      if (scanResult.summary.verdict === "fail") {
-        verdict = "fail";
-      } else if (scanResult.summary.verdict === "warn" && verdict !== "fail") {
-        verdict = "warn";
-      }
+      if (scanResult.summary.verdict === "fail") verdict = "fail";
+      else if (scanResult.summary.verdict === "warn" && verdict !== "fail") verdict = "warn";
 
       moduleScans.push({
         module_id: `${moduleId.address}::${moduleId.module_name}`,
@@ -313,12 +285,14 @@ async function scanWallet(
         meta: scanResult.meta,
       });
     } catch (error) {
-      console.warn(`  Failed to scan ${moduleId.address}::${moduleId.module_name}: ${error instanceof Error ? error.message : String(error)}`);
-      // Continue with other modules
+      console.warn(
+        `  Failed to scan ${moduleId.address}::${moduleId.module_name}: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
   }
 
-  // Build aggregated wallet scan result
   return {
     request_id: randomUUID(),
     target: {
@@ -339,11 +313,11 @@ async function scanWallet(
       fetch_method: "rpc",
       artifact_hash: `wallet_${address}`,
       binding_note: `Wallet scan for ${address}`,
-      artifactOrigin: {
+      artifact_origin: {
         kind: "supra_rpc_v3",
         path: `${rpcUrl}/rpc/v3/accounts/${address}/modules`,
       },
-    },
+    } as any,
     summary: {
       risk_score: maxRiskScore,
       verdict,
@@ -351,25 +325,20 @@ async function scanWallet(
       badge_eligibility: {
         scanned: true,
         no_critical: aggregatedSeverityCounts.critical === 0,
-        security_verified: false, // Wallet scans don't get security verified badge
+        security_verified: false,
         continuously_monitored: false,
         reasons: [],
         expires_at_iso: undefined,
       },
-      capabilities: {
-        poolStats: false,
-        totalStaked: false,
-        queue: false,
-        userViews: false,
-      },
-    },
+      capabilities: { poolStats: false, totalStaked: false, queue: false, userViews: false },
+    } as any,
     findings: allFindings,
     meta: {
       scan_options: options,
       rpc_url: rpcUrl,
       duration_ms: 0,
       wallet_modules: moduleScans,
-    },
+    } as any,
   };
 }
 
@@ -391,11 +360,12 @@ program
   .option("--prev <path>", "Previous snapshot path (for level 5 diff)")
   .option("--curr <path>", "Current snapshot path (for level 5 diff)")
   .option("--delay <ms>", "Delay between snapshots for level 5 (default: 1000)", (v) => parseInt(v, 10), 1000)
+  .option("--proxy_base <url>", "Optional HTTP proxy base for RPC/adapters")
+  .option("--fa_owner <addr>", "Optional FA owner override (when needed)")
   .action(async (options) => {
     try {
-      const { kind, level, rpc, out, pdf, pulse, prev, curr, delay } = options;
+      const { kind, level, rpc, out, pdf, pulse, prev, curr, delay, proxy_base, fa_owner } = options;
 
-      // Normalize kind (creator -> wallet)
       const normalizedKind = kind === "creator" ? "wallet" : kind;
 
       // Validate level based on kind
@@ -414,7 +384,6 @@ program
           process.exit(1);
         }
       } else {
-        // coin or fa
         if (level < 1 || level > 5) {
           const errorSummary = {
             error: {
@@ -467,109 +436,88 @@ program
       // Run scan
       let scanResult: ScanResult;
       if (normalizedKind === "wallet") {
-        scanResult = await scanWallet(target, level, rpc, options);
+        scanResult = await scanWallet(target, level, rpc, { ...options, proxy_base });
       } else if (normalizedKind === "fa") {
         scanResult = await scanFAToken(target, {
           rpc_url: rpc,
-          proxy_base: options.proxy_base,
-          fa_owner: options.fa_owner,
-        });
-        // Map level to scan depth if needed
-        // scanFAToken handles levels internally
+          proxy_base,
+          fa_owner,
+        } as any);
       } else {
-        // coin
         scanResult = await scanCoinToken(target, {
           rpc_url: rpc,
-          proxy_base: options.proxy_base,
-        });
+          proxy_base,
+        } as any);
       }
 
       // Add scan level number and target kind to result
       (scanResult as any).scan_level_num = level;
       (scanResult as any).scan_level_str = `L${level}`;
       (scanResult as any).target = {
-        ...scanResult.target,
+        ...(scanResult as any).target,
         kind: normalizedKind,
         chain: "supra",
       };
 
       // Handle level 4/5 snapshot/diff logic for coin/fa
       if ((normalizedKind === "coin" || normalizedKind === "fa") && level >= 4) {
-        // Level 4: Create snapshot
         if (level === 4) {
           console.log("Creating snapshot baseline...");
-          const snapshot = normalizedKind === "coin"
-            ? await buildCoinSnapshot({ scanResult, rpcUrl: rpc })
-            : await buildFASnapshot({ scanResult, rpcUrl: rpc });
+          const snapshot =
+            normalizedKind === "coin"
+              ? await buildCoinSnapshot({ scanResult, rpcUrl: rpc })
+              : await buildFASnapshot({ scanResult, rpcUrl: rpc });
 
-          writeFileSync(
-            join(artifactsDir, "snapshot.json"),
-            JSON.stringify(snapshot, null, 2)
-          );
+          writeFileSync(join(artifactsDir, "snapshot.json"), JSON.stringify(snapshot, null, 2));
         }
 
-        // Level 5: Create diff
         if (level === 5) {
           if (prev && curr) {
-            // Use provided snapshots
             console.log("Creating diff from provided snapshots...");
             const prevSnapshot = JSON.parse(readFileSync(prev, "utf-8"));
             const currSnapshot = JSON.parse(readFileSync(curr, "utf-8"));
             const diff = diffSnapshots(prevSnapshot, currSnapshot);
-            writeFileSync(
-              join(artifactsDir, "diff.json"),
-              JSON.stringify(diff, null, 2)
-            );
+            writeFileSync(join(artifactsDir, "diff.json"), JSON.stringify(diff, null, 2));
           } else {
-            // Create two snapshots with delay and diff
             console.log("Creating snapshot v1...");
-            const snapshot1 = normalizedKind === "coin"
-              ? await buildCoinSnapshot({ scanResult, rpcUrl: rpc })
-              : await buildFASnapshot({ scanResult, rpcUrl: rpc });
+            const snapshot1 =
+              normalizedKind === "coin"
+                ? await buildCoinSnapshot({ scanResult, rpcUrl: rpc })
+                : await buildFASnapshot({ scanResult, rpcUrl: rpc });
 
-            writeFileSync(
-              join(artifactsDir, "snapshot_v1.json"),
-              JSON.stringify(snapshot1, null, 2)
-            );
+            writeFileSync(join(artifactsDir, "snapshot_v1.json"), JSON.stringify(snapshot1, null, 2));
 
             console.log(`Waiting ${delay}ms before creating snapshot v2...`);
             await new Promise((resolve) => setTimeout(resolve, delay));
 
-            // Re-scan for snapshot v2
-            const scanResult2 = normalizedKind === "fa"
-              ? await scanFAToken(target, { rpc_url: rpc })
-              : await scanCoinToken(target, { rpc_url: rpc });
+            const scanResult2 =
+              normalizedKind === "fa"
+                ? await scanFAToken(target, { rpc_url: rpc, proxy_base } as any)
+                : await scanCoinToken(target, { rpc_url: rpc, proxy_base } as any);
 
             console.log("Creating snapshot v2...");
-            const snapshot2 = normalizedKind === "coin"
-              ? await buildCoinSnapshot({ scanResult: scanResult2, rpcUrl: rpc })
-              : await buildFASnapshot({ scanResult: scanResult2, rpcUrl: rpc });
+            const snapshot2 =
+              normalizedKind === "coin"
+                ? await buildCoinSnapshot({ scanResult: scanResult2, rpcUrl: rpc })
+                : await buildFASnapshot({ scanResult: scanResult2, rpcUrl: rpc });
 
-            writeFileSync(
-              join(artifactsDir, "snapshot_v2.json"),
-              JSON.stringify(snapshot2, null, 2)
-            );
+            writeFileSync(join(artifactsDir, "snapshot_v2.json"), JSON.stringify(snapshot2, null, 2));
 
             const diff = diffSnapshots(snapshot1, snapshot2);
-            writeFileSync(
-              join(artifactsDir, "diff.json"),
-              JSON.stringify(diff, null, 2)
-            );
+            writeFileSync(join(artifactsDir, "diff.json"), JSON.stringify(diff, null, 2));
           }
         }
       }
 
       // Derive badge using authoritative policy
       const badgeResult = deriveBadge(scanResult);
-      
-      // Inject badge into scan result
+
       (scanResult as any).badge = badgeResult;
-      if (scanResult.summary.badge_eligibility) {
-        // Update badge_eligibility with badge result
-        scanResult.summary.badge_eligibility.security_verified = 
+      if ((scanResult as any).summary?.badge_eligibility) {
+        (scanResult as any).summary.badge_eligibility.security_verified =
           badgeResult.tier === "SECURITY_VERIFIED" || badgeResult.tier === "CONTINUOUSLY_MONITORED";
-        scanResult.summary.badge_eligibility.continuously_monitored = badgeResult.continuously_monitored;
-        scanResult.summary.badge_eligibility.expires_at_iso = badgeResult.expires_at_iso || undefined;
+        (scanResult as any).summary.badge_eligibility.continuously_monitored = badgeResult.continuously_monitored;
+        (scanResult as any).summary.badge_eligibility.expires_at_iso = badgeResult.expires_at_iso || undefined;
       }
 
       // Attach Supra Pulse if provided
@@ -578,17 +526,12 @@ program
         console.log(`Attaching Supra Pulse report: ${pulse}...`);
         pulseMetadata = await attachSupraPulse(pulse, artifactsDir);
         if (pulseMetadata) {
-          (scanResult as any).external_intel = {
-            supra_pulse: pulseMetadata,
-          };
+          (scanResult as any).external_intel = { supra_pulse: pulseMetadata };
         }
       }
 
       // Write report.json
-      writeFileSync(
-        join(out, "report.json"),
-        JSON.stringify(scanResult, null, 2)
-      );
+      writeFileSync(join(out, "report.json"), JSON.stringify(scanResult, null, 2));
 
       // Sign badge if private key is available
       let signedBadge: SignedBadge | null = null;
@@ -614,19 +557,23 @@ program
       }
 
       // Generate summary.json (includes badge)
-      const summary = generateSummaryJson(scanResult, normalizedKind, target, level, out, !!pdf, pulseMetadata, badgeResult, signedBadge);
-      writeFileSync(
-        join(out, "summary.json"),
-        JSON.stringify(summary, null, 2)
+      const summary = generateSummaryJson(
+        scanResult,
+        normalizedKind,
+        target,
+        level,
+        out,
+        !!pdf,
+        pulseMetadata,
+        badgeResult,
+        signedBadge
       );
+      writeFileSync(join(out, "summary.json"), JSON.stringify(summary, null, 2));
 
       // Write badge file if signed
       if (signedBadge) {
         const scanId = scanResult.request_id;
-        writeFileSync(
-          join(out, `badge_${scanId}.json`),
-          JSON.stringify(signedBadge, null, 2)
-        );
+        writeFileSync(join(out, `badge_${scanId}.json`), JSON.stringify(signedBadge, null, 2));
       }
 
       // Generate PDF if requested
@@ -638,14 +585,13 @@ program
       console.log(`\nScan complete!`);
       console.log(`  Report: ${join(out, "report.json")}`);
       console.log(`  Summary: ${join(out, "summary.json")}`);
-      if (pdf) {
-        console.log(`  PDF: ${join(out, "report.pdf")}`);
-      }
+      if (pdf) console.log(`  PDF: ${join(out, "report.pdf")}`);
     } catch (error) {
       console.error("Scan failed:", error instanceof Error ? error.message : String(error));
       process.exit(1);
     }
   });
 
-// Parse command line arguments
 program.parse(process.argv);
+
+
