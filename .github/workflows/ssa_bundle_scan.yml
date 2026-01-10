@@ -52,6 +52,12 @@ jobs:
       - name: Install (npm)
         run: npm install
 
+      - name: Install Playwright browsers (for Full Integrated PDF)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx playwright install --with-deps chromium
+
       - name: Build
         run: npm run build
 
@@ -88,7 +94,7 @@ jobs:
             exit 1
           fi
 
-      - name: Run SSA Bundle Scan
+      - name: Run SSA Bundle Scan (with Full Integrated final_report.pdf)
         shell: bash
         env:
           SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
@@ -137,6 +143,7 @@ jobs:
 
           mkdir -p "$bundle_dir/scans" "$bundle_dir/tmp"
 
+          # Resolve compiled CLI path
           CLI=""
           if [ -f dist/cli/ssa.js ]; then
             CLI="dist/cli/ssa.js"
@@ -151,6 +158,22 @@ jobs:
             exit 1
           fi
           echo "✅ Using CLI: $CLI"
+
+          # Resolve compiled generate-report path (HTML->PDF pipeline)
+          GEN=""
+          if [ -f dist/scripts/generate-report.js ]; then
+            GEN="dist/scripts/generate-report.js"
+          elif [ -f dist/src/scripts/generate-report.js ]; then
+            GEN="dist/src/scripts/generate-report.js"
+          else
+            echo "❌ generate-report script not found after build."
+            echo "Searched: dist/scripts/generate-report.js, dist/src/scripts/generate-report.js"
+            set +o pipefail
+            (find dist -type f -print | head -n 200) || true
+            set -o pipefail
+            exit 1
+          fi
+          echo "✅ Using generator: $GEN"
 
           # Normalize + validate bundle_json -> bundle_scans.json
           node --input-type=module - <<'NODE'
@@ -196,13 +219,14 @@ jobs:
 
           mv bundle_scans.json "$bundle_dir/bundle_scans.json"
 
+          # Determine report type branding
           tier_lc="$(echo "${pulse_tier:-}" | tr '[:upper:]' '[:lower:]' | xargs)"
           report_type="SSA_REPORT"
           if [[ "$tier_lc" == "premium" || "$tier_lc" == "spotlight" ]]; then
             report_type="SSA_FULL_INTEGRATED_REPORT"
           fi
 
-          # Pulse download (best effort)
+          # Pulse download (best effort; DO NOT fail bundle if pulse URL 404s)
           pulse_path=""
           pulse_error=""
           if [[ -n "$pulse_url" ]]; then
@@ -236,6 +260,7 @@ jobs:
           pulse_attached=false
           if [[ -n "$pulse_path" ]]; then pulse_attached=true; fi
 
+          # Bundle inputs for Base44 ingestion (deterministic location)
           ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           export BUNDLE_DIR="$bundle_dir"
           export TS_UTC="$ts_utc"
@@ -369,6 +394,75 @@ jobs:
           fi
           echo "✅ Combined PDF: $combined"
 
+          echo "🧾 Generating HTML->PDF integrated final_report.pdf (same pipeline as local)..."
+
+          # Choose scan JSONs for generator
+          wallet_json="$(find "$bundle_dir/scans" -maxdepth 2 -type f -name report.json | grep -i wallet | head -n 1 || true)"
+          fa_json="$(find "$bundle_dir/scans" -maxdepth 2 -type f -name report.json | grep -i '_fa_' | head -n 1 || true)"
+          coin_json="$(find "$bundle_dir/scans" -maxdepth 2 -type f -name report.json | grep -i '_coin_' | head -n 1 || true)"
+
+          primary_json=""
+          if [[ -n "$wallet_json" ]]; then
+            primary_json="$wallet_json"
+          elif [[ -n "$fa_json" ]]; then
+            primary_json="$fa_json"
+          elif [[ -n "$coin_json" ]]; then
+            primary_json="$coin_json"
+          else
+            primary_json="$(find "$bundle_dir/scans" -maxdepth 2 -type f -name report.json | head -n 1 || true)"
+          fi
+
+          if [[ -z "$primary_json" ]]; then
+            echo "❌ Could not find any scan report.json to feed generate-report."
+            find "$bundle_dir/scans" -maxdepth 3 -type f -print || true
+            exit 1
+          fi
+
+          # Only pass --pulse if it's a JSON (generator expects Pulse summary JSON)
+          pulse_arg=()
+          if [[ -n "$pulse_path" && "$pulse_path" == *.json ]]; then
+            pulse_arg=( --pulse "$pulse_path" )
+          fi
+
+          gen_out="$bundle_dir/tmp/_gen"
+          mkdir -p "$gen_out"
+
+          gen_args=( --scan "$primary_json" --project-name "$project" --ts-utc "$ts_utc" --out "$gen_out" --debug )
+          if [[ -n "$wallet_json" ]]; then gen_args+=( --wallet-scan "$wallet_json" ); fi
+          if [[ -n "$fa_json" ]]; then gen_args+=( --fa "$fa_json" ); fi
+          "${pulse_arg[@]}" && true
+
+          node "$GEN" "${gen_args[@]}" "${pulse_arg[@]}"
+
+          # Compute expected archive path (generate-report uses <out>/<project>/<timestampSafe>/final_report.pdf)
+          timestamp_safe="${ts_utc//:/-}"
+          # ts_utc from date -u has no milliseconds; keep logic aligned with generator
+          archive_path="$gen_out/$project/$timestamp_safe"
+
+          if [[ -f "$archive_path/final_report.pdf" ]]; then
+            cp "$archive_path/final_report.pdf" "$bundle_dir/final_report.pdf"
+            echo "✅ final_report.pdf saved to: $bundle_dir/final_report.pdf"
+          elif [[ -f "$archive_path/report.pdf" ]]; then
+            # Standard report fallback
+            cp "$archive_path/report.pdf" "$bundle_dir/final_report.pdf"
+            echo "✅ (fallback) report.pdf saved as final_report.pdf to: $bundle_dir/final_report.pdf"
+          else
+            echo "❌ Generator did not produce expected PDF."
+            echo "Expected one of:"
+            echo "  $archive_path/final_report.pdf"
+            echo "  $archive_path/report.pdf"
+            echo "Archive listing:"
+            (find "$gen_out" -maxdepth 5 -type f -print | head -n 200) || true
+            exit 1
+          fi
+
+          # Copy supporting files (inputs/checksum) into bundle root for ingestion convenience
+          for f in inputs.json checksum.txt supra_pulse_summary.json badge.json badge.sig; do
+            if [[ -f "$archive_path/$f" ]]; then
+              cp "$archive_path/$f" "$bundle_dir/$f"
+            fi
+          done
+
       - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
         with:
@@ -384,7 +478,7 @@ jobs:
           git config user.name "ssa-bot"
           git config user.email "ssa-bot@users.noreply.github.com"
 
-          # Try to add reports, but don't fail if ignored
+          # Try to add reports, but don't fail if ignored (Option A)
           set +e
           git add "reports/${{ github.event.inputs.project_name }}/"
           add_rc=$?
@@ -402,6 +496,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
