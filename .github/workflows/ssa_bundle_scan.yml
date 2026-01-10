@@ -70,7 +70,6 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -y
-          # qpdf is ideal; pdfunite is fallback
           sudo apt-get install -y qpdf poppler-utils
           qpdf --version || true
           pdfunite -v || true
@@ -345,9 +344,7 @@ jobs:
           echo "🧩 Building combined_report.pdf (qpdf/pdfunite)..."
           combined="$bundle_dir/combined_report.pdf"
 
-          # Prefer qpdf; fall back to pdfunite
           if command -v qpdf >/dev/null 2>&1; then
-            # build args safely
             mapfile -t pdfs < "$bundle_dir/tmp/pdfs.txt"
             if [[ "${#pdfs[@]}" -lt 1 ]]; then
               echo "❌ No PDFs listed in tmp/pdfs.txt"
@@ -380,14 +377,23 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Commit & Push
+      - name: Commit & Push (best-effort; reports may be gitignored)
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "ssa-bot"
           git config user.email "ssa-bot@users.noreply.github.com"
 
+          # Try to add reports, but don't fail if ignored
+          set +e
           git add "reports/${{ github.event.inputs.project_name }}/"
+          add_rc=$?
+          set -e
+
+          if [[ $add_rc -ne 0 ]]; then
+            echo "⚠️ reports/ appears to be gitignored; skipping commit. (Artifacts still uploaded.)"
+            exit 0
+          fi
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
@@ -396,6 +402,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
