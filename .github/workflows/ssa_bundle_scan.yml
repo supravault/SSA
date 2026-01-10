@@ -65,6 +65,16 @@ jobs:
           fi
           jq --version
 
+      - name: Ensure PDF merge tools (qpdf preferred)
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -y
+          # qpdf is ideal; pdfunite is fallback
+          sudo apt-get install -y qpdf poppler-utils
+          qpdf --version || true
+          pdfunite -v || true
+
       - name: Debug dist output (top 200)
         shell: bash
         run: |
@@ -143,6 +153,7 @@ jobs:
           fi
           echo "✅ Using CLI: $CLI"
 
+          # Normalize + validate bundle_json -> bundle_scans.json
           node --input-type=module - <<'NODE'
           import fs from "node:fs";
 
@@ -192,6 +203,7 @@ jobs:
             report_type="SSA_FULL_INTEGRATED_REPORT"
           fi
 
+          # Pulse download (best effort)
           pulse_path=""
           pulse_error=""
           if [[ -n "$pulse_url" ]]; then
@@ -330,34 +342,35 @@ jobs:
             echo "$scan_dir/${kind}_report.pdf" >> "$bundle_dir/tmp/pdfs.txt"
           done
 
-          echo "🧩 Building combined_report.pdf (pypdf only, no reportlab)..."
-          export BUNDLE_DIR="$bundle_dir"
+          echo "🧩 Building combined_report.pdf (qpdf/pdfunite)..."
+          combined="$bundle_dir/combined_report.pdf"
 
-          python3 - <<'PY'
-          import os, sys, subprocess
-          from pathlib import Path
+          # Prefer qpdf; fall back to pdfunite
+          if command -v qpdf >/dev/null 2>&1; then
+            # build args safely
+            mapfile -t pdfs < "$bundle_dir/tmp/pdfs.txt"
+            if [[ "${#pdfs[@]}" -lt 1 ]]; then
+              echo "❌ No PDFs listed in tmp/pdfs.txt"
+              exit 1
+            fi
+            qpdf --empty --pages "${pdfs[@]}" -- "$combined"
+          elif command -v pdfunite >/dev/null 2>&1; then
+            mapfile -t pdfs < "$bundle_dir/tmp/pdfs.txt"
+            if [[ "${#pdfs[@]}" -lt 1 ]]; then
+              echo "❌ No PDFs listed in tmp/pdfs.txt"
+              exit 1
+            fi
+            pdfunite "${pdfs[@]}" "$combined"
+          else
+            echo "❌ Neither qpdf nor pdfunite is available."
+            exit 1
+          fi
 
-          bundle_dir = Path(os.environ["BUNDLE_DIR"])
-          pdf_list = (bundle_dir / "tmp" / "pdfs.txt").read_text().splitlines()
-          if not pdf_list:
-            raise SystemExit("No PDFs to merge (tmp/pdfs.txt empty)")
-
-          subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "pypdf"])
-
-          from pypdf import PdfReader, PdfWriter
-
-          writer = PdfWriter()
-          for p in pdf_list:
-            r = PdfReader(p)
-            for page in r.pages:
-              writer.add_page(page)
-
-          out_path = bundle_dir / "combined_report.pdf"
-          with open(out_path, "wb") as f:
-            writer.write(f)
-
-          print("✅ Combined PDF:", out_path)
-          PY
+          if [[ ! -s "$combined" ]]; then
+            echo "❌ combined_report.pdf not created"
+            exit 1
+          fi
+          echo "✅ Combined PDF: $combined"
 
       - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
@@ -383,6 +396,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
