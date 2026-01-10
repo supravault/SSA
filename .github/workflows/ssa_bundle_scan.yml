@@ -29,7 +29,7 @@ on:
 
 jobs:
   bundle_scan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
 
@@ -143,7 +143,6 @@ jobs:
 
           mkdir -p "$bundle_dir/scans" "$bundle_dir/tmp"
 
-          # Resolve compiled CLI path
           CLI=""
           if [ -f dist/cli/ssa.js ]; then
             CLI="dist/cli/ssa.js"
@@ -159,7 +158,6 @@ jobs:
           fi
           echo "✅ Using CLI: $CLI"
 
-          # Resolve compiled generate-report path (HTML->PDF pipeline)
           GEN=""
           if [ -f dist/scripts/generate-report.js ]; then
             GEN="dist/scripts/generate-report.js"
@@ -175,7 +173,6 @@ jobs:
           fi
           echo "✅ Using generator: $GEN"
 
-          # Normalize + validate bundle_json -> bundle_scans.json
           node --input-type=module - <<'NODE'
           import fs from "node:fs";
 
@@ -219,14 +216,12 @@ jobs:
 
           mv bundle_scans.json "$bundle_dir/bundle_scans.json"
 
-          # Determine report type branding
           tier_lc="$(echo "${pulse_tier:-}" | tr '[:upper:]' '[:lower:]' | xargs)"
           report_type="SSA_REPORT"
           if [[ "$tier_lc" == "premium" || "$tier_lc" == "spotlight" ]]; then
             report_type="SSA_FULL_INTEGRATED_REPORT"
           fi
 
-          # Pulse download (best effort; DO NOT fail bundle if pulse URL 404s)
           pulse_path=""
           pulse_error=""
           if [[ -n "$pulse_url" ]]; then
@@ -260,7 +255,6 @@ jobs:
           pulse_attached=false
           if [[ -n "$pulse_path" ]]; then pulse_attached=true; fi
 
-          # Bundle inputs for Base44 ingestion (deterministic location)
           ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           export BUNDLE_DIR="$bundle_dir"
           export TS_UTC="$ts_utc"
@@ -396,7 +390,6 @@ jobs:
 
           echo "🧾 Generating HTML->PDF integrated final_report.pdf (same pipeline as local)..."
 
-          # Choose scan JSONs for generator
           wallet_json="$(find "$bundle_dir/scans" -maxdepth 2 -type f -name report.json | grep -i wallet | head -n 1 || true)"
           fa_json="$(find "$bundle_dir/scans" -maxdepth 2 -type f -name report.json | grep -i '_fa_' | head -n 1 || true)"
           coin_json="$(find "$bundle_dir/scans" -maxdepth 2 -type f -name report.json | grep -i '_coin_' | head -n 1 || true)"
@@ -418,7 +411,6 @@ jobs:
             exit 1
           fi
 
-          # Only pass --pulse if it's a JSON (generator expects Pulse summary JSON)
           pulse_arg=()
           if [[ -n "$pulse_path" && "$pulse_path" == *.json ]]; then
             pulse_arg=( --pulse "$pulse_path" )
@@ -430,20 +422,16 @@ jobs:
           gen_args=( --scan "$primary_json" --project-name "$project" --ts-utc "$ts_utc" --out "$gen_out" --debug )
           if [[ -n "$wallet_json" ]]; then gen_args+=( --wallet-scan "$wallet_json" ); fi
           if [[ -n "$fa_json" ]]; then gen_args+=( --fa "$fa_json" ); fi
-          "${pulse_arg[@]}" && true
 
           node "$GEN" "${gen_args[@]}" "${pulse_arg[@]}"
 
-          # Compute expected archive path (generate-report uses <out>/<project>/<timestampSafe>/final_report.pdf)
           timestamp_safe="${ts_utc//:/-}"
-          # ts_utc from date -u has no milliseconds; keep logic aligned with generator
           archive_path="$gen_out/$project/$timestamp_safe"
 
           if [[ -f "$archive_path/final_report.pdf" ]]; then
             cp "$archive_path/final_report.pdf" "$bundle_dir/final_report.pdf"
             echo "✅ final_report.pdf saved to: $bundle_dir/final_report.pdf"
           elif [[ -f "$archive_path/report.pdf" ]]; then
-            # Standard report fallback
             cp "$archive_path/report.pdf" "$bundle_dir/final_report.pdf"
             echo "✅ (fallback) report.pdf saved as final_report.pdf to: $bundle_dir/final_report.pdf"
           else
@@ -456,7 +444,6 @@ jobs:
             exit 1
           fi
 
-          # Copy supporting files (inputs/checksum) into bundle root for ingestion convenience
           for f in inputs.json checksum.txt supra_pulse_summary.json badge.json badge.sig; do
             if [[ -f "$archive_path/$f" ]]; then
               cp "$archive_path/$f" "$bundle_dir/$f"
@@ -478,7 +465,6 @@ jobs:
           git config user.name "ssa-bot"
           git config user.email "ssa-bot@users.noreply.github.com"
 
-          # Try to add reports, but don't fail if ignored (Option A)
           set +e
           git add "reports/${{ github.event.inputs.project_name }}/"
           add_rc=$?
@@ -496,6 +482,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
