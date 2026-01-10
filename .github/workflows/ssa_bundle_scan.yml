@@ -71,7 +71,10 @@ jobs:
           set -eu
           if [ -d dist ]; then
             echo "==== dist tree (top 200) ===="
+            # Avoid SIGPIPE breaking job
+            set +o pipefail
             (find dist -type f -print | head -n 200) || true
+            set -o pipefail
           else
             echo "dist/ does not exist after build!"
             exit 1
@@ -136,7 +139,9 @@ jobs:
           else
             echo "❌ SSA CLI not found after build."
             echo "Searched: dist/cli/ssa.js, dist/src/cli/ssa.js"
+            set +o pipefail
             (find dist -type f -print | head -n 200) || true
+            set -o pipefail
             exit 1
           fi
           echo "✅ Using CLI: $CLI"
@@ -192,33 +197,58 @@ jobs:
             report_type="SSA_FULL_INTEGRATED_REPORT"
           fi
 
-          # Download pulse if provided
+          # Download pulse if provided (BEST EFFORT: do not fail on 404/other)
           pulse_path=""
+          pulse_error=""
           if [[ -n "$pulse_url" ]]; then
-            echo "⬇️ Downloading Supra Pulse report..."
-            ext="${pulse_url##*.}"
+            echo "⬇️ Downloading Supra Pulse report (optional)..."
+
+            # infer ext from URL path (strip query)
+            url_no_q="${pulse_url%%\?*}"
+            ext="${url_no_q##*.}"
+            ext="$(echo "$ext" | tr '[:upper:]' '[:lower:]')"
+
             if [[ "$ext" =~ ^(pdf|json)$ ]]; then
               pulse_path="$bundle_dir/tmp/pulse_input.${ext}"
             else
               pulse_path="$bundle_dir/tmp/pulse_input.pdf"
             fi
-            curl -L --fail --retry 3 --retry-delay 1 -o "$pulse_path" "$pulse_url"
-            echo "✅ Pulse saved: $pulse_path"
+
+            set +e
+            http_code="$(curl -L -sS -w "%{http_code}" -o "$pulse_path" "$pulse_url")"
+            curl_rc=$?
+            set -e
+
+            if [[ $curl_rc -ne 0 || "$http_code" -lt 200 || "$http_code" -ge 300 ]]; then
+              echo "⚠️ Pulse download failed (rc=$curl_rc http=$http_code). Continuing without pulse."
+              rm -f "$pulse_path" || true
+              pulse_path=""
+              pulse_error="pulse_download_failed_rc_${curl_rc}_http_${http_code}"
+            else
+              echo "✅ Pulse saved: $pulse_path"
+            fi
           fi
 
           pulse_attached=false
-          if [[ -n "$pulse_url" ]]; then pulse_attached=true; fi
+          if [[ -n "$pulse_path" ]]; then pulse_attached=true; fi
 
-          # Write bundle_inputs.json safely (no heredoc)
+          # Write bundle_inputs.json safely (no TS non-null assertions)
           ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           export BUNDLE_DIR="$bundle_dir"
           export TS_UTC="$ts_utc"
           export REPORT_TYPE="$report_type"
           export PULSE_ATTACHED="$pulse_attached"
+          export PULSE_ERROR="$pulse_error"
+
           node --input-type=module - <<'NODE'
           import fs from "node:fs";
 
-          const bundleDir = process.env.BUNDLE_DIR!;
+          const bundleDir = process.env.BUNDLE_DIR;
+          if (!bundleDir) {
+            console.error("❌ Missing env BUNDLE_DIR");
+            process.exit(1);
+          }
+
           const scans = JSON.parse(fs.readFileSync(`${bundleDir}/bundle_scans.json`, "utf8"));
 
           const out = {
@@ -237,7 +267,8 @@ jobs:
             pulse: {
               attached: (process.env.PULSE_ATTACHED === "true"),
               tier: process.env.PULSE_TIER || "",
-              url: process.env.PULSE_URL || ""
+              url: process.env.PULSE_URL || "",
+              error: process.env.PULSE_ERROR || ""
             },
             bundle: scans
           };
@@ -400,6 +431,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
