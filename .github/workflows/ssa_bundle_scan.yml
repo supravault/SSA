@@ -75,9 +75,7 @@ jobs:
           pdfunite -v || true
           pdftotext -v || true
 
-      # IMPORTANT: Fix "browserType.launch: Executable doesn't exist"
-      # We install Chromium browser binaries for Playwright.
-      # (No --with-deps here to avoid apt dependency issues on some runner images.)
+      # Fix "browserType.launch: Executable doesn't exist" for generate-report.js
       - name: Install Playwright Chromium (for generate-report.js)
         shell: bash
         run: |
@@ -85,8 +83,8 @@ jobs:
           npx playwright --version
           npx playwright install chromium
 
-      # Fix SVG warnings caused by hardcoded path expecting /home/runner/work/SSA/tools/...
-      # GitHub workspace is /home/runner/work/SSA/SSA. We create a symlink one level up.
+      # Fix SVG warnings caused by generator expecting /home/runner/work/SSA/tools/...
+      # Workspace is /home/runner/work/SSA/SSA, so we symlink one level up.
       - name: Fix tools/ path for embedded SVGs (symlink)
         shell: bash
         run: |
@@ -410,7 +408,7 @@ jobs:
           echo "✅ Combined PDF: $combined"
 
           # ------------------------------------------------------------
-          # Build pulse_summary.json (robust JSON; NEVER empty/invalid)
+          # Build pulse_summary.json (robust JSON; fix bash syntax issues)
           # ------------------------------------------------------------
           pulse_summary_path=""
           if [[ -n "$pulse_path" && "$pulse_path" == *.pdf ]]; then
@@ -432,24 +430,25 @@ jobs:
                 source: "pulse_pdf_text_extract"
               }' > "$pulse_summary_path"
 
-            # Validate JSON file is parseable
-            node --input-type=module - <<'NODE'
+            # Validate JSON is parseable (correct bash+heredoc form)
+            node --input-type=module - "$pulse_summary_path" <<'NODE'
             import fs from "node:fs";
-            const p = process.argv[1];
+            const p = process.argv[2];
             const s = fs.readFileSync(p, "utf8");
             JSON.parse(s);
             console.log("✅ pulse_summary.json is valid JSON");
-            NODE "$pulse_summary_path"
+            NODE
+
           elif [[ -n "$pulse_path" && "$pulse_path" == *.json ]]; then
             pulse_summary_path="$pulse_path"
-            # Validate JSON file is parseable
-            node --input-type=module - <<'NODE'
+
+            node --input-type=module - "$pulse_summary_path" <<'NODE'
             import fs from "node:fs";
-            const p = process.argv[1];
+            const p = process.argv[2];
             const s = fs.readFileSync(p, "utf8");
             JSON.parse(s);
             console.log("✅ pulse JSON is valid JSON");
-            NODE "$pulse_summary_path"
+            NODE
           fi
 
           # ------------------------------------------------------------
@@ -519,6 +518,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
