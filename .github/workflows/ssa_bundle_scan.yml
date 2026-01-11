@@ -18,7 +18,6 @@ on:
           2) Object: {"scans":[...]}
         required: true
         type: string
-
       dispatch_id:
         description: "Optional: Base44 dispatch UUID (used to correlate ingestion)"
         required: false
@@ -98,7 +97,7 @@ jobs:
             exit 1
           fi
 
-      - name: Run SSA Bundle Scan
+      - name: Run SSA Bundle Scan (main)
         shell: bash
         env:
           SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
@@ -132,10 +131,10 @@ jobs:
 
           project="$(echo "${PROJECT_NAME}" | xargs)"
           label="$(echo "${PROJECT_LABEL:-}" | xargs)"
-          pulse_url="$(echo "${PULSE_URL:-}" | xargs)"
-          pulse_tier="$(echo "${PULSE_TIER:-}" | xargs)"
           dispatch_id="$(echo "${DISPATCH_ID:-}" | xargs)"
 
+          pulse_url="$(echo "${PULSE_URL:-}" | xargs)"
+          pulse_tier="$(echo "${PULSE_TIER:-}" | xargs)"
           pulse_score="$(echo "${PULSE_SCORE:-}" | xargs)"
           pulse_verdict="$(echo "${PULSE_VERDICT:-}" | xargs)"
           pulse_timestamp="$(echo "${PULSE_TIMESTAMP:-}" | xargs)"
@@ -192,10 +191,11 @@ jobs:
             ln -s "$GITHUB_WORKSPACE/tools/icons" "$parent_dir/tools/icons"
           fi
 
-          # Normalize + validate bundle_json -> bundle_scans.json
+          # Normalize + validate bundle_json -> bundle_scans.json (written into bundle_dir)
           node --input-type=module - <<'NODE'
           import fs from "node:fs";
 
+          const outPath = process.env.OUT_PATH;
           const raw = process.env.BUNDLE_JSON || "";
           if (!raw.trim()) { console.error("❌ bundle_json is empty"); process.exit(1); }
 
@@ -230,11 +230,14 @@ jobs:
             return { kind, level, target, modulesAllowlist };
           });
 
-          fs.writeFileSync("bundle_scans.json", JSON.stringify({ scans: norm }, null, 2));
-          console.log(`✅ Normalized ${norm.length} scan(s)`);
+          fs.writeFileSync(outPath, JSON.stringify({ scans: norm }, null, 2));
+          console.log(`✅ Normalized ${norm.length} scan(s) -> ${outPath}`);
           NODE
+        env:
+          OUT_PATH: ${{ github.workspace }}/_bundle_scans.json
 
-          mv bundle_scans.json "$bundle_dir/bundle_scans.json"
+          # Move normalized scans into bundle_dir
+          mv "$GITHUB_WORKSPACE/_bundle_scans.json" "$bundle_dir/bundle_scans.json"
 
           tier_lc="$(echo "${pulse_tier:-}" | tr '[:upper:]' '[:lower:]' | xargs)"
           report_type="SSA_REPORT"
@@ -267,140 +270,6 @@ jobs:
               rm -f "$pulse_path" || true
               pulse_path=""
               pulse_error="pulse_download_failed_rc_${curl_rc}_http_${http_code}"
-            else
-              echo "✅ Pulse saved: $pulse_path"
-            fi
-          fi
-
-          pulse_attached=false
-          if [[ -n "$pulse_path" ]]; then pulse_attached=true; fi
-
-          ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-
-          # Write bundle_inputs.json (include dispatch_id for Base44 correlation)
-          node --input-type=module - <<'NODE'
-          import fs from "node:fs";
-
-          const bundleDir = process.env.BUNDLE_DIR;
-          if (!bundleDir) { console.error("❌ Missing env BUNDLE_DIR"); process.exit(1); }
-
-          const scans = JSON.parse(fs.readFileSync(`${bundleDir}/bundle_scans.json`, "utf8"));
-
-          const out = {
-            dispatch_id: process.env.DISPATCH_ID || "",
-            run_id: process.env.RUN_ID,
-            run_attempt: process.env.RUN_ATTEMPT,
-            workflow: process.env.WORKFLOW_NAME,
-            repo: process.env.REPO,
-            ref: process.env.REF,
-            sha: process.env.SHA,
-            triggered_by: process.env.ACTOR,
-            ts_utc: process.env.TS_UTC,
-            project_name: process.env.PROJECT_NAME,
-            project_label: process.env.PROJECT_LABEL || "",
-            rpc: process.env.SUPRA_RPC_URL,
-            report_type: process.env.REPORT_TYPE,
-            pulse: {
-              attached: (process.env.PULSE_ATTACHED === "true"),
-              tier: process.env.PULSE_TIER || "",
-              url: process.env.PULSE_URL || "",
-              error: process.env.PULSE_ERROR || ""
-            },
-            bundle: scans
-          };
-
-          fs.writeFileSync(`${bundleDir}/bundle_inputs.json`, JSON.stringify(out, null, 2));
-          console.log("✅ Wrote bundle_inputs.json");
-          NODE
-        env:
-          BUNDLE_DIR: ${{ github.workspace }}/reports/${{ github.event.inputs.project_name }}/${{ github.run_id }}_BUNDLE
-          TS_UTC: ${{ github.run_id }}
-          REPORT_TYPE: SSA_REPORT
-          PULSE_ATTACHED: "false"
-          PULSE_ERROR: ""
-        continue-on-error: true
-
-      - name: Run SSA Bundle Scan (main)
-        shell: bash
-        env:
-          SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
-          PROJECT_NAME: ${{ github.event.inputs.project_name }}
-          PROJECT_LABEL: ${{ github.event.inputs.project_label }}
-          BUNDLE_JSON: ${{ github.event.inputs.bundle_json }}
-          DISPATCH_ID: ${{ github.event.inputs.dispatch_id }}
-          PULSE_URL: ${{ github.event.inputs.pulse_url }}
-          PULSE_TIER: ${{ github.event.inputs.pulse_tier }}
-          PULSE_SCORE: ${{ github.event.inputs.pulse_score }}
-          PULSE_VERDICT: ${{ github.event.inputs.pulse_verdict }}
-          PULSE_TIMESTAMP: ${{ github.event.inputs.pulse_timestamp }}
-          RUN_ID: ${{ github.run_id }}
-          RUN_ATTEMPT: ${{ github.run_attempt }}
-          WORKFLOW_NAME: ${{ github.workflow }}
-          REPO: ${{ github.repository }}
-          REF: ${{ github.ref }}
-          SHA: ${{ github.sha }}
-          ACTOR: ${{ github.actor }}
-          GITHUB_WORKSPACE: ${{ github.workspace }}
-        run: |
-          set -euo pipefail
-
-          project="$(echo "${PROJECT_NAME}" | xargs)"
-          label="$(echo "${PROJECT_LABEL:-}" | xargs)"
-          pulse_url="$(echo "${PULSE_URL:-}" | xargs)"
-          pulse_tier="$(echo "${PULSE_TIER:-}" | xargs)"
-          dispatch_id="$(echo "${DISPATCH_ID:-}" | xargs)"
-
-          pulse_score="$(echo "${PULSE_SCORE:-}" | xargs)"
-          pulse_verdict="$(echo "${PULSE_VERDICT:-}" | xargs)"
-          pulse_timestamp="$(echo "${PULSE_TIMESTAMP:-}" | xargs)"
-
-          safe_label=""
-          if [[ -n "$label" ]]; then safe_label="$(echo "$label" | tr -cd 'a-zA-Z0-9._-')"; fi
-
-          if [[ -n "$safe_label" ]]; then
-            bundle_dir="reports/${project}/${RUN_ID}_BUNDLE_${safe_label}"
-          else
-            bundle_dir="reports/${project}/${RUN_ID}_BUNDLE"
-          fi
-
-          mkdir -p "$bundle_dir/scans" "$bundle_dir/tmp"
-
-          CLI=""
-          if [ -f dist/cli/ssa.js ]; then CLI="dist/cli/ssa.js"; fi
-          if [ -z "$CLI" ] && [ -f dist/src/cli/ssa.js ]; then CLI="dist/src/cli/ssa.js"; fi
-          echo "✅ Using CLI: $CLI"
-
-          GEN=""
-          if [ -f dist/scripts/generate-report.js ]; then GEN="dist/scripts/generate-report.js"; fi
-          if [ -z "$GEN" ] && [ -f dist/src/scripts/generate-report.js ]; then GEN="dist/src/scripts/generate-report.js"; fi
-          if [[ -n "$GEN" ]]; then echo "✅ Using generator: $GEN"; else echo "⚠️ No generator found (final_report will be skipped)"; fi
-
-          # SVG path fix
-          parent_dir="$(cd "$GITHUB_WORKSPACE/.." && pwd)"
-          mkdir -p "$parent_dir/tools"
-          if [[ ! -e "$parent_dir/tools/icons" ]]; then
-            ln -s "$GITHUB_WORKSPACE/tools/icons" "$parent_dir/tools/icons"
-          fi
-
-          # Pulse download
-          pulse_path=""
-          if [[ -n "$pulse_url" ]]; then
-            url_no_q="${pulse_url%%\?*}"
-            ext="${url_no_q##*.}"
-            ext="$(echo "$ext" | tr '[:upper:]' '[:lower:]')"
-            if [[ "$ext" =~ ^(pdf|json)$ ]]; then
-              pulse_path="$bundle_dir/tmp/pulse_input.${ext}"
-            else
-              pulse_path="$bundle_dir/tmp/pulse_input.pdf"
-            fi
-            set +e
-            http_code="$(curl -L -sS -w "%{http_code}" -o "$pulse_path" "$pulse_url")"
-            curl_rc=$?
-            set -e
-            if [[ $curl_rc -ne 0 || "$http_code" -lt 200 || "$http_code" -ge 300 ]]; then
-              echo "⚠️ Pulse download failed (rc=$curl_rc http=$http_code). Continuing without pulse."
-              rm -f "$pulse_path" || true
-              pulse_path=""
             else
               echo "✅ Pulse saved: $pulse_path"
             fi
@@ -483,11 +352,11 @@ jobs:
           if [[ -n "$pulse_tier" ]]; then
             pulse_summary_path="$bundle_dir/tmp/pulse_summary.json"
 
-            # If user provided pulse inputs, use them (RELIABLE)
             if [[ -n "$pulse_score" || -n "$pulse_verdict" || -n "$pulse_timestamp" ]]; then
               echo "✅ Building pulse_summary.json from workflow inputs (Option A)..."
-              python3 -c '
+              python3 - <<'PY' > "$pulse_summary_path"
 import json, os
+
 tier = (os.environ.get("PULSE_TIER") or "").strip()
 score_raw = (os.environ.get("PULSE_SCORE") or "").strip()
 verdict = (os.environ.get("PULSE_VERDICT") or "").strip()
@@ -495,61 +364,78 @@ ts = (os.environ.get("PULSE_TIMESTAMP") or "").strip()
 
 score = None
 if score_raw:
-  try:
-    v = int(score_raw)
-    if 0 <= v <= 100: score = v
-  except: pass
+    try:
+        v = int(score_raw)
+        if 0 <= v <= 100:
+            score = v
+    except Exception:
+        pass
 
 out = {
-  "tier": tier,
-  "timestamp_utc": ts,
-  "score": score,
-  "verdict": verdict,
-  "source": "workflow_inputs"
+    "tier": tier,
+    "timestamp_utc": ts,
+    "score": score,
+    "verdict": verdict,
+    "source": "workflow_inputs",
 }
 print(json.dumps(out, indent=2))
-' > "$pulse_summary_path"
+PY
             else
-              # fallback attempt: JSON file directly if pulse_path is .json
               if [[ -n "$pulse_path" && "$pulse_path" == *.json ]]; then
                 echo "✅ Using pulse JSON directly."
                 cp -f "$pulse_path" "$pulse_summary_path"
               elif [[ -n "$pulse_path" && "$pulse_path" == *.pdf ]]; then
                 echo "⚠️ Attempting best-effort Pulse PDF text extract (may produce UNKNOWN)..."
                 pdftotext "$pulse_path" "$bundle_dir/tmp/pulse.txt" || true
-                python3 -c '
+
+                python3 - <<'PY' > "$pulse_summary_path"
 import json, re, os
-txt_path = os.path.join(os.environ["BUNDLE_DIR"], "tmp", "pulse.txt")
+
+bundle_dir = os.environ["BUNDLE_DIR"]
+txt_path = os.path.join(bundle_dir, "tmp", "pulse.txt")
 tier = (os.environ.get("PULSE_TIER") or "").strip()
 
 raw = ""
 try:
-  raw = open(txt_path, "r", encoding="utf-8", errors="ignore").read()
-except:
-  raw = ""
+    raw = open(txt_path, "r", encoding="utf-8", errors="ignore").read()
+except Exception:
+    raw = ""
 
 ts = ""
 m = re.search(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", raw)
-if m: ts = m.group(0)
+if m:
+    ts = m.group(0)
 
 score = None
-for pat in [r"risk\s*score[^0-9]{0,20}(\d{1,3})", r"\bscore[^0-9]{0,20}(\d{1,3})\b", r"(\d{1,3})\s*/\s*100"]:
-  mm = re.search(pat, raw, flags=re.IGNORECASE)
-  if mm:
-    try:
-      v = int(mm.group(1))
-      if 0 <= v <= 100:
-        score = v
-        break
-    except: pass
+for pat in [
+    r"risk\s*score[^0-9]{0,20}(\d{1,3})",
+    r"\bscore[^0-9]{0,20}(\d{1,3})\b",
+    r"(\d{1,3})\s*/\s*100",
+]:
+    mm = re.search(pat, raw, flags=re.IGNORECASE)
+    if mm:
+        try:
+            v = int(mm.group(1))
+            if 0 <= v <= 100:
+                score = v
+                break
+        except Exception:
+            pass
 
 verdict = ""
 mv = re.search(r"\bverdict\b[^A-Z]{0,20}([A-Z]{3,20})", raw)
-if mv: verdict = mv.group(1).strip()
+if mv:
+    verdict = mv.group(1).strip()
 
-out = {"tier": tier, "timestamp_utc": ts, "score": score, "verdict": verdict, "source": "pulse_pdf_text_extract"}
+out = {
+    "tier": tier,
+    "timestamp_utc": ts,
+    "score": score,
+    "verdict": verdict,
+    "source": "pulse_pdf_text_extract",
+}
 print(json.dumps(out, indent=2))
-' > "$pulse_summary_path"
+PY
               else
                 echo "ℹ️ No pulse inputs or pulse file; skipping pulse summary."
                 pulse_summary_path=""
@@ -597,6 +483,59 @@ print(json.dumps(out, indent=2))
             echo "ℹ️ Skipping final_report.pdf generation (missing generator or pulse summary)."
           fi
 
+          # Write bundle_inputs.json (Base44 correlation)
+          ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          pulse_attached="false"
+          if [[ -n "$pulse_path" ]]; then pulse_attached="true"; fi
+
+          node --input-type=module - <<'NODE'
+          import fs from "node:fs";
+
+          const bundleDir = process.env.BUNDLE_DIR;
+          const scans = JSON.parse(fs.readFileSync(`${bundleDir}/bundle_scans.json`, "utf8"));
+
+          const out = {
+            dispatch_id: process.env.DISPATCH_ID || "",
+            run_id: process.env.RUN_ID,
+            run_attempt: process.env.RUN_ATTEMPT,
+            workflow: process.env.WORKFLOW_NAME,
+            repo: process.env.REPO,
+            ref: process.env.REF,
+            sha: process.env.SHA,
+            triggered_by: process.env.ACTOR,
+            ts_utc: process.env.TS_UTC,
+            project_name: process.env.PROJECT_NAME,
+            project_label: process.env.PROJECT_LABEL || "",
+            rpc: process.env.SUPRA_RPC_URL,
+            report_type: process.env.REPORT_TYPE,
+            pulse: {
+              attached: (process.env.PULSE_ATTACHED === "true"),
+              tier: process.env.PULSE_TIER || "",
+              url: process.env.PULSE_URL || "",
+              error: process.env.PULSE_ERROR || ""
+            },
+            bundle: scans
+          };
+
+          fs.writeFileSync(`${bundleDir}/bundle_inputs.json`, JSON.stringify(out, null, 2));
+          console.log("✅ Wrote bundle_inputs.json");
+          NODE
+        env:
+          BUNDLE_DIR: ${{ github.workspace }}/reports/${{ github.event.inputs.project_name }}/${{ github.run_id }}_BUNDLE
+          TS_UTC: dummy
+          REPORT_TYPE: SSA_REPORT
+          PULSE_ATTACHED: dummy
+          PULSE_ERROR: dummy
+
+          # IMPORTANT: we override these immediately before node runs above using exported vars
+        # (We override the env at runtime right before writing bundle_inputs.json)
+          # shellcheck disable=SC2034
+          export BUNDLE_DIR="$bundle_dir"
+          export TS_UTC="$ts_utc"
+          export REPORT_TYPE="$report_type"
+          export PULSE_ATTACHED="$pulse_attached"
+          export PULSE_ERROR="$pulse_error"
+
       - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
         with:
@@ -620,7 +559,8 @@ print(json.dumps(out, indent=2))
           fi
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
-          git push 
+          git push
+
 
 
 
