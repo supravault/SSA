@@ -18,6 +18,10 @@ on:
           2) Object: {"scans":[...]}
         required: true
         type: string
+      dispatch_id:
+        description: "Optional: Base44 dispatch UUID (used to correlate ingestion)"
+        required: false
+        type: string
       pulse_url:
         description: "Optional: URL to Supra Pulse PDF/JSON (Base44 hosted URL or direct)"
         required: false
@@ -55,46 +59,16 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Ensure jq is available
-        shell: bash
-        run: |
-          set -euo pipefail
-          if ! command -v jq >/dev/null 2>&1; then
-            sudo apt-get update -y
-            sudo apt-get install -y jq
-          fi
-          jq --version
-
-      - name: Ensure PDF tools (qpdf preferred)
+      - name: Ensure system tools (jq, qpdf, poppler-utils, python3)
         shell: bash
         run: |
           set -euo pipefail
           sudo apt-get update -y
-          sudo apt-get install -y qpdf poppler-utils
+          sudo apt-get install -y jq qpdf poppler-utils python3
+          jq --version
           qpdf --version || true
-          pdfunite -v || true
-
-      # Fix Playwright error: browserType.launch: Executable doesn't exist
-      - name: Install Playwright Chromium (for generate-report.js)
-        shell: bash
-        run: |
-          set -euo pipefail
-          npx playwright --version
-          npx playwright install chromium
-
-      # Fix SVG warnings: generator looks for /home/runner/work/SSA/tools/... but workspace is /home/runner/work/SSA/SSA
-      - name: Fix tools/ path for embedded SVGs (symlink)
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-          parent_dir="$(dirname "$GITHUB_WORKSPACE")"   # /home/runner/work/SSA
-          if [ ! -e "$parent_dir/tools" ]; then
-            ln -s "$GITHUB_WORKSPACE/tools" "$parent_dir/tools"
-            echo "Created symlink: $parent_dir/tools -> $GITHUB_WORKSPACE/tools"
-          else
-            echo "Path exists already: $parent_dir/tools"
-          fi
+          pdftotext -v || true
+          python3 --version
 
       - name: Debug dist output (top 200)
         shell: bash
@@ -118,6 +92,7 @@ jobs:
           PROJECT_NAME: ${{ github.event.inputs.project_name }}
           PROJECT_LABEL: ${{ github.event.inputs.project_label }}
           BUNDLE_JSON: ${{ github.event.inputs.bundle_json }}
+          DISPATCH_ID: ${{ github.event.inputs.dispatch_id }}
           PULSE_URL: ${{ github.event.inputs.pulse_url }}
           PULSE_TIER: ${{ github.event.inputs.pulse_tier }}
 
@@ -140,6 +115,7 @@ jobs:
           label="$(echo "${PROJECT_LABEL:-}" | xargs)"
           pulse_url="$(echo "${PULSE_URL:-}" | xargs)"
           pulse_tier="$(echo "${PULSE_TIER:-}" | xargs)"
+          dispatch_id="$(echo "${DISPATCH_ID:-}" | xargs)"
 
           if [[ ! "$project" =~ ^[a-zA-Z0-9._-]+$ ]]; then
             echo "❌ project_name contains invalid characters. Allowed: letters, numbers, . _ -"
@@ -182,10 +158,23 @@ jobs:
           elif [ -f dist/src/scripts/generate-report.js ]; then
             GEN="dist/src/scripts/generate-report.js"
           fi
+
           if [[ -n "$GEN" ]]; then
             echo "✅ Using generator: $GEN"
           else
-            echo "⚠️ generate-report script not found in dist/. We will skip final_report.pdf generation."
+            echo "⚠️ generate-report.js not found in dist/. final_report.pdf will be skipped."
+          fi
+
+          # -------------------------------------------------------------------
+          # Fix SVG path mismatch in Actions:
+          # generator logs look for /home/runner/work/SSA/tools/icons/*
+          # but actual path is /home/runner/work/SSA/SSA/tools/icons/*
+          # Create a symlink so both exist.
+          # -------------------------------------------------------------------
+          parent_dir="$(cd "$GITHUB_WORKSPACE/.." && pwd)"
+          mkdir -p "$parent_dir/tools"
+          if [[ ! -e "$parent_dir/tools/icons" ]]; then
+            ln -s "$GITHUB_WORKSPACE/tools/icons" "$parent_dir/tools/icons"
           fi
 
           # Normalize + validate bundle_json -> bundle_scans.json
@@ -232,19 +221,17 @@ jobs:
 
           mv bundle_scans.json "$bundle_dir/bundle_scans.json"
 
-          # Determine report type (metadata)
           tier_lc="$(echo "${pulse_tier:-}" | tr '[:upper:]' '[:lower:]' | xargs)"
           report_type="SSA_REPORT"
           if [[ "$tier_lc" == "premium" || "$tier_lc" == "spotlight" ]]; then
             report_type="SSA_FULL_INTEGRATED_REPORT"
           fi
 
-          # Pulse download (best effort)
+          # Pulse download (best effort; never fail the run)
           pulse_path=""
           pulse_error=""
           if [[ -n "$pulse_url" ]]; then
             echo "⬇️ Downloading Supra Pulse report (optional)..."
-
             url_no_q="${pulse_url%%\?*}"
             ext="${url_no_q##*.}"
             ext="$(echo "$ext" | tr '[:upper:]' '[:lower:]')"
@@ -273,8 +260,9 @@ jobs:
           pulse_attached=false
           if [[ -n "$pulse_path" ]]; then pulse_attached=true; fi
 
-          # Write bundle_inputs.json
           ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+          # Write bundle_inputs.json (include dispatch_id for Base44 correlation)
           export BUNDLE_DIR="$bundle_dir"
           export TS_UTC="$ts_utc"
           export REPORT_TYPE="$report_type"
@@ -290,6 +278,7 @@ jobs:
           const scans = JSON.parse(fs.readFileSync(`${bundleDir}/bundle_scans.json`, "utf8"));
 
           const out = {
+            dispatch_id: process.env.DISPATCH_ID || "",
             run_id: process.env.RUN_ID,
             run_attempt: process.env.RUN_ATTEMPT,
             workflow: process.env.WORKFLOW_NAME,
@@ -381,23 +370,14 @@ jobs:
           done
 
           # Merge scan PDFs into combined_report.pdf
-          echo "🧩 Building combined_report.pdf (qpdf/pdfunite)..."
+          echo "🧩 Building combined_report.pdf (qpdf)..."
           combined="$bundle_dir/combined_report.pdf"
-
           mapfile -t pdfs < "$bundle_dir/tmp/pdfs.txt"
           if [[ "${#pdfs[@]}" -lt 1 ]]; then
             echo "❌ No PDFs listed in tmp/pdfs.txt"
             exit 1
           fi
-
-          if command -v qpdf >/dev/null 2>&1; then
-            qpdf --empty --pages "${pdfs[@]}" -- "$combined"
-          elif command -v pdfunite >/dev/null 2>&1; then
-            pdfunite "${pdfs[@]}" "$combined"
-          else
-            echo "❌ Neither qpdf nor pdfunite is available."
-            exit 1
-          fi
+          qpdf --empty --pages "${pdfs[@]}" -- "$combined"
 
           if [[ ! -s "$combined" ]]; then
             echo "❌ combined_report.pdf not created"
@@ -406,65 +386,123 @@ jobs:
           echo "✅ Combined PDF: $combined"
 
           # ------------------------------------------------------------
-          # Pulse summary (NO PDF parsing; always valid JSON; prevents exit code 2)
+          # Build pulse_summary.json for final integrated report
+          # - If pulse is JSON: use it directly
+          # - If pulse is PDF: pdftotext + python regex extraction
           # ------------------------------------------------------------
           pulse_summary_path=""
-          if [[ -n "$pulse_path" ]]; then
+          if [[ -n "$pulse_path" && "$pulse_path" == *.json ]]; then
+            pulse_summary_path="$pulse_path"
+          elif [[ -n "$pulse_path" && "$pulse_path" == *.pdf ]]; then
+            echo "🧠 Extracting Pulse summary from PDF text (best effort)..."
+            pdftotext "$pulse_path" "$bundle_dir/tmp/pulse.txt" || true
+
             pulse_summary_path="$bundle_dir/tmp/pulse_summary.json"
-            jq -n \
-              --arg tier "${pulse_tier:-}" \
-              --arg url "${pulse_url:-}" \
-              --arg ts "${ts_utc:-}" \
-              --arg source "$(basename "$pulse_path")" \
-              '{
-                tier: (if ($tier|length)>0 then $tier else null end),
-                score: null,
-                timestamp_utc: (if ($ts|length)>0 then $ts else null end),
-                pulse_url: (if ($url|length)>0 then $url else null end),
-                source: ("pulse_attached:" + $source)
-              }' > "$pulse_summary_path"
-            echo "✅ Wrote pulse_summary.json: $pulse_summary_path"
+            python3 - <<'PY'
+          import json, re, os
+          txt_path = os.path.join(os.environ["BUNDLE_DIR"], "tmp", "pulse.txt")
+          out_path = os.path.join(os.environ["BUNDLE_DIR"], "tmp", "pulse_summary.json")
+
+          tier = (os.environ.get("PULSE_TIER") or "").strip()
+          raw = ""
+          try:
+            with open(txt_path, "r", encoding="utf-8", errors="ignore") as f:
+              raw = f.read()
+          except Exception:
+            raw = ""
+
+          # timestamp: ISO Z
+          ts = ""
+          m = re.search(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", raw)
+          if m: ts = m.group(0)
+
+          # score heuristics: look for "score" near a number, or "Risk Score: 82", "Score 82/100"
+          score = None
+          patterns = [
+            r"risk\s*score[^0-9]{0,20}(\d{1,3})",
+            r"\bscore[^0-9]{0,20}(\d{1,3})\b",
+            r"(\d{1,3})\s*/\s*100",
+          ]
+          for pat in patterns:
+            mm = re.search(pat, raw, flags=re.IGNORECASE)
+            if mm:
+              try:
+                val = int(mm.group(1))
+                if 0 <= val <= 100:
+                  score = val
+                  break
+              except Exception:
+                pass
+
+          # verdict heuristics if present
+          verdict = ""
+          mv = re.search(r"\bverdict\b[^A-Z]{0,20}([A-Z]{3,20})", raw)
+          if mv:
+            verdict = mv.group(1).strip()
+
+          out = {
+            "tier": tier,
+            "timestamp_utc": ts,
+            "score": score,
+            "verdict": verdict,
+            "source": "pulse_pdf_text_extract"
+          }
+
+          with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(out, f, indent=2)
+          print("✅ Wrote pulse_summary.json:", out_path)
+          PY
           fi
 
           # ------------------------------------------------------------
-          # Generate JONES-style final_report.pdf using generate-report.js
+          # Generate final_report.pdf (JONES-style) via generate-report.js
+          # Requires: Playwright browsers installed + pulse_summary_path present
           # ------------------------------------------------------------
           if [[ -n "$GEN" && -n "$pulse_summary_path" ]]; then
-            echo "🏁 Generating final_report.pdf (Full Integrated via generate-report.js)..."
+            echo "🧩 Installing Playwright browser (chromium) for final report..."
+            export PLAYWRIGHT_BROWSERS_PATH=0
+            npx playwright install --with-deps chromium
 
-            coin_report="$(ls -1 "$bundle_dir"/scans/*_coin_L*/report.json 2>/dev/null | head -n 1 || true)"
-            fa_report="$(ls -1 "$bundle_dir"/scans/*_fa_L*/report.json 2>/dev/null | head -n 1 || true)"
-            wallet_report="$(ls -1 "$bundle_dir"/scans/*_wallet_L*/report.json 2>/dev/null | head -n 1 || true)"
-
-            primary_scan=""
-            if [[ -n "$coin_report" ]]; then primary_scan="$coin_report"; fi
-            if [[ -z "$primary_scan" && -n "$fa_report" ]]; then primary_scan="$fa_report"; fi
-            if [[ -z "$primary_scan" && -n "$wallet_report" ]]; then primary_scan="$wallet_report"; fi
-
+            echo "🏁 Generating final_report.pdf via generate-report.js..."
+            # Prefer coin scan as primary, else FA, else wallet
+            primary_scan="$(ls -1 "$bundle_dir"/scans/*_coin_L*/report.json 2>/dev/null | head -n 1 || true)"
             if [[ -z "$primary_scan" ]]; then
-              echo "⚠️ No scan report.json files found for final integrated report."
-            else
-              args=( --scan "$primary_scan" --pulse "$pulse_summary_path" --project-name "$project" --ts-utc "$ts_utc" --out "$bundle_dir" )
+              primary_scan="$(ls -1 "$bundle_dir"/scans/*_fa_L*/report.json 2>/dev/null | head -n 1 || true)"
+            fi
+            if [[ -z "$primary_scan" ]]; then
+              primary_scan="$(ls -1 "$bundle_dir"/scans/*_wallet_L*/report.json 2>/dev/null | head -n 1 || true)"
+            fi
 
-              if [[ -n "$wallet_report" && "$wallet_report" != "$primary_scan" ]]; then
-                args+=( --wallet-scan "$wallet_report" )
+            wallet_scan="$(ls -1 "$bundle_dir"/scans/*_wallet_L*/report.json 2>/dev/null | head -n 1 || true)"
+            fa_scan="$(ls -1 "$bundle_dir"/scans/*_fa_L*/report.json 2>/dev/null | head -n 1 || true)"
+
+            if [[ -n "$primary_scan" ]]; then
+              args=( --scan "$primary_scan" --pulse "$pulse_summary_path" --project-name "$project" --ts-utc "$ts_utc" --out "$bundle_dir/tmp/_gen" )
+              if [[ -n "$wallet_scan" && "$wallet_scan" != "$primary_scan" ]]; then
+                args+=( --wallet-scan "$wallet_scan" )
               fi
-              if [[ -n "$fa_report" && "$fa_report" != "$primary_scan" ]]; then
-                args+=( --fa "$fa_report" )
+              if [[ -n "$fa_scan" && "$fa_scan" != "$primary_scan" ]]; then
+                args+=( --fa "$fa_scan" )
               fi
 
               node "$GEN" "${args[@]}"
 
-              newest_final="$(find "$bundle_dir/$project" -name final_report.pdf -print 2>/dev/null | sort | tail -n 1 || true)"
+              # Find the newest generated final_report.pdf
+              set +o pipefail
+              newest_final="$(find "$bundle_dir/tmp/_gen" -name final_report.pdf -print | sort | tail -n 1 || true)"
+              set -o pipefail
+
               if [[ -n "$newest_final" ]]; then
                 cp -f "$newest_final" "$bundle_dir/final_report.pdf"
                 echo "✅ final_report.pdf ready: $bundle_dir/final_report.pdf"
               else
-                echo "⚠️ generate-report ran but final_report.pdf not found under $bundle_dir/$project/"
+                echo "⚠️ generate-report ran but final_report.pdf not found under $bundle_dir/tmp/_gen"
               fi
+            else
+              echo "⚠️ No scan report.json found; skipping final integrated report."
             fi
           else
-            echo "ℹ️ Skipping final_report.pdf generation (missing generator or pulse attachment)."
+            echo "ℹ️ Skipping final_report.pdf generation (missing generator or pulse summary)."
           fi
 
       - name: Upload artifacts (debug)
@@ -482,7 +520,7 @@ jobs:
           git config user.name "ssa-bot"
           git config user.email "ssa-bot@users.noreply.github.com"
 
-          # Force add even if gitignored (Base44 needs repo contents, not artifacts)
+          # Force add even if gitignored (Base44 reads repo contents)
           git add -f "reports/${{ github.event.inputs.project_name }}/"
 
           if git diff --cached --quiet; then
@@ -492,6 +530,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
