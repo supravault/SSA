@@ -1,6 +1,6 @@
 name: SSA Bundle Scan
 
-'on':
+on:
   workflow_dispatch:
     inputs:
       project_name:
@@ -51,12 +51,7 @@ name: SSA Bundle Scan
   # Optional “continuous monitoring” runner:
   # - Add a repo file: config/continuous_watch.json
   #   Format:
-  #     {
-  #       "project_name":"JONES",
-  #       "project_label":"AUTO",
-  #       "bundle_json":{"scans":[{"kind":"fa","level":5,"target":"0x..."}]},
-  #       "pulse_url":"", "pulse_tier":"", "pulse_project":"", "pulse_score":"", "pulse_verdict":"", "pulse_timestamp":"", "dispatch_id":""
-  #     }
+  #     {"project_name":"JONES","project_label":"AUTO","bundle_json":{"scans":[{"kind":"fa","level":5,"target":"0x..."}]}}
   schedule:
     - cron: "0 3 * * *"
 
@@ -67,7 +62,7 @@ jobs:
       contents: write
 
     concurrency:
-      group: ssa-bundle-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+      group: "ssa-bundle-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}"
       cancel-in-progress: false
 
     steps:
@@ -82,7 +77,7 @@ jobs:
           node-version: "20"
           cache: "npm"
 
-      # npm ci fails if lockfile is out-of-sync (e.g., tsx missing)
+      # npm ci can fail if lockfile is out-of-sync (e.g., missing tsx)
       - name: Install (npm)
         run: npm install
 
@@ -94,12 +89,11 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -y
-          sudo apt-get install -y jq qpdf poppler-utils python3 curl
+          sudo apt-get install -y jq qpdf poppler-utils python3
           jq --version
           qpdf --version || true
           pdftotext -v || true
           python3 --version
-          curl --version | head -n 1 || true
 
       - name: Run SSA Bundle Scan (main)
         shell: bash
@@ -208,7 +202,20 @@ jobs:
           fi
           echo "✅ Using CLI: $CLI"
 
-          # Fix SVG path mismatch in Actions by ensuring ../tools/icons exists (keeps all existing behavior)
+          # Resolve report generator (optional)
+          GEN=""
+          if [[ -f dist/scripts/generate-report.js ]]; then
+            GEN="dist/scripts/generate-report.js"
+          elif [[ -f dist/src/scripts/generate-report.js ]]; then
+            GEN="dist/src/scripts/generate-report.js"
+          fi
+          if [[ -n "$GEN" ]]; then
+            echo "✅ Using generator: $GEN"
+          else
+            echo "⚠️ generate-report.js not found in dist/. final_report.pdf will be skipped."
+          fi
+
+          # Fix SVG path mismatch in Actions by ensuring ../tools/icons exists
           parent_dir="$(cd "$GITHUB_WORKSPACE/.." && pwd)"
           mkdir -p "$parent_dir/tools"
           if [[ ! -e "$parent_dir/tools/icons" ]]; then
@@ -396,8 +403,7 @@ jobs:
 
           # ------------------------------------------
           # Pulse summary (READ PDF / JSON)
-          # Verdict must not remain UNKNOWN if pulse was provided.
-          # Score is treated as "goodness" (higher is safer).
+          # NOTE: Pulse score is "goodness" (higher is safer)
           # ------------------------------------------
           pulse_summary_path=""
           if [[ -n "${pulse_tier:-}" || -n "${pulse_path:-}" ]]; then
@@ -590,7 +596,7 @@ PY
       - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
         with:
-          name: ssa-bundle-${{ github.event_name }}-${{ github.run_id }}
+          name: "ssa-bundle-${{ github.event_name }}-${{ github.run_id }}"
           path: reports/
           if-no-files-found: error
           retention-days: 7
@@ -611,6 +617,7 @@ PY
 
           git commit -m "SSA BUNDLE: run ${{ github.run_id }} (${{ github.event_name }})"
           git push
+
 
 
 
