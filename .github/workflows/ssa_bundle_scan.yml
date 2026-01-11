@@ -236,7 +236,7 @@ jobs:
           mv "$tmp_norm" "$out_json"
           echo "✅ Wrote bundle_scans.json: $out_json"
 
-      - name: Download Pulse (best effort)
+      - name: Download Pulse (best effort) + write pulse.txt if PDF
         shell: bash
         run: |
           set -euo pipefail
@@ -269,6 +269,18 @@ jobs:
               pulse_error="pulse_download_failed_rc_${curl_rc}_http_${http_code}"
             else
               echo "✅ Pulse saved: $pulse_path"
+            fi
+          fi
+
+          # If PDF, write pulse.txt alongside it (this is what we’ll derive score/verdict from)
+          if [[ -n "${pulse_path:-}" && "${pulse_path,,}" == *.pdf && -f "$pulse_path" ]]; then
+            pulse_txt="$bundle_dir/tmp/pulse.txt"
+            pdftotext -raw "$pulse_path" "$pulse_txt" || true
+            if [[ -s "$pulse_txt" ]]; then
+              echo "✅ pulse.txt ready: $pulse_txt"
+            else
+              echo "⚠️ pulse.txt empty/unavailable after pdftotext"
+              rm -f "$pulse_txt" || true
             fi
           fi
 
@@ -383,6 +395,7 @@ jobs:
             mv "$scan_dir/report.pdf" "$scan_dir/${kind}_report.pdf"
             echo "$scan_dir/${kind}_report.pdf" >> "$bundle_dir/tmp/pdfs.txt"
 
+            # ---- FA L5: mark as "continuous monitored" + next_run_hint ----
             if [[ "$kind" == "fa" && "$level" == "5" && -f "$scan_dir/report.json" ]]; then
               tmp_report="$scan_dir/tmp_report.json"
               jq '
@@ -404,7 +417,7 @@ jobs:
           qpdf --empty --pages "${pdfs[@]}" -- "$combined"
           echo "✅ Combined PDF: $combined"
 
-      - name: Build pulse_summary.json (best effort, bash only)
+      - name: Build pulse_summary.json (derive score/verdict from pulse.txt)
         shell: bash
         run: |
           set -euo pipefail
@@ -413,11 +426,10 @@ jobs:
 
           pulse_tier="$(cat .pulse_tier || true)"
           pulse_project="$(cat .pulse_project || true)"
-          pulse_score="$(cat .pulse_score || true)"
-          pulse_verdict="$(cat .pulse_verdict || true)"
+          pulse_score_in="$(cat .pulse_score || true)"
+          pulse_verdict_in="$(cat .pulse_verdict || true)"
           pulse_timestamp="$(cat .pulse_timestamp || true)"
 
-          # Only build summary if tier or a pulse file exists
           pulse_summary_path=""
           if [[ -n "${pulse_tier:-}" || -n "${pulse_path:-}" ]]; then
             pulse_summary_path="$bundle_dir/tmp/pulse_summary.json"
@@ -427,6 +439,7 @@ jobs:
             score=""
             verdict=""
             ts=""
+            source="missing_pulse"
 
             clamp_score() {
               local s="$1"
@@ -437,101 +450,46 @@ jobs:
               fi
             }
 
-            # YOUR RULE:
-            # - if total score >= 90 -> EXCELLENT
-            # - if total score < 90 -> "SCORE_<n>"
-            verdict_from_score() {
+            verdict_from_score_A() {
               local s="$1"
-              if [[ -z "$s" ]]; then echo ""; return; fi
-              if (( s >= 90 )); then echo "EXCELLENT"; return; fi
-              echo "SCORE_${s}"
+              if [[ -z "$s" ]]; then
+                echo "UNKNOWN"
+                return
+              fi
+              if (( s >= 90 )); then
+                echo "EXCELLENT"
+              else
+                echo "SCORE_${s}"
+              fi
             }
 
-            source="missing_pulse"
-
-            # 1) workflow overrides still win if user manually sets them
-            if [[ -n "${pulse_score:-}" || -n "${pulse_verdict:-}" || -n "${pulse_timestamp:-}" ]]; then
-              score="$(clamp_score "$pulse_score")"
-              verdict="$(echo "${pulse_verdict:-}" | tr '[:lower:]' '[:upper:]' | xargs || true)"
+            # 1) workflow overrides (highest priority)
+            if [[ -n "${pulse_score_in:-}" || -n "${pulse_verdict_in:-}" || -n "${pulse_timestamp:-}" ]]; then
+              score="$(clamp_score "$pulse_score_in")"
+              verdict="$(echo "${pulse_verdict_in:-}" | tr '[:lower:]' '[:upper:]' | xargs || true)"
               ts="$(echo "${pulse_timestamp:-}" | xargs || true)"
               source="workflow_inputs"
             fi
 
-            # 2) If we have pulse.txt (preferred), parse it
-            #    Common locations:
-            #      - bundle_dir/tmp/pulse.txt
-            #      - bundle_dir/tmp/pulse_text.txt (from pdftotext)
-            #      - bundle_dir/tmp/pulse_raw.txt (optional)
-            txt_src=""
-            if [[ "$source" == "missing_pulse" ]]; then
-              if [[ -f "$bundle_dir/tmp/pulse.txt" ]]; then
-                txt_src="$bundle_dir/tmp/pulse.txt"
-              fi
+            # 2) derive from pulse.txt (Option A)
+            pulse_txt="$bundle_dir/tmp/pulse.txt"
+            if [[ "$source" == "missing_pulse" && -f "$pulse_txt" ]]; then
+              # take the FIRST standalone number 0-100 from pulse.txt (matches your sample where 91 is alone)
+              found="$(grep -Eo '^[[:space:]]*[0-9]{1,3}[[:space:]]*$' "$pulse_txt" | head -n 1 | tr -d '[:space:]' || true)"
+              score="$(clamp_score "${found:-}")"
+              source="pulse_txt"
             fi
 
-            # 3) If no pulse.txt but we have PDF, extract to pulse_text.txt and parse that
-            if [[ "$source" == "missing_pulse" && -z "$txt_src" && -n "${pulse_path:-}" && "${pulse_path,,}" == *.pdf && -f "$pulse_path" ]]; then
-              txt="$bundle_dir/tmp/pulse_text.txt"
-              pdftotext -raw "$pulse_path" "$txt" || true
-              if [[ -f "$txt" ]]; then
-                txt_src="$txt"
-              fi
-            fi
-
-            attestation_text=""
-            if [[ "$source" == "missing_pulse" && -n "$txt_src" && -f "$txt_src" ]]; then
-              # timestamp (if present)
-              ts="$(grep -Eo '\b[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z\b' "$txt_src" | head -n 1 || true)"
-
-              # tier (if present in text; keep input as primary display tier)
-              t_in_txt="$(grep -Eo 'Tier:[[:space:]]*[A-Za-z]+' "$txt_src" | head -n 1 | sed 's/Tier:[[:space:]]*//' | xargs || true)"
-              if [[ -n "$t_in_txt" && -z "${pulse_tier:-}" ]]; then
-                tier="$t_in_txt"
-              fi
-
-              # score: prefer a standalone line that is a number (matches your pulse.txt where 91 is on its own line)
-              s0="$(grep -E '^[[:space:]]*[0-9]{1,3}[[:space:]]*$' "$txt_src" | head -n 1 | tr -d '[:space:]' || true)"
-              score="$(clamp_score "$s0")"
-
-              # fallback score patterns
-              if [[ -z "$score" ]]; then
-                s1="$(grep -Eo '\b([0-9]{1,3})\s*/\s*100\b' "$txt_src" | head -n 1 | grep -Eo '[0-9]{1,3}' || true)"
-                score="$(clamp_score "$s1")"
-              fi
-
-              # Attestation text: keep it readable (first ~200 lines), strip nulls
-              attestation_text="$(python3 - <<'PY'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-raw = p.read_text(encoding="utf-8", errors="ignore").replace("\x00","")
-lines = [ln.rstrip() for ln in raw.splitlines()]
-# drop super-empty leading/trailing blocks
-while lines and not lines[0].strip(): lines.pop(0)
-while lines and not lines[-1].strip(): lines.pop()
-# limit for JSON size
-lines = lines[:200]
-print("\n".join(lines))
-PY
-"$txt_src")"
-
-              source="pulse_text"
-            fi
-
-            # 4) JSON parsing if pulse_path is JSON (and still missing)
+            # 3) JSON fallback (if no pulse.txt and a .json exists)
             if [[ "$source" == "missing_pulse" && -n "${pulse_path:-}" && "${pulse_path,,}" == *.json && -f "$pulse_path" ]]; then
-              score="$(jq -r '(.score // .risk_score // .riskScore // .total_score // .overall_score // .overallScore // empty) | tostring' "$pulse_path" 2>/dev/null | head -n 1 || true)"
-              score="$(clamp_score "$score")"
-              verdict="$(jq -r '(.verdict // .risk // .status // .risk_level // .riskLevel // .rating // empty) | tostring' "$pulse_path" 2>/dev/null | head -n 1 | tr '[:lower:]' '[:upper:]' | xargs || true)"
-              ts="$(jq -r '(.timestamp // .timestamp_utc // .ts // .date // .generated_at // .generatedAt // empty) | tostring' "$pulse_path" 2>/dev/null | head -n 1 | xargs || true)"
+              raw_score="$(jq -r '(.score // .risk_score // .riskScore // .total_score // .overall_score // .overallScore // empty) | tostring' "$pulse_path" 2>/dev/null | head -n 1 || true)"
+              score="$(clamp_score "$raw_score")"
               source="pulse_json"
             fi
 
-            # verdict:
-            # - if verdict explicitly provided, keep it
-            # - else derive from score using YOUR rule
+            # verdict per Option A (unless explicitly provided)
             if [[ -z "$verdict" ]]; then
-              verdict="$(verdict_from_score "$score")"
-              if [[ -z "$verdict" ]]; then verdict="UNKNOWN"; fi
+              verdict="$(verdict_from_score_A "$score")"
             fi
 
             jq -n \
@@ -541,15 +499,13 @@ PY
               --arg verdict "$verdict" \
               --arg source "$source" \
               --arg score_str "${score:-}" \
-              --arg attestation_text "${attestation_text:-}" \
               '{
                 tier: $tier,
                 project: $project,
                 timestamp_utc: $timestamp_utc,
                 score: (if $score_str=="" then null else ($score_str|tonumber) end),
                 verdict: $verdict,
-                source: $source,
-                attestation_text: (if $attestation_text=="" then null else $attestation_text end)
+                source: $source
               }' > "$pulse_summary_path"
 
             echo "✅ pulse_summary.json ready: $pulse_summary_path"
@@ -706,6 +662,7 @@ PY
 
           git commit -m "SSA BUNDLE: run ${{ github.run_id }} (${{ github.event_name }})"
           git push
+
 
 
 
