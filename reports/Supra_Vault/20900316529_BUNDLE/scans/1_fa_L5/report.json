@@ -1,0 +1,369 @@
+{
+  "request_id": "0207e927-9d10-4727-b19b-d46463cb886a",
+  "target": {
+    "chain": "supra",
+    "module_address": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+    "module_name": "fa_token",
+    "module_id": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358::fa_token",
+    "kind": "fa"
+  },
+  "scan_level": "quick",
+  "timestamp_iso": "2026-01-11T19:03:56.214Z",
+  "engine": {
+    "name": "ssa-scanner",
+    "version": "0.1.0",
+    "ruleset_version": "move-ruleset-0.1.0"
+  },
+  "artifact": {
+    "fetch_method": "rpc",
+    "artifact_hash": "fa_0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+    "binding_note": "FA token scan for 0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+    "metadata": {
+      "fa_metadata": {
+        "address": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+        "symbol": "SVLT",
+        "decimals": 6,
+        "name": "Supra Vault Token",
+        "fetchMethod": "supra_rpc_v3_resources",
+        "supplyParityCheck": {
+          "driftDetected": false,
+          "tolerance": 0.01
+        },
+        "rpcPlan": {
+          "provider_chain": [
+            "resources",
+            "suprascan_graphql"
+          ],
+          "v1_resources": {
+            "url": "https://rpc-mainnet.supra.com/rpc/v1/accounts/0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358/resources",
+            "used": false
+          },
+          "v1_view": {
+            "url": "https://rpc-mainnet.supra.com/rpc/v1/view",
+            "attempts": [],
+            "used": false
+          },
+          "suprascan_graphql": {
+            "url": "https://suprascan.io/api/graphql",
+            "queryName": "GetFaDetails",
+            "used": false
+          },
+          "framework_views_enabled": false,
+          "resources_endpoint": "https://rpc-mainnet.supra.com/rpc/v3/accounts/0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358/resources",
+          "resources_success": true,
+          "suprascan_graphql_success": false
+        }
+      },
+      "metadata_fetch_method": "supra_rpc_v3_resources"
+    }
+  },
+  "summary": {
+    "risk_score": 14,
+    "verdict": "pass",
+    "severity_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 2,
+      "low": 1,
+      "info": 5
+    },
+    "badge_eligibility": {
+      "scanned": true,
+      "no_critical": true,
+      "security_verified": true,
+      "continuously_monitored": false,
+      "reasons": [
+        "Security Verified badge requires bytecode or source code analysis",
+        "Continuous monitoring not enabled"
+      ],
+      "expires_at_iso": "2026-02-10T19:04:35.894Z"
+    },
+    "capabilities": {
+      "poolStats": false,
+      "totalStaked": false,
+      "queue": false,
+      "userViews": false
+    },
+    "assurance_level": "metadata_only"
+  },
+  "findings": [
+    {
+      "id": "FA-FREEZE-001",
+      "title": "Freeze/Blacklist/Pause Capability Unknown",
+      "severity": "info",
+      "confidence": 0.3,
+      "description": "Cannot verify freeze/blacklist/pause capabilities without bytecode. FA tokens may have these features.",
+      "recommendation": "Review token documentation or source code to verify freeze/blacklist/pause capabilities.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [],
+        "locations": []
+      },
+      "references": []
+    },
+    {
+      "id": "FA-UPGRADE-001",
+      "title": "Upgrade/Admin Controls Unknown",
+      "severity": "info",
+      "confidence": 0.3,
+      "description": "Cannot verify upgrade/admin controls without bytecode. FA tokens may have upgrade capabilities.",
+      "recommendation": "Review token documentation or source code to verify upgrade/admin mechanisms.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [],
+        "locations": []
+      },
+      "references": []
+    },
+    {
+      "id": "FA-META-001",
+      "title": "Missing or Incomplete Metadata",
+      "severity": "low",
+      "confidence": 0.9,
+      "description": "Token metadata is missing or incomplete. Missing: totalSupply",
+      "recommendation": "Ensure all standard FA metadata fields (symbol, decimals, totalSupply) are available via view functions.",
+      "evidence": {
+        "kind": "metadata",
+        "matched": [],
+        "locations": []
+      },
+      "references": []
+    },
+    {
+      "id": "FA-MINT-001",
+      "title": "Mint reference present (supply can be increased)",
+      "severity": "medium",
+      "confidence": 0.9,
+      "description": "This FA exposes a mint reference in resources (e.g., ManagedFungibleAsset.mint_ref). Supply is not provably immutable.",
+      "recommendation": "If this is intended (admin-mintable token), document it. If not intended, rotate/lock mint authority or migrate to an immutable supply design.",
+      "evidence": {
+        "kind": "metadata",
+        "matched": [
+          "hasMintRef"
+        ],
+        "locations": []
+      },
+      "references": []
+    },
+    {
+      "id": "FA-BURN-001",
+      "title": "Burn reference present",
+      "severity": "info",
+      "confidence": 0.9,
+      "description": "This FA exposes a burn reference in resources (e.g., ManagedFungibleAsset.burn_ref). Burning may be possible by an authority.",
+      "recommendation": "If burn is used for deflation/buyback, document the burn policy and how authority is controlled.",
+      "evidence": {
+        "kind": "metadata",
+        "matched": [
+          "hasBurnRef"
+        ],
+        "locations": []
+      },
+      "references": []
+    },
+    {
+      "id": "FA-HOOKS-001",
+      "title": "FA has dispatch hooks (custom transfer/deposit/withdraw logic)",
+      "severity": "medium",
+      "confidence": 0.9,
+      "description": "DispatchFunctionStore contains hook functions. Transfers/deposits/withdrawals may execute additional Move code.",
+      "recommendation": "Fetch and analyze the hook modules/functions (module_address/module_name/function_name) to verify no blacklisting, fee siphons, or transfer restrictions.",
+      "evidence": {
+        "kind": "metadata",
+        "matched": [
+          "deposit",
+          "withdraw",
+          "derivedBalance",
+          "hooks"
+        ],
+        "locations": []
+      },
+      "references": []
+    },
+    {
+      "id": "FA-OWNER-001",
+      "title": "FA object owner present",
+      "severity": "info",
+      "confidence": 0.9,
+      "description": "ObjectCore.owner exists. Depending on framework rules, the owner may have administrative abilities (e.g., managing refs / upgrades / dispatch settings).",
+      "recommendation": "Treat owner as an admin surface. If high-assurance is needed, verify the owner is a trusted module/account (multisig/DAO) and whether owner can rotate refs.",
+      "evidence": {
+        "kind": "metadata",
+        "matched": [
+          "owner"
+        ],
+        "locations": []
+      },
+      "references": []
+    },
+    {
+      "id": "FA-SUPPLY-001",
+      "title": "Supply info detected",
+      "severity": "info",
+      "confidence": 0.9,
+      "description": "ConcurrentSupply resource was found. Current and max supply values are available in resources.",
+      "recommendation": "",
+      "evidence": {
+        "kind": "metadata",
+        "matched": [
+          "current",
+          "max"
+        ],
+        "locations": []
+      },
+      "references": []
+    }
+  ],
+  "meta": {
+    "scan_options": {
+      "rpc_url": "https://rpc-mainnet.supra.com"
+    },
+    "rpc_url": "https://rpc-mainnet.supra.com",
+    "duration_ms": 13544,
+    "artifact_mode": "view_only",
+    "artifact_loaded": false,
+    "artifact_components": {
+      "hasSource": false,
+      "hasAbi": false,
+      "hasBytecode": false,
+      "origin": {
+        "kind": "manual",
+        "path": "fa_metadata_only"
+      },
+      "onChainBytecodeFetched": false
+    },
+    "rule_capabilities": {
+      "viewOnly": true,
+      "hasAbi": false,
+      "hasBytecodeOrSource": false,
+      "artifactMode": "view_only"
+    },
+    "verdict_reason": "View-only scan completed. No high-risk findings detected.",
+    "fa_metadata": {
+      "address": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+      "symbol": "SVLT",
+      "decimals": 6,
+      "name": "Supra Vault Token",
+      "fetchMethod": "supra_rpc_v3_resources",
+      "supplyParityCheck": {
+        "driftDetected": false,
+        "tolerance": 0.01
+      },
+      "rpcPlan": {
+        "provider_chain": [
+          "resources",
+          "suprascan_graphql"
+        ],
+        "v1_resources": {
+          "url": "https://rpc-mainnet.supra.com/rpc/v1/accounts/0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358/resources",
+          "used": false
+        },
+        "v1_view": {
+          "url": "https://rpc-mainnet.supra.com/rpc/v1/view",
+          "attempts": [],
+          "used": false
+        },
+        "suprascan_graphql": {
+          "url": "https://suprascan.io/api/graphql",
+          "queryName": "GetFaDetails",
+          "used": false
+        },
+        "framework_views_enabled": false,
+        "resources_endpoint": "https://rpc-mainnet.supra.com/rpc/v3/accounts/0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358/resources",
+        "resources_success": true,
+        "suprascan_graphql_success": false
+      }
+    },
+    "creator_modules_scanned": 0,
+    "metadata_verified": true,
+    "code_verified": false,
+    "has_custom_modules": false,
+    "fa_cross_checks": {
+      "supplyMetadataClaimsMatch": true
+    },
+    "verdict_tier": "metadata",
+    "fa_rpc_plan": {
+      "provider_chain": [
+        "resources",
+        "suprascan_graphql"
+      ],
+      "v1_resources": {
+        "url": "https://rpc-mainnet.supra.com/rpc/v1/accounts/0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358/resources",
+        "used": false
+      },
+      "v1_view": {
+        "url": "https://rpc-mainnet.supra.com/rpc/v1/view",
+        "attempts": [],
+        "used": false
+      },
+      "suprascan_graphql": {
+        "url": "https://suprascan.io/api/graphql",
+        "queryName": "GetFaDetails",
+        "used": false
+      },
+      "framework_views_enabled": false,
+      "resources_endpoint": "https://rpc-mainnet.supra.com/rpc/v3/accounts/0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358/resources",
+      "resources_success": true,
+      "suprascan_graphql_success": false
+    },
+    "surface_report": {
+      "kind": "fa",
+      "fa_surface": {
+        "surface_known": false,
+        "reason": "FA creator address unknown; cannot resolve control modules",
+        "control_modules": [],
+        "scanned_modules": []
+      }
+    },
+    "fa_resource_analysis": {
+      "hasMintRef": true,
+      "hasBurnRef": true,
+      "hasTransferRef": true,
+      "hasDispatchFunctions": true,
+      "hasDepositFunction": true,
+      "hasWithdrawFunction": true,
+      "hasAdminControl": true,
+      "ownerAddress": "0xd6e692f606215e8dc872bb24134de1e90e7845af0ed88be568c71a0a0272877d",
+      "currentSupply": "797799999000000",
+      "maxSupply": "1000000000000000",
+      "isSupplyCapped": true,
+      "resourcesParsedCount": 7,
+      "hookModules": [
+        {
+          "module_address": "0xa4a4a31116e114bf3c4f4728914e6b43db73279a4421b0768993e07248fe2234",
+          "module_name": "dispatchable_fa_store",
+          "function_name": "on_deposit"
+        },
+        {
+          "module_address": "0xa4a4a31116e114bf3c4f4728914e6b43db73279a4421b0768993e07248fe2234",
+          "module_name": "dispatchable_fa_store",
+          "function_name": "on_withdraw"
+        }
+      ]
+    },
+    "monitoring_enabled": true
+  },
+  "scan_level_num": 5,
+  "scan_level_str": "L5",
+  "badge": {
+    "tier": "SECURITY_VERIFIED",
+    "label": "SSA · Security Verified",
+    "expires_at_iso": "2026-02-10T19:04:35.894Z",
+    "continuously_monitored": false
+  },
+  "external_intel": {
+    "supra_pulse": {
+      "attached": true,
+      "kind": "pdf",
+      "sha256": "c2f349f10e9a7eadf5aaa3a6cb73e288a87e4434df6945fade97ee15cc68e713",
+      "filename": "supra_pulse.pdf"
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "mode": "continuous",
+    "cadence": "24h",
+    "next_run_hint_utc": null,
+    "note": "FA L5 implies continuous monitoring. This repo uses workflow schedule + config/continuous_watch.json to re-run."
+  }
+}

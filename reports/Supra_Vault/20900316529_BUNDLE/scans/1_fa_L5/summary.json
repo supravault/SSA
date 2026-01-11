@@ -1,0 +1,31 @@
+{
+  "target": {
+    "kind": "fa",
+    "value": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358"
+  },
+  "time_utc": "2026-01-11T19:03:56.214Z",
+  "level": 5,
+  "verdict": "pass",
+  "score": 14,
+  "severity": {
+    "critical": 0,
+    "high": 0,
+    "medium": 2,
+    "low": 1,
+    "info": 5
+  },
+  "badge": {
+    "tier": "SECURITY_VERIFIED",
+    "label": "SSA · Security Verified",
+    "security_verified": true,
+    "continuously_monitored": false,
+    "expires_at_iso": "2026-02-10T19:04:35.894Z"
+  },
+  "artifacts": {
+    "report_json": "report.json",
+    "report_pdf": "report.pdf",
+    "snapshot": null,
+    "diff": "artifacts/diff.json",
+    "pulse": "artifacts/supra_pulse.pdf"
+  }
+}
