@@ -32,7 +32,6 @@ on:
         required: false
         type: string
 
-      # ---- Option A (RELIABLE Pulse integration) ----
       pulse_score:
         description: "Optional: Pulse risk score (0-100). If provided, overrides PDF extraction."
         required: false
@@ -191,9 +190,10 @@ jobs:
             ln -s "$GITHUB_WORKSPACE/tools/icons" "$parent_dir/tools/icons"
           fi
 
-          # Normalize bundle_json -> bundle_scans.json (write directly into bundle_dir)
-          node --input-type=module - <<'NODE'
+          # Normalize bundle_json -> bundle_scans.json (write into bundle_dir)
+          OUT_PATH="$bundle_dir/bundle_scans.json" node --input-type=module - <<'NODE'
           import fs from "node:fs";
+
           const raw = process.env.BUNDLE_JSON || "";
           const outPath = process.env.OUT_PATH || "bundle_scans.json";
           if (!raw.trim()) { console.error("❌ bundle_json is empty"); process.exit(1); }
@@ -232,15 +232,6 @@ jobs:
           fs.writeFileSync(outPath, JSON.stringify({ scans: norm }, null, 2));
           console.log(`✅ Normalized ${norm.length} scan(s) -> ${outPath}`);
           NODE
-        env:
-          OUT_PATH: ""
-
-          # The node block reads OUT_PATH from env; we set it in bash before calling node.
-          :
-          # (No-op; YAML requires a mapping, but we are not adding anything here.)
-
-          # Make sure OUT_PATH points into bundle_dir
-          export OUT_PATH="$bundle_dir/bundle_scans.json"
 
           tier_lc="$(echo "${pulse_tier:-}" | tr '[:upper:]' '[:lower:]' | xargs)"
           report_type="SSA_REPORT"
@@ -382,12 +373,10 @@ print(json.dumps({
 }, indent=2))
 PY
             elif [[ -n "$pulse_path" && "$pulse_path" == *.json ]]; then
-              echo "✅ Using pulse JSON directly."
               cp -f "$pulse_path" "$pulse_summary_path"
             elif [[ -n "$pulse_path" && "$pulse_path" == *.pdf ]]; then
-              echo "⚠️ Best-effort Pulse PDF text extract (may produce UNKNOWN)..."
               pdftotext "$pulse_path" "$bundle_dir/tmp/pulse.txt" || true
-              python3 - <<'PY' > "$pulse_summary_path"
+              BUNDLE_DIR="$bundle_dir" python3 - <<'PY' > "$pulse_summary_path"
 import json, re, os
 bundle_dir = os.environ["BUNDLE_DIR"]
 txt_path = os.path.join(bundle_dir, "tmp", "pulse.txt")
@@ -436,11 +425,9 @@ PY
 
           # Generate final_report.pdf (only if generator exists + pulse summary exists)
           if [[ -n "$GEN" && -n "$pulse_summary_path" ]]; then
-            echo "🧩 Installing Playwright browser (chromium) for final report..."
             export PLAYWRIGHT_BROWSERS_PATH=0
             npx playwright install --with-deps chromium
 
-            echo "🏁 Generating final_report.pdf..."
             ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
             primary_scan="$(ls -1 "$bundle_dir"/scans/*_coin_L*/report.json 2>/dev/null | head -n 1 || true)"
@@ -463,15 +450,9 @@ PY
               newest_final="$(find "$outdir" -name final_report.pdf -print | sort | tail -n 1 || true)"
               if [[ -n "$newest_final" ]]; then
                 cp -f "$newest_final" "$bundle_dir/final_report.pdf"
-                echo "✅ final_report.pdf ready: $bundle_dir/final_report.pdf"
-              else
-                echo "⚠️ generate-report ran but final_report.pdf not found under $outdir"
+                echo "✅ final_report.pdf ready"
               fi
-            else
-              echo "⚠️ No scan report.json found; skipping final integrated report."
             fi
-          else
-            echo "ℹ️ Skipping final_report.pdf (missing generator or pulse summary)."
           fi
 
           # Write bundle_inputs.json (Base44 correlation)
@@ -479,6 +460,7 @@ PY
           pulse_attached="false"
           if [[ -n "$pulse_path" ]]; then pulse_attached="true"; fi
 
+          BUNDLE_DIR="$bundle_dir" TS_UTC="$ts_utc" REPORT_TYPE="$report_type" PULSE_ATTACHED="$pulse_attached" PULSE_ERROR="$pulse_error" \
           node --input-type=module - <<'NODE'
           import fs from "node:fs";
 
@@ -511,19 +493,6 @@ PY
           fs.writeFileSync(`${bundleDir}/bundle_inputs.json`, JSON.stringify(out, null, 2));
           console.log("✅ Wrote bundle_inputs.json");
           NODE
-        env:
-          BUNDLE_DIR: ""
-          TS_UTC: ""
-          REPORT_TYPE: ""
-          PULSE_ATTACHED: ""
-          PULSE_ERROR: ""
-
-          # IMPORTANT: values are set in bash right before the node call using environment variables
-          # and will be available because bash exports them in-process.
-          #
-          # We set these via "export" in bash (inside run), not here.
-
-          # (No additional step-level env needed)
 
       - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
@@ -549,6 +518,7 @@ PY
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
