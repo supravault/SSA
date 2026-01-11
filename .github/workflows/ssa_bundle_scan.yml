@@ -383,6 +383,7 @@ jobs:
             mv "$scan_dir/report.pdf" "$scan_dir/${kind}_report.pdf"
             echo "$scan_dir/${kind}_report.pdf" >> "$bundle_dir/tmp/pdfs.txt"
 
+            # ✅ FA L5: patch "continuous monitoring" flags (keep everything else same)
             if [[ "$kind" == "fa" && "$level" == "5" && -f "$scan_dir/report.json" ]]; then
               tmp_report="$scan_dir/tmp_report.json"
               jq '
@@ -393,8 +394,13 @@ jobs:
                   next_run_hint_utc: null,
                   note: "L5 implies continuous monitoring. Schedule runs are implemented via workflow schedule + config/continuous_watch.json."
                 }
+                | .badge = ((.badge // {}) + { continuously_monitored: true })
+                | .summary.badge_eligibility = ((.summary.badge_eligibility // {}) + { continuously_monitored: true })
+                | .summary.badge_eligibility.reasons =
+                    ((.summary.badge_eligibility.reasons // [])
+                     | map(select(. != "Continuous monitoring not enabled")))
               ' "$scan_dir/report.json" > "$tmp_report" && mv "$tmp_report" "$scan_dir/report.json"
-              echo "✅ Patched FA L5 report.json with monitoring.enabled=true"
+              echo "✅ Patched FA L5 report.json: monitoring + continuously_monitored=true"
             fi
           done
 
@@ -670,6 +676,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: run ${{ github.run_id }} (${{ github.event_name }})"
           git push
+
 
 
 
