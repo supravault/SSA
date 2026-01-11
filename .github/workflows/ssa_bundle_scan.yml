@@ -59,21 +59,20 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Ensure system tools (jq, qpdf, poppler-utils, python3)
+      - name: Ensure system tools (jq, qpdf, poppler-utils)
         shell: bash
         run: |
           set -euo pipefail
           sudo apt-get update -y
-          sudo apt-get install -y jq qpdf poppler-utils python3
+          sudo apt-get install -y jq qpdf poppler-utils
           jq --version
           qpdf --version || true
           pdftotext -v || true
-          python3 --version
 
       - name: Debug dist output (top 200)
         shell: bash
         run: |
-          set -eu
+          set -euo pipefail
           if [ -d dist ]; then
             echo "==== dist tree (top 200) ===="
             set +o pipefail
@@ -158,23 +157,18 @@ jobs:
           elif [ -f dist/src/scripts/generate-report.js ]; then
             GEN="dist/src/scripts/generate-report.js"
           fi
-
           if [[ -n "$GEN" ]]; then
             echo "✅ Using generator: $GEN"
           else
             echo "⚠️ generate-report.js not found in dist/. final_report.pdf will be skipped."
           fi
 
-          # ------------------------------------------------------------
           # Fix SVG path mismatch in Actions:
-          # generator expects /home/runner/work/SSA/tools/icons/*
-          # but checkout is /home/runner/work/SSA/SSA/tools/icons/*
-          # ------------------------------------------------------------
           parent_dir="$(cd "$GITHUB_WORKSPACE/.." && pwd)"
           mkdir -p "$parent_dir/tools"
-          rm -rf "$parent_dir/tools/icons" || true
-          ln -s "$GITHUB_WORKSPACE/tools/icons" "$parent_dir/tools/icons"
-          echo "✅ Linked icons: $parent_dir/tools/icons -> $GITHUB_WORKSPACE/tools/icons"
+          if [[ ! -e "$parent_dir/tools/icons" ]]; then
+            ln -s "$GITHUB_WORKSPACE/tools/icons" "$parent_dir/tools/icons"
+          fi
 
           # Normalize + validate bundle_json -> bundle_scans.json
           node --input-type=module - <<'NODE'
@@ -226,9 +220,7 @@ jobs:
             report_type="SSA_FULL_INTEGRATED_REPORT"
           fi
 
-          # ------------------------------------------------------------
-          # Pulse download (best effort; never fail run)
-          # ------------------------------------------------------------
+          # Pulse download (best effort; never fail the run)
           pulse_path=""
           pulse_error=""
           if [[ -n "$pulse_url" ]]; then
@@ -258,12 +250,16 @@ jobs:
             fi
           fi
 
+          pulse_attached=false
+          if [[ -n "$pulse_path" ]]; then pulse_attached=true; fi
+
           ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
-          # Write bundle_inputs.json (include dispatch_id)
+          # Write bundle_inputs.json (include dispatch_id for Base44 correlation)
           export BUNDLE_DIR="$bundle_dir"
           export TS_UTC="$ts_utc"
           export REPORT_TYPE="$report_type"
+          export PULSE_ATTACHED="$pulse_attached"
           export PULSE_ERROR="$pulse_error"
 
           node --input-type=module - <<'NODE'
@@ -289,7 +285,7 @@ jobs:
             rpc: process.env.SUPRA_RPC_URL,
             report_type: process.env.REPORT_TYPE,
             pulse: {
-              attached: false,
+              attached: (process.env.PULSE_ATTACHED === "true"),
               tier: process.env.PULSE_TIER || "",
               url: process.env.PULSE_URL || "",
               error: process.env.PULSE_ERROR || ""
@@ -301,99 +297,7 @@ jobs:
           console.log("✅ Wrote bundle_inputs.json");
           NODE
 
-          # ------------------------------------------------------------
-          # Pulse summary: ALWAYS convert PDF -> pulse_summary.json
-          # (Scanner/generator understand JSON, not PDF)
-          # ------------------------------------------------------------
-          pulse_summary_path=""
-          if [[ -n "$pulse_path" && "$pulse_path" == *.json ]]; then
-            pulse_summary_path="$pulse_path"
-            echo "✅ Using Pulse JSON directly: $pulse_summary_path"
-          elif [[ -n "$pulse_path" && "$pulse_path" == *.pdf ]]; then
-            echo "🧠 Extracting Pulse summary from PDF text..."
-            pdftotext "$pulse_path" "$bundle_dir/tmp/pulse.txt" || true
-            pulse_summary_path="$bundle_dir/tmp/pulse_summary.json"
-
-            python3 - <<'PY'
-import json, os, re
-
-bundle_dir = os.environ.get("BUNDLE_DIR","")
-txt_path = os.path.join(bundle_dir, "tmp", "pulse.txt")
-out_path = os.path.join(bundle_dir, "tmp", "pulse_summary.json")
-
-tier_in = (os.environ.get("PULSE_TIER") or "").strip()
-
-raw = ""
-try:
-  with open(txt_path, "r", encoding="utf-8", errors="ignore") as f:
-    raw = f.read()
-except Exception:
-  raw = ""
-
-tier = tier_in
-m_tier = re.search(r"\bTier:\s*(Standard|Premium|Spotlight)\b", raw, flags=re.IGNORECASE)
-if m_tier:
-  tier = m_tier.group(1).capitalize()
-
-ts = ""
-m_iso = re.search(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", raw)
-if m_iso:
-  ts = m_iso.group(0)
-
-score = None
-for pat in [
-  r"risk\s*score[^0-9]{0,20}(\d{1,3})",
-  r"\bscore[^0-9]{0,20}(\d{1,3})\b",
-  r"(\d{1,3})\s*/\s*100",
-]:
-  mm = re.search(pat, raw, flags=re.IGNORECASE)
-  if mm:
-    try:
-      v = int(mm.group(1))
-      if 0 <= v <= 100:
-        score = v
-        break
-    except Exception:
-      pass
-
-# Fallback: line ends with a 0..100 number (e.g., "JONES ON SUPRA 91")
-if score is None:
-  lines = [ln.strip() for ln in raw.splitlines() if ln.strip()]
-  for ln in lines[:120]:
-    mm = re.search(r"(\d{1,3})\s*$", ln)
-    if mm:
-      try:
-        v = int(mm.group(1))
-        if 0 <= v <= 100:
-          score = v
-          break
-      except Exception:
-        pass
-
-verdict = ""
-mv = re.search(r"\bverdict\b[^A-Z]{0,20}([A-Z]{3,20})", raw)
-if mv:
-  verdict = mv.group(1).strip()
-
-out = {
-  "tier": tier,
-  "timestamp_utc": ts,
-  "score": score,
-  "verdict": verdict,
-  "source": "pulse_pdf_text_extract"
-}
-
-with open(out_path, "w", encoding="utf-8") as f:
-  json.dump(out, f, indent=2)
-
-print("✅ Wrote pulse_summary.json:", out_path)
-print("   Parsed:", out)
-PY
-          fi
-
-          # ------------------------------------------------------------
           # Run scans + collect PDFs
-          # ------------------------------------------------------------
           : > "$bundle_dir/tmp/pdfs.txt"
           total="$(jq -r '.scans | length' "$bundle_dir/bundle_scans.json")"
           echo "▶ Running bundle scans: $total scan(s)"
@@ -414,13 +318,14 @@ PY
               --arg pulseTier "${pulse_tier:-}" \
               --arg allowlist "$allowlist" \
               --argjson level "$level" \
+              --argjson pulseAttached "$( [[ -n "$pulse_path" ]] && echo true || echo false )" \
               '{
                 kind: $kind,
                 level: $level,
                 target: $target,
                 wallet_modules_allowlist: $allowlist,
                 rpc: $rpc,
-                pulse_attached: false,
+                pulse_attached: $pulseAttached,
                 pulse_tier: $pulseTier
               }' > "$scan_dir/scan_inputs.json"
 
@@ -434,9 +339,8 @@ PY
             fi
 
             pulse_args=()
-            if [[ -n "$pulse_summary_path" ]]; then
-              pulse_args=( --pulse "$pulse_summary_path" )
-              jq '.pulse_attached=true' "$scan_dir/scan_inputs.json" > "$scan_dir/.tmp.json" && mv "$scan_dir/.tmp.json" "$scan_dir/scan_inputs.json"
+            if [[ -n "$pulse_path" ]]; then
+              pulse_args=( --pulse "$pulse_path" )
             fi
 
             echo "▶ [$((idx+1))/$total] ${kind} L${level} ${target}"
@@ -474,7 +378,68 @@ PY
           fi
           echo "✅ Combined PDF: $combined"
 
-          # Generate final_report.pdf via generate-report.js
+          # ------------------------------------------------------------
+          # Build pulse_summary.json for final integrated report
+          # ------------------------------------------------------------
+          pulse_summary_path=""
+          if [[ -n "$pulse_path" && "$pulse_path" == *.json ]]; then
+            pulse_summary_path="$pulse_path"
+          elif [[ -n "$pulse_path" && "$pulse_path" == *.pdf ]]; then
+            echo "🧠 Extracting Pulse summary from PDF text (best effort)..."
+            pdftotext "$pulse_path" "$bundle_dir/tmp/pulse.txt" || true
+
+            export PULSE_TXT="$bundle_dir/tmp/pulse.txt"
+            export PULSE_OUT="$bundle_dir/tmp/pulse_summary.json"
+
+            node --input-type=module - <<'NODE'
+            import fs from "node:fs";
+
+            const txtPath = process.env.PULSE_TXT;
+            const outPath = process.env.PULSE_OUT;
+            const tier = (process.env.PULSE_TIER || "").trim();
+
+            let raw = "";
+            try { raw = fs.readFileSync(txtPath, "utf8"); } catch { raw = ""; }
+
+            const tsMatch = raw.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/);
+            const timestamp_utc = tsMatch ? tsMatch[0] : "";
+
+            let score = null;
+            const patterns = [
+              /risk\s*score[^0-9]{0,20}(\d{1,3})/i,
+              /\bscore[^0-9]{0,20}(\d{1,3})\b/i,
+              /(\d{1,3})\s*\/\s*100/i,
+            ];
+            for (const re of patterns) {
+              const m = raw.match(re);
+              if (m && m[1]) {
+                const v = Number(m[1]);
+                if (Number.isFinite(v) && v >= 0 && v <= 100) { score = v; break; }
+              }
+            }
+
+            let verdict = "";
+            const v = raw.match(/\bverdict\b[^A-Z]{0,30}([A-Z]{3,20})/);
+            if (v && v[1]) verdict = String(v[1]).trim();
+
+            const out = {
+              tier,
+              timestamp_utc,
+              score,
+              verdict,
+              source: "pulse_pdf_text_extract"
+            };
+
+            fs.writeFileSync(outPath, JSON.stringify(out, null, 2));
+            console.log("✅ Wrote pulse_summary.json:", outPath);
+            NODE
+
+            pulse_summary_path="$bundle_dir/tmp/pulse_summary.json"
+          fi
+
+          # ------------------------------------------------------------
+          # Generate final_report.pdf (JONES-style) via generate-report.js
+          # ------------------------------------------------------------
           if [[ -n "$GEN" && -n "$pulse_summary_path" ]]; then
             echo "🧩 Installing Playwright browser (chromium) for final report..."
             export PLAYWRIGHT_BROWSERS_PATH=0
@@ -503,7 +468,10 @@ PY
 
               node "$GEN" "${args[@]}"
 
+              set +o pipefail
               newest_final="$(find "$bundle_dir/tmp/_gen" -name final_report.pdf -print | sort | tail -n 1 || true)"
+              set -o pipefail
+
               if [[ -n "$newest_final" ]]; then
                 cp -f "$newest_final" "$bundle_dir/final_report.pdf"
                 echo "✅ final_report.pdf ready: $bundle_dir/final_report.pdf"
@@ -514,7 +482,7 @@ PY
               echo "⚠️ No scan report.json found; skipping final integrated report."
             fi
           else
-            echo "ℹ️ Skipping final_report.pdf generation (missing generator or pulse_summary.json)."
+            echo "ℹ️ Skipping final_report.pdf generation (missing generator or pulse summary)."
           fi
 
       - name: Upload artifacts (debug)
@@ -541,6 +509,7 @@ PY
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
