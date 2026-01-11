@@ -1,0 +1,2814 @@
+{
+  "request_id": "7bec8f1e-d9db-4ac3-8725-255724f87042",
+  "target": {
+    "address": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3",
+    "module_name": "",
+    "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3",
+    "kind": "wallet",
+    "chain": "supra"
+  },
+  "scan_level": "full",
+  "timestamp_iso": "2026-01-11T20:02:36.984Z",
+  "engine": {
+    "name": "ssa-scanner",
+    "version": "0.1.0",
+    "ruleset_version": "move-ruleset-0.1.0"
+  },
+  "artifact": {
+    "fetch_method": "rpc",
+    "artifact_hash": "wallet_0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3",
+    "binding_note": "Wallet scan for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3",
+    "artifact_origin": {
+      "kind": "supra_rpc_v3",
+      "path": "https://rpc-mainnet.supra.com/rpc/v3/accounts/0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3/modules"
+    }
+  },
+  "summary": {
+    "risk_score": 74,
+    "verdict": "fail",
+    "severity_counts": {
+      "critical": 0,
+      "high": 30,
+      "medium": 9,
+      "low": 1,
+      "info": 2
+    },
+    "badge_eligibility": {
+      "scanned": true,
+      "no_critical": true,
+      "security_verified": false,
+      "continuously_monitored": false,
+      "reasons": []
+    },
+    "capabilities": {
+      "poolStats": false,
+      "totalStaked": false,
+      "queue": false,
+      "userViews": false
+    }
+  },
+  "findings": [
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 1 required view function(s): pool_stats. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats"
+        ],
+        "locations": [
+          {
+            "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats",
+            "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 1 required view function(s): pool_stats. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats"
+        ],
+        "locations": [
+          {
+            "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats",
+            "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 1 required view function(s): pool_stats. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats"
+        ],
+        "locations": [
+          {
+            "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats",
+            "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 1 required view function(s): pool_stats. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats"
+        ],
+        "locations": [
+          {
+            "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats",
+            "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v12"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v12"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v13"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v13"
+    },
+    {
+      "id": "SVSSA-MOVE-006",
+      "title": "Potential Unbounded Loops in Entry Functions",
+      "severity": "medium",
+      "confidence": 0.5,
+      "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+      "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "loop"
+        ],
+        "locations": [
+          {
+            "fn": "pool_stats",
+            "note": "Entry function may contain loops"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v14"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v14"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v14"
+    },
+    {
+      "id": "SVSSA-MOVE-006",
+      "title": "Potential Unbounded Loops in Entry Functions",
+      "severity": "medium",
+      "confidence": 0.5,
+      "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+      "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "loop"
+        ],
+        "locations": [
+          {
+            "fn": "pool_stats",
+            "note": "Entry function may contain loops"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v15"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v15"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v15"
+    },
+    {
+      "id": "SVSSA-MOVE-006",
+      "title": "Potential Unbounded Loops in Entry Functions",
+      "severity": "medium",
+      "confidence": 0.5,
+      "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+      "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "loop"
+        ],
+        "locations": [
+          {
+            "fn": "pool_stats",
+            "note": "Entry function may contain loops"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v16"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v16"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v16"
+    },
+    {
+      "id": "SVSSA-MOVE-006",
+      "title": "Potential Unbounded Loops in Entry Functions",
+      "severity": "medium",
+      "confidence": 0.5,
+      "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+      "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "loop"
+        ],
+        "locations": [
+          {
+            "fn": "pool_stats",
+            "note": "Entry function may contain loops"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v17"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v17"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v17"
+    },
+    {
+      "id": "SVSSA-MOVE-006",
+      "title": "Potential Unbounded Loops in Entry Functions",
+      "severity": "medium",
+      "confidence": 0.5,
+      "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+      "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "loop"
+        ],
+        "locations": [
+          {
+            "fn": "pool_stats",
+            "note": "Entry function may contain loops"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v18"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v18"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v18"
+    },
+    {
+      "id": "SVSSA-MOVE-006",
+      "title": "Potential Unbounded Loops in Entry Functions",
+      "severity": "medium",
+      "confidence": 0.5,
+      "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+      "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "loop"
+        ],
+        "locations": [
+          {
+            "fn": "pool_stats",
+            "note": "Entry function may contain loops"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v19"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v19"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v19"
+    },
+    {
+      "id": "SVSSA-MOVE-006",
+      "title": "Potential Unbounded Loops in Entry Functions",
+      "severity": "medium",
+      "confidence": 0.5,
+      "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+      "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "loop"
+        ],
+        "locations": [
+          {
+            "fn": "pool_stats",
+            "note": "Entry function may contain loops"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v23"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v23"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v23"
+    },
+    {
+      "id": "SVSSA-MOVE-005-INFO",
+      "title": "Expected Staking Outflow Pattern",
+      "severity": "info",
+      "confidence": 0.8,
+      "description": "Entry function \"view_withdraw_requests\" matches expected staking outflow pattern. Verify access control is properly enforced via request/fulfill pattern.",
+      "recommendation": "Ensure this function uses proper access control (e.g., request/fulfill pattern, signer verification).",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "view_withdraw_requests"
+        ],
+        "locations": [
+          {
+            "fn": "view_withdraw_requests",
+            "note": "Expected staking outflow pattern"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v24"
+    },
+    {
+      "id": "SVSSA-MOVE-005-INFO",
+      "title": "Expected Staking Outflow Pattern",
+      "severity": "info",
+      "confidence": 0.8,
+      "description": "Entry function \"view_claim_requests\" matches expected staking outflow pattern. Verify access control is properly enforced via request/fulfill pattern.",
+      "recommendation": "Ensure this function uses proper access control (e.g., request/fulfill pattern, signer verification).",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "view_claim_requests"
+        ],
+        "locations": [
+          {
+            "fn": "view_claim_requests",
+            "note": "Expected staking outflow pattern"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v24"
+    },
+    {
+      "id": "SVSSA-MOVE-006",
+      "title": "Potential Unbounded Loops in Entry Functions",
+      "severity": "medium",
+      "confidence": 0.5,
+      "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+      "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "loop"
+        ],
+        "locations": [
+          {
+            "fn": "view_withdraw_requests",
+            "note": "Entry function may contain loops"
+          },
+          {
+            "fn": "view_claim_requests",
+            "note": "Entry function may contain loops"
+          },
+          {
+            "fn": "pool_stats",
+            "note": "Entry function may contain loops"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v24"
+    },
+    {
+      "id": "SVSSA-MOVE-007",
+      "title": "Missing Event Emissions for Sensitive Operations",
+      "severity": "low",
+      "confidence": 0.5,
+      "description": "Detected sensitive operations (mint/withdraw/admin/upgrade) but no clear event emission patterns found in bytecode/source. Events are important for off-chain monitoring and transparency.",
+      "recommendation": "Emit events for all sensitive operations (transfers, mints, burns, admin actions) to enable off-chain monitoring and improve transparency.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "withdraw"
+        ],
+        "locations": [
+          {
+            "fn": "view_withdraw_requests",
+            "note": "Sensitive operation without clear event emission"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v24"
+    },
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats",
+            "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked",
+            "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats",
+            "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked",
+            "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt"
+    }
+  ],
+  "meta": {
+    "scan_options": {
+      "out": "reports/src/20901019612_BUNDLE/scans/0_wallet_L3",
+      "delay": 1000,
+      "kind": "wallet",
+      "level": 3,
+      "address": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3",
+      "rpc": "https://rpc-mainnet.supra.com",
+      "pdf": true
+    },
+    "rpc_url": "https://rpc-mainnet.supra.com",
+    "duration_ms": 0,
+    "wallet_modules": [
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10",
+        "summary": {
+          "risk_score": 70,
+          "verdict": "fail",
+          "severity_counts": {
+            "critical": 0,
+            "high": 4,
+            "medium": 0,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 4 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:00:30.740Z"
+          },
+          "capabilities": {
+            "poolStats": false,
+            "totalStaked": true,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 1 required view function(s): pool_stats. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats"
+              ],
+              "locations": [
+                {
+                  "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 1 required view function(s): pool_stats. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats"
+              ],
+              "locations": [
+                {
+                  "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 10312,
+          "view_results": {
+            "total_staked": [
+              "0"
+            ]
+          },
+          "view_errors": [
+            {
+              "viewName": "pool_stats",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats",
+              "error": "Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v10::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "view_plus_onchain_module"
+          },
+          "verdict_reason": "Missing required view capabilities (poolStats or totalStaked)"
+        }
+      },
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11",
+        "summary": {
+          "risk_score": 70,
+          "verdict": "fail",
+          "severity_counts": {
+            "critical": 0,
+            "high": 4,
+            "medium": 0,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 4 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:00:41.053Z"
+          },
+          "capabilities": {
+            "poolStats": false,
+            "totalStaked": true,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 1 required view function(s): pool_stats. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats"
+              ],
+              "locations": [
+                {
+                  "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 1 required view function(s): pool_stats. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats"
+              ],
+              "locations": [
+                {
+                  "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 10735,
+          "view_results": {
+            "total_staked": [
+              "0"
+            ]
+          },
+          "view_errors": [
+            {
+              "viewName": "pool_stats",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats",
+              "error": "Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v11::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "view_plus_onchain_module"
+          },
+          "verdict_reason": "Missing required view capabilities (poolStats or totalStaked)"
+        }
+      },
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v12",
+        "summary": {
+          "risk_score": 37,
+          "verdict": "inconclusive",
+          "severity_counts": {
+            "critical": 0,
+            "high": 2,
+            "medium": 0,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 2 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:00:51.788Z"
+          },
+          "capabilities": {
+            "poolStats": true,
+            "totalStaked": true,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v12"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v12"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 9498,
+          "view_results": {
+            "pool_stats": [
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "1768161659"
+            ],
+            "total_staked": [
+              "0"
+            ]
+          },
+          "view_errors": [
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v12::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v12::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "view_plus_onchain_module"
+          },
+          "verdict_reason": "Missing queue capability; cannot fully verify module state"
+        }
+      },
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v13",
+        "summary": {
+          "risk_score": 37,
+          "verdict": "inconclusive",
+          "severity_counts": {
+            "critical": 0,
+            "high": 2,
+            "medium": 0,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 2 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:01:01.286Z"
+          },
+          "capabilities": {
+            "poolStats": true,
+            "totalStaked": true,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v13"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v13"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 9150,
+          "view_results": {
+            "pool_stats": [
+              "165343",
+              "0",
+              "0",
+              "0",
+              "1762070251",
+              "1762675051",
+              "1768161660"
+            ],
+            "total_staked": [
+              "0"
+            ]
+          },
+          "view_errors": [
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v13::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v13::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "view_plus_onchain_module"
+          },
+          "verdict_reason": "Missing queue capability; cannot fully verify module state"
+        }
+      },
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v14",
+        "summary": {
+          "risk_score": 41,
+          "verdict": "inconclusive",
+          "severity_counts": {
+            "critical": 0,
+            "high": 2,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 2 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:01:10.436Z"
+          },
+          "capabilities": {
+            "poolStats": true,
+            "totalStaked": true,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-006",
+            "title": "Potential Unbounded Loops in Entry Functions",
+            "severity": "medium",
+            "confidence": 0.5,
+            "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+            "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "loop"
+              ],
+              "locations": [
+                {
+                  "fn": "pool_stats",
+                  "note": "Entry function may contain loops"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v14"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v14"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v14"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 11014,
+          "view_results": {
+            "pool_stats": [
+              "1653",
+              "0",
+              "0",
+              "0",
+              "1762076966",
+              "1762681766",
+              "1768161678"
+            ],
+            "total_staked": [
+              "0"
+            ]
+          },
+          "view_errors": [
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v14::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v14::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "view_plus_onchain_module"
+          },
+          "verdict_reason": "Missing queue capability; cannot fully verify module state"
+        }
+      },
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v15",
+        "summary": {
+          "risk_score": 41,
+          "verdict": "inconclusive",
+          "severity_counts": {
+            "critical": 0,
+            "high": 2,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 2 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:01:21.451Z"
+          },
+          "capabilities": {
+            "poolStats": true,
+            "totalStaked": true,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-006",
+            "title": "Potential Unbounded Loops in Entry Functions",
+            "severity": "medium",
+            "confidence": 0.5,
+            "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+            "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "loop"
+              ],
+              "locations": [
+                {
+                  "fn": "pool_stats",
+                  "note": "Entry function may contain loops"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v15"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v15"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v15"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 9880,
+          "view_results": {
+            "pool_stats": [
+              "1653",
+              "0",
+              "99960711900000000000",
+              "10000000",
+              "1762080306",
+              "1762685029",
+              "1768161689"
+            ],
+            "total_staked": [
+              "10000000"
+            ]
+          },
+          "view_errors": [
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v15::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v15::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "view_plus_onchain_module"
+          },
+          "verdict_reason": "Missing queue capability; cannot fully verify module state"
+        }
+      },
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v16",
+        "summary": {
+          "risk_score": 41,
+          "verdict": "inconclusive",
+          "severity_counts": {
+            "critical": 0,
+            "high": 2,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 2 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:01:31.331Z"
+          },
+          "capabilities": {
+            "poolStats": true,
+            "totalStaked": true,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-006",
+            "title": "Potential Unbounded Loops in Entry Functions",
+            "severity": "medium",
+            "confidence": 0.5,
+            "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+            "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "loop"
+              ],
+              "locations": [
+                {
+                  "fn": "pool_stats",
+                  "note": "Entry function may contain loops"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v16"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v16"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v16"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 9793,
+          "view_results": {
+            "pool_stats": [
+              "1653",
+              "7555863000000000000",
+              "986971587000000000000",
+              "1000000",
+              "1762107440",
+              "1762699948",
+              "1768161689"
+            ],
+            "total_staked": [
+              "1000000"
+            ]
+          },
+          "view_errors": [
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v16::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v16::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "view_plus_onchain_module"
+          },
+          "verdict_reason": "Missing queue capability; cannot fully verify module state"
+        }
+      },
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v17",
+        "summary": {
+          "risk_score": 42,
+          "verdict": "inconclusive",
+          "severity_counts": {
+            "critical": 0,
+            "high": 2,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 2 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:01:41.125Z"
+          },
+          "capabilities": {
+            "poolStats": true,
+            "totalStaked": true,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-006",
+            "title": "Potential Unbounded Loops in Entry Functions",
+            "severity": "medium",
+            "confidence": 0.5,
+            "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+            "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "loop"
+              ],
+              "locations": [
+                {
+                  "fn": "pool_stats",
+                  "note": "Entry function may contain loops"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v17"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v17"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v17"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 8166,
+          "view_results": {
+            "pool_stats": [
+              "1653",
+              "4740804000000000000",
+              "4740804000000000000",
+              "0",
+              "1762118182",
+              "1762718345",
+              "1768161704"
+            ],
+            "total_staked": [
+              "0"
+            ]
+          },
+          "view_errors": [
+            {
+              "viewName": "claim_queue_length",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v17::claim_queue_length",
+              "error": "Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v17::claim_queue_length: Supra view RPC failed (408):  (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v17::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v17::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "view_plus_onchain_module"
+          },
+          "verdict_reason": "Missing queue capability; cannot fully verify module state"
+        }
+      },
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v18",
+        "summary": {
+          "risk_score": 41,
+          "verdict": "inconclusive",
+          "severity_counts": {
+            "critical": 0,
+            "high": 2,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 2 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:01:49.292Z"
+          },
+          "capabilities": {
+            "poolStats": true,
+            "totalStaked": true,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-006",
+            "title": "Potential Unbounded Loops in Entry Functions",
+            "severity": "medium",
+            "confidence": 0.5,
+            "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+            "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "loop"
+              ],
+              "locations": [
+                {
+                  "fn": "pool_stats",
+                  "note": "Entry function may contain loops"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v18"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v18"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v18"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 9711,
+          "view_results": {
+            "pool_stats": [
+              "1653",
+              "0",
+              "999433554000000000000",
+              "1000000",
+              "1762122038",
+              "1762726656",
+              "1768161715"
+            ],
+            "total_staked": [
+              "1000000"
+            ]
+          },
+          "view_errors": [
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v18::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v18::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "view_plus_onchain_module"
+          },
+          "verdict_reason": "Missing queue capability; cannot fully verify module state"
+        }
+      },
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v19",
+        "summary": {
+          "risk_score": 41,
+          "verdict": "inconclusive",
+          "severity_counts": {
+            "critical": 0,
+            "high": 2,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 2 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:01:59.003Z"
+          },
+          "capabilities": {
+            "poolStats": true,
+            "totalStaked": true,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-006",
+            "title": "Potential Unbounded Loops in Entry Functions",
+            "severity": "medium",
+            "confidence": 0.5,
+            "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+            "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "loop"
+              ],
+              "locations": [
+                {
+                  "fn": "pool_stats",
+                  "note": "Entry function may contain loops"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v19"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v19"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v19"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 11185,
+          "view_results": {
+            "pool_stats": [
+              "1653",
+              "0",
+              "999580671000000000000",
+              "1000000",
+              "1762130108",
+              "1762734815",
+              "1768161727"
+            ],
+            "total_staked": [
+              "1000000"
+            ]
+          },
+          "view_errors": [
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v19::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v19::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "view_plus_onchain_module"
+          },
+          "verdict_reason": "Missing queue capability; cannot fully verify module state"
+        }
+      },
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v23",
+        "summary": {
+          "risk_score": 41,
+          "verdict": "inconclusive",
+          "severity_counts": {
+            "critical": 0,
+            "high": 2,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 2 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:02:10.188Z"
+          },
+          "capabilities": {
+            "poolStats": true,
+            "totalStaked": true,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-006",
+            "title": "Potential Unbounded Loops in Entry Functions",
+            "severity": "medium",
+            "confidence": 0.5,
+            "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+            "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "loop"
+              ],
+              "locations": [
+                {
+                  "fn": "pool_stats",
+                  "note": "Entry function may contain loops"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v23"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v23"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v23"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 10304,
+          "view_results": {
+            "pool_stats": [
+              "1487",
+              "16697547000000000000",
+              "230576474500000000000",
+              "4000000",
+              "1762230094",
+              "1762805424",
+              "1768161737"
+            ],
+            "total_staked": [
+              "4000000"
+            ]
+          },
+          "view_errors": [
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v23::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v23::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "view_plus_onchain_module"
+          },
+          "verdict_reason": "Missing queue capability; cannot fully verify module state"
+        }
+      },
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v24",
+        "summary": {
+          "risk_score": 6,
+          "verdict": "pass",
+          "severity_counts": {
+            "critical": 0,
+            "high": 0,
+            "medium": 1,
+            "low": 1,
+            "info": 2
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": true,
+            "continuously_monitored": false,
+            "reasons": [
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:02:20.492Z"
+          },
+          "capabilities": {
+            "poolStats": true,
+            "totalStaked": true,
+            "queue": true,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-005-INFO",
+            "title": "Expected Staking Outflow Pattern",
+            "severity": "info",
+            "confidence": 0.8,
+            "description": "Entry function \"view_withdraw_requests\" matches expected staking outflow pattern. Verify access control is properly enforced via request/fulfill pattern.",
+            "recommendation": "Ensure this function uses proper access control (e.g., request/fulfill pattern, signer verification).",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "view_withdraw_requests"
+              ],
+              "locations": [
+                {
+                  "fn": "view_withdraw_requests",
+                  "note": "Expected staking outflow pattern"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v24"
+          },
+          {
+            "id": "SVSSA-MOVE-005-INFO",
+            "title": "Expected Staking Outflow Pattern",
+            "severity": "info",
+            "confidence": 0.8,
+            "description": "Entry function \"view_claim_requests\" matches expected staking outflow pattern. Verify access control is properly enforced via request/fulfill pattern.",
+            "recommendation": "Ensure this function uses proper access control (e.g., request/fulfill pattern, signer verification).",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "view_claim_requests"
+              ],
+              "locations": [
+                {
+                  "fn": "view_claim_requests",
+                  "note": "Expected staking outflow pattern"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v24"
+          },
+          {
+            "id": "SVSSA-MOVE-006",
+            "title": "Potential Unbounded Loops in Entry Functions",
+            "severity": "medium",
+            "confidence": 0.5,
+            "description": "Detected loop-related patterns in bytecode strings. If entry functions iterate over user-controlled vectors without bounds, this may lead to DoS attacks or excessive gas consumption.",
+            "recommendation": "Verify that loop bounds are properly enforced and consider adding maximum iteration limits.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "loop"
+              ],
+              "locations": [
+                {
+                  "fn": "view_withdraw_requests",
+                  "note": "Entry function may contain loops"
+                },
+                {
+                  "fn": "view_claim_requests",
+                  "note": "Entry function may contain loops"
+                },
+                {
+                  "fn": "pool_stats",
+                  "note": "Entry function may contain loops"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v24"
+          },
+          {
+            "id": "SVSSA-MOVE-007",
+            "title": "Missing Event Emissions for Sensitive Operations",
+            "severity": "low",
+            "confidence": 0.5,
+            "description": "Detected sensitive operations (mint/withdraw/admin/upgrade) but no clear event emission patterns found in bytecode/source. Events are important for off-chain monitoring and transparency.",
+            "recommendation": "Emit events for all sensitive operations (transfers, mints, burns, admin actions) to enable off-chain monitoring and improve transparency.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "withdraw"
+              ],
+              "locations": [
+                {
+                  "fn": "view_withdraw_requests",
+                  "note": "Sensitive operation without clear event emission"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v24"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 2152,
+          "view_results": {
+            "view_withdraw_requests": [
+              []
+            ],
+            "view_claim_requests": [
+              []
+            ],
+            "pool_stats": [
+              "38580",
+              "104012688871439963693",
+              "104012881509104220172",
+              "20790073610256",
+              "1768057931",
+              "1768722108",
+              "1768161740"
+            ],
+            "total_staked": [
+              "20790073610256"
+            ]
+          },
+          "view_errors": [
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v24::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::staking_v24::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "v24",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "view_plus_onchain_module"
+          }
+        }
+      },
+      {
+        "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt",
+        "summary": {
+          "risk_score": 74,
+          "verdict": "fail",
+          "severity_counts": {
+            "critical": 0,
+            "high": 4,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 4 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:02:22.644Z"
+          },
+          "capabilities": {
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked",
+                  "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked",
+                  "note": "Failed: Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 14339,
+          "view_results": {},
+          "view_errors": [
+            {
+              "viewName": "pool_stats",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats",
+              "error": "Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "total_staked",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked",
+              "error": "Supra view call failed for 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3::jackpot_svlt::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "verdict_reason": "Missing required view capabilities (poolStats or totalStaked)"
+        }
+      }
+    ]
+  },
+  "scan_level_num": 3,
+  "scan_level_str": "L3",
+  "badge": {
+    "tier": "NONE",
+    "label": "No Badge",
+    "expires_at_iso": null,
+    "continuously_monitored": false,
+    "reason": "Verdict is fail, requires 'pass' for wallet badge"
+  }
+}

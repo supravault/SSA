@@ -1,0 +1,32 @@
+{
+  "target": {
+    "kind": "wallet",
+    "value": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3"
+  },
+  "time_utc": "2026-01-11T20:02:36.984Z",
+  "level": 3,
+  "verdict": "fail",
+  "score": 74,
+  "severity": {
+    "critical": 0,
+    "high": 30,
+    "medium": 9,
+    "low": 1,
+    "info": 2
+  },
+  "badge": {
+    "tier": "NONE",
+    "label": "No Badge",
+    "security_verified": false,
+    "continuously_monitored": false,
+    "expires_at_iso": null,
+    "reason": "Verdict is fail, requires 'pass' for wallet badge"
+  },
+  "artifacts": {
+    "report_json": "report.json",
+    "report_pdf": "report.pdf",
+    "snapshot": null,
+    "diff": null,
+    "pulse": null
+  }
+}
