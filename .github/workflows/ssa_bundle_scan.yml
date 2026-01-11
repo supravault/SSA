@@ -228,7 +228,7 @@ jobs:
                 | if ($v.level < 1 or $v.level > 5) then error("scan["+($i|tostring)+"].level must be 1..5") else . end
                 | if ($v.kind=="wallet" and ($v.level < 1 or $v.level > 3)) then error("scan["+($i|tostring)+"].wallet level must be 1..3") else . end
                 | if (($v.target|tostring)|length)==0 then error("scan["+($i|tostring)+"].target is required") else . end
-              )) | length > 0
+              )) | length
           ' "$tmp_norm" > /dev/null
 
           mv "$tmp_norm" "$bundle_dir/bundle_scans.json"
@@ -346,7 +346,7 @@ jobs:
                   enabled: true,
                   mode: "continuous",
                   cadence: "24h",
-                  note: "Declared by workflow (L5 semantic). True continuous monitoring requires scheduled re-scans + state."
+                  note: "Declared by workflow for L5. True continuous monitoring requires scheduled re-scans + persisted state."
                 }
               ' "$scan_dir/report.json" > "$tmp_report" && mv "$tmp_report" "$scan_dir/report.json"
               echo "✅ Patched FA L5 report.json with monitoring.enabled=true"
@@ -368,7 +368,7 @@ jobs:
           #   1) explicit inputs (score/verdict/timestamp)
           #   2) pulse JSON (if downloaded)
           #   3) pulse PDF -> pdftotext -> regex
-          # + fallback verdict-from-score if verdict text missing
+          # + IMPORTANT: Pulse score is "goodness" (higher is safer)
           # ------------------------------------------
           pulse_summary_path=""
           if [[ -n "$pulse_tier" || -n "$pulse_path" ]]; then
@@ -394,19 +394,19 @@ txt_out = os.path.join(bundle_dir, "tmp", "pulse.txt")
 
 def clamp_score(x):
   try:
-    v = int(x)
+    v = int(str(x).strip())
     return v if 0 <= v <= 100 else None
   except Exception:
     return None
 
-def verdict_from_score(score):
+def verdict_from_score_good(score):
+  # Higher score = safer (based on Pulse PDFs like "91" as top score)
   if score is None:
     return ""
-  # simple tiering; adjust later if you want
-  if score <= 20: return "SAFE"
-  if score <= 40: return "LOW"
-  if score <= 60: return "MEDIUM"
-  if score <= 80: return "HIGH"
+  if score >= 80: return "SAFE"
+  if score >= 60: return "LOW"
+  if score >= 40: return "MEDIUM"
+  if score >= 20: return "HIGH"
   return "CRITICAL"
 
 # 1) Inputs override
@@ -423,15 +423,14 @@ if not source and pulse_path.lower().endswith(".json") and os.path.exists(pulse_
     with open(pulse_path, "r", encoding="utf-8", errors="ignore") as f:
       raw_obj = json.load(f)
     source = "pulse_json"
-    # try to pull common keys if present
-    for k in ["score","risk_score","riskScore"]:
+    for k in ["score","risk_score","riskScore","total_score","overall_score"]:
       if score is None and isinstance(raw_obj, dict) and k in raw_obj:
         score = clamp_score(raw_obj.get(k))
-    for k in ["verdict","risk","status","risk_level"]:
+    for k in ["verdict","risk","status","risk_level","rating"]:
       if not verdict and isinstance(raw_obj, dict) and k in raw_obj:
         vv = str(raw_obj.get(k) or "").strip()
         if vv: verdict = vv.upper()
-    for k in ["timestamp","timestamp_utc","ts","date"]:
+    for k in ["timestamp","timestamp_utc","ts","date","generated_at"]:
       if not timestamp_utc and isinstance(raw_obj, dict) and k in raw_obj:
         timestamp_utc = str(raw_obj.get(k) or "").strip()
   except Exception:
@@ -441,10 +440,10 @@ if not source and pulse_path.lower().endswith(".json") and os.path.exists(pulse_
 # 3) PDF text extract
 if not source and pulse_path.lower().endswith(".pdf") and os.path.exists(pulse_path):
   try:
-    # Use pdftotext output created by workflow (best-effort)
-    # If file not created yet, we'll create it here.
+    # Ensure we have pulse.txt
     if not os.path.exists(txt_out):
       os.system(f'pdftotext -layout "{pulse_path}" "{txt_out}" >/dev/null 2>&1')
+
     raw = ""
     try:
       with open(txt_out, "r", encoding="utf-8", errors="ignore") as f:
@@ -454,18 +453,26 @@ if not source and pulse_path.lower().endswith(".pdf") and os.path.exists(pulse_p
 
     source = "pulse_pdf_text_extract"
 
-    # timestamp ISO Z
+    # timestamp (Pulse PDFs often show "Date: January 5, 2026" not ISO; keep ISO if present)
     if not timestamp_utc:
       m = re.search(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", raw)
       if m: timestamp_utc = m.group(0)
 
-    # score patterns (more forgiving)
+    # SCORE: prefer a standalone line number (e.g., "91" on its own line)
+    if score is None:
+      for line in raw.splitlines():
+        s = line.strip()
+        if re.fullmatch(r"\d{1,3}", s):
+          v = clamp_score(s)
+          if v is not None:
+            score = v
+            break
+
+    # fallback score patterns (avoid picking 14/15 etc by requiring /100 or "Score" context)
     if score is None:
       patterns = [
-        r"risk\s*score[^0-9]{0,50}(\d{1,3})",
-        r"\bscore\b[^0-9]{0,50}(\d{1,3})\b",
+        r"\b(?:overall\s+)?score\b[^0-9]{0,80}(\d{1,3})\b",
         r"(\d{1,3})\s*/\s*100",
-        r"(\d{1,3})\s*%\s*(?:risk)?",
       ]
       for pat in patterns:
         mm = re.search(pat, raw, flags=re.IGNORECASE)
@@ -474,13 +481,12 @@ if not source and pulse_path.lower().endswith(".pdf") and os.path.exists(pulse_p
           if score is not None:
             break
 
-    # verdict patterns
+    # verdict keywords usually not present in Pulse PDFs, but still try
     if not verdict:
       m = re.search(r"\b(verdict|risk\s*level|risk)\b[^A-Z]{0,80}\b(SAFE|OK|LOW|MEDIUM|HIGH|CRITICAL|WARNING)\b", raw, flags=re.IGNORECASE)
       if m:
         verdict = m.group(2).upper().strip()
       else:
-        # fallback: any standalone keyword
         m2 = re.search(r"\b(SAFE|OK|LOW|MEDIUM|HIGH|CRITICAL|WARNING)\b", raw, flags=re.IGNORECASE)
         if m2:
           verdict = m2.group(1).upper().strip()
@@ -488,9 +494,9 @@ if not source and pulse_path.lower().endswith(".pdf") and os.path.exists(pulse_p
   except Exception:
     source = ""
 
-# fallback: if verdict missing but score exists
+# If verdict still missing, derive from score (higher=safer)
 if not verdict:
-  verdict = verdict_from_score(score) or "UNKNOWN"
+  verdict = verdict_from_score_good(score) or "UNKNOWN"
 
 out = {
   "tier": tier,
@@ -500,7 +506,6 @@ out = {
   "verdict": verdict,
   "source": source if source else "missing_pulse",
 }
-# keep raw JSON if we had it
 if raw_obj is not None:
   out["raw"] = raw_obj
 
@@ -628,6 +633,7 @@ PY
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
