@@ -1,0 +1,184 @@
+{
+  "meta": {
+    "schema_version": "3.0",
+    "timestamp_iso": "2026-01-11T18:44:52.838Z",
+    "rpc_url": "https://rpc-mainnet.supra.com",
+    "scanner_version": "0.1.0"
+  },
+  "identity": {
+    "faAddress": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+    "objectOwner": "0xd6e692f606215e8dc872bb24134de1e90e7845af0ed88be568c71a0a0272877d"
+  },
+  "supply": {
+    "supplyCurrentBase": "797799999000000",
+    "supplyMaxBase": "1000000000000000",
+    "decimals": 6
+  },
+  "capabilities": {
+    "hasMintRef": true,
+    "hasBurnRef": true,
+    "hasTransferRef": true,
+    "hasDepositHook": true,
+    "hasWithdrawHook": true,
+    "hasDerivedBalanceHook": false
+  },
+  "control_surface": {
+    "relevantModules": [
+      "0xa4a4a31116e114bf3c4f4728914e6b43db73279a4421b0768993e07248fe2234::dispatchable_fa_store"
+    ],
+    "modules": {
+      "0xa4a4a31116e114bf3c4f4728914e6b43db73279a4421b0768993e07248fe2234::dispatchable_fa_store": {
+        "moduleId": "0xa4a4a31116e114bf3c4f4728914e6b43db73279a4421b0768993e07248fe2234::dispatchable_fa_store",
+        "abi_fetched": true,
+        "entry_fn_names": [],
+        "exposed_fn_names": []
+      }
+    },
+    "hookModules": [
+      {
+        "module_address": "0xa4a4a31116e114bf3c4f4728914e6b43db73279a4421b0768993e07248fe2234",
+        "module_name": "dispatchable_fa_store",
+        "function_name": "on_deposit"
+      },
+      {
+        "module_address": "0xa4a4a31116e114bf3c4f4728914e6b43db73279a4421b0768993e07248fe2234",
+        "module_name": "dispatchable_fa_store",
+        "function_name": "on_withdraw"
+      }
+    ],
+    "hooks": {
+      "deposit_hook": {
+        "module_address": "0xa4a4a31116e114bf3c4f4728914e6b43db73279a4421b0768993e07248fe2234",
+        "module_name": "dispatchable_fa_store",
+        "function_name": "on_deposit",
+        "risk": "medium"
+      },
+      "withdraw_hook": {
+        "module_address": "0xa4a4a31116e114bf3c4f4728914e6b43db73279a4421b0768993e07248fe2234",
+        "module_name": "dispatchable_fa_store",
+        "function_name": "on_withdraw",
+        "risk": "high"
+      }
+    },
+    "hookModulePins": [
+      {
+        "module_address": "0xa4a4a31116e114bf3c4f4728914e6b43db73279a4421b0768993e07248fe2234",
+        "module_name": "dispatchable_fa_store",
+        "moduleId": "0xa4a4a31116e114bf3c4f4728914e6b43db73279a4421b0768993e07248fe2234::dispatchable_fa_store",
+        "codeHash": "ad0360702f01308201eb4f457f4e23d5aca7916d48a0788ba5acb972cc1751ea",
+        "hashBasis": "bytecode",
+        "fetchedFrom": "rpc_v3"
+      }
+    ],
+    "ownerModulesCount": 0
+  },
+  "coverage": {
+    "coverage": "complete",
+    "reasons": []
+  },
+  "findings": [
+    {
+      "id": "FA-FREEZE-001",
+      "severity": "info",
+      "title": "Freeze/Blacklist/Pause Capability Unknown"
+    },
+    {
+      "id": "FA-UPGRADE-001",
+      "severity": "info",
+      "title": "Upgrade/Admin Controls Unknown"
+    },
+    {
+      "id": "FA-META-001",
+      "severity": "low",
+      "title": "Missing or Incomplete Metadata"
+    }
+  ],
+  "hashes": {
+    "moduleSurfaceHash": {
+      "0xa4a4a31116e114bf3c4f4728914e6b43db73279a4421b0768993e07248fe2234::dispatchable_fa_store": "e3b0c44298fc1c14"
+    },
+    "overallSurfaceHash": "032d79a49db2edbc",
+    "hookModulesSurfaceHash": "31a43f7405d0b8cc21483bad72e322274b4233f91fff495550c80e5a05525d02"
+  },
+  "privileges": {
+    "byClass": {
+      "MINT": [],
+      "BURN": [],
+      "FREEZE_RESTRICT": [],
+      "ADMIN_OWNERSHIP": [],
+      "UPGRADE_PUBLISH": [],
+      "METADATA_MUTATION": [],
+      "HOOK_CONFIG": [],
+      "UNKNOWN_PRIVILEGE": []
+    },
+    "all": [],
+    "hasOpaqueControl": true
+  },
+  "invariants": {
+    "items": [
+      {
+        "id": "FA_OWNER_KNOWN",
+        "status": "ok",
+        "title": "FA owner is known",
+        "detail": "Owner address: 0xd6e692f606215e8dc872bb24134de1e90e7845af0ed88be568c71a0a0272877d"
+      },
+      {
+        "id": "FA_OWNER_STABILITY_SIGNAL",
+        "status": "unknown",
+        "title": "Owner stability signal",
+        "detail": "Owner stability requires historical comparison (Level 3)"
+      },
+      {
+        "id": "FA_HAS_WITHDRAW_HOOK",
+        "status": "ok",
+        "title": "Withdraw hook present",
+        "detail": "Withdraw hook is configured"
+      },
+      {
+        "id": "FA_UNKNOWN_HOOK_MODULE",
+        "status": "ok",
+        "title": "All hook modules known",
+        "detail": "All hook modules have accessible ABIs"
+      },
+      {
+        "id": "FA_MAX_SUPPLY_PRESENT",
+        "status": "ok",
+        "title": "Max supply is set",
+        "detail": "Max supply: 1000000000000000"
+      },
+      {
+        "id": "FA_MAX_SUPPLY_EXCEEDED",
+        "status": "ok",
+        "title": "Max supply not exceeded",
+        "detail": "Current supply (797799999000000) is within max supply (1000000000000000)"
+      }
+    ],
+    "overall": "unknown"
+  },
+  "evidence": {
+    "sourcesUsed": [
+      "rpc_v3",
+      "suprascan"
+    ],
+    "parity": [
+      {
+        "id": "SUPPLY_PARITY",
+        "status": "unknown",
+        "detail": "One or both supply sources unavailable",
+        "evidence": {
+          "rpcSupply": "797799999000000",
+          "suprascanSupply": null
+        }
+      },
+      {
+        "id": "OWNER_PARITY",
+        "status": "match",
+        "detail": "Owner matches: 0xd6e692f606215e8dc872bb24134de1e90e7845af0ed88be568c71a0a0272877d",
+        "evidence": {
+          "rpcOwner": "0xd6e692f606215e8dc872bb24134de1e90e7845af0ed88be568c71a0a0272877d",
+          "suprascanOwner": "0xd6e692f606215e8dc872bb24134de1e90e7845af0ed88be568c71a0a0272877d"
+        }
+      }
+    ]
+  }
+}

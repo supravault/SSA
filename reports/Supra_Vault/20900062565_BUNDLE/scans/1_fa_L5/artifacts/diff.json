@@ -1,0 +1,155 @@
+{
+  "changed": true,
+  "changes": [
+    {
+      "type": "FINDING_ADDED",
+      "severity": "medium",
+      "before": null,
+      "after": "FA-MINT-001",
+      "evidence": {
+        "id": "FA-MINT-001",
+        "title": "Mint reference present (supply can be increased)",
+        "severity": "medium"
+      }
+    },
+    {
+      "type": "FINDING_ADDED",
+      "severity": "medium",
+      "before": null,
+      "after": "FA-HOOKS-001",
+      "evidence": {
+        "id": "FA-HOOKS-001",
+        "title": "FA has dispatch hooks (custom transfer/deposit/withdraw logic)",
+        "severity": "medium"
+      }
+    },
+    {
+      "type": "FINDINGS_CHANGED",
+      "severity": "medium",
+      "before": [
+        {
+          "id": "FA-FREEZE-001",
+          "severity": "info",
+          "title": "Freeze/Blacklist/Pause Capability Unknown"
+        },
+        {
+          "id": "FA-UPGRADE-001",
+          "severity": "info",
+          "title": "Upgrade/Admin Controls Unknown"
+        },
+        {
+          "id": "FA-META-001",
+          "severity": "low",
+          "title": "Missing or Incomplete Metadata"
+        }
+      ],
+      "after": [
+        {
+          "id": "FA-FREEZE-001",
+          "severity": "info",
+          "title": "Freeze/Blacklist/Pause Capability Unknown"
+        },
+        {
+          "id": "FA-UPGRADE-001",
+          "severity": "info",
+          "title": "Upgrade/Admin Controls Unknown"
+        },
+        {
+          "id": "FA-META-001",
+          "severity": "low",
+          "title": "Missing or Incomplete Metadata"
+        },
+        {
+          "id": "FA-MINT-001",
+          "severity": "medium",
+          "title": "Mint reference present (supply can be increased)"
+        },
+        {
+          "id": "FA-BURN-001",
+          "severity": "info",
+          "title": "Burn reference present"
+        },
+        {
+          "id": "FA-HOOKS-001",
+          "severity": "medium",
+          "title": "FA has dispatch hooks (custom transfer/deposit/withdraw logic)"
+        },
+        {
+          "id": "FA-OWNER-001",
+          "severity": "info",
+          "title": "FA object owner present"
+        },
+        {
+          "id": "FA-SUPPLY-001",
+          "severity": "info",
+          "title": "Supply info detected"
+        }
+      ],
+      "evidence": {
+        "newFindings": [
+          {
+            "id": "FA-MINT-001",
+            "severity": "medium",
+            "title": "Mint reference present (supply can be increased)"
+          },
+          {
+            "id": "FA-BURN-001",
+            "severity": "info",
+            "title": "Burn reference present"
+          },
+          {
+            "id": "FA-HOOKS-001",
+            "severity": "medium",
+            "title": "FA has dispatch hooks (custom transfer/deposit/withdraw logic)"
+          },
+          {
+            "id": "FA-OWNER-001",
+            "severity": "info",
+            "title": "FA object owner present"
+          },
+          {
+            "id": "FA-SUPPLY-001",
+            "severity": "info",
+            "title": "Supply info detected"
+          }
+        ],
+        "removedFindings": [],
+        "severityEscalations": [],
+        "maxNewSeverity": "medium"
+      }
+    },
+    {
+      "type": "FINDING_ADDED",
+      "severity": "info",
+      "before": null,
+      "after": "FA-BURN-001",
+      "evidence": {
+        "id": "FA-BURN-001",
+        "title": "Burn reference present",
+        "severity": "info"
+      }
+    },
+    {
+      "type": "FINDING_ADDED",
+      "severity": "info",
+      "before": null,
+      "after": "FA-OWNER-001",
+      "evidence": {
+        "id": "FA-OWNER-001",
+        "title": "FA object owner present",
+        "severity": "info"
+      }
+    },
+    {
+      "type": "FINDING_ADDED",
+      "severity": "info",
+      "before": null,
+      "after": "FA-SUPPLY-001",
+      "evidence": {
+        "id": "FA-SUPPLY-001",
+        "title": "Supply info detected",
+        "severity": "info"
+      }
+    }
+  ]
+}
