@@ -1,0 +1,10 @@
+{
+  "scans": [
+    {
+      "kind": "wallet",
+      "level": 1,
+      "target": "0x1234567890abcdef",
+      "modulesAllowlist": ""
+    }
+  ]
+}

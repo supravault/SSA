@@ -1,0 +1,77 @@
+{
+  "request_id": "7bb356de-1f97-4215-ad94-1eb43bbeb68f",
+  "target": {
+    "chain": "supra",
+    "module_address": "0x1234567890abcdef",
+    "module_name": "",
+    "module_id": "0x1234567890abcdef",
+    "address": "0x1234567890abcdef",
+    "kind": "wallet"
+  },
+  "scan_level": "quick",
+  "timestamp_iso": "2026-01-11T17:38:43.017Z",
+  "engine": {
+    "name": "ssa-scanner",
+    "version": "0.1.0",
+    "ruleset_version": "move-ruleset-0.1.0"
+  },
+  "artifact": {
+    "fetch_method": "rpc",
+    "artifact_hash": "wallet_0x1234567890abcdef",
+    "binding_note": "Wallet scan for 0x1234567890abcdef",
+    "artifact_origin": {
+      "kind": "supra_rpc_v3",
+      "path": "https://rpc-mainnet.supra.com/rpc/v3/accounts/0x1234567890abcdef/modules"
+    }
+  },
+  "summary": {
+    "risk_score": 0,
+    "verdict": "pass",
+    "severity_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "badge_eligibility": {
+      "scanned": true,
+      "no_critical": true,
+      "security_verified": false,
+      "continuously_monitored": false,
+      "reasons": [
+        "No modules found at wallet address"
+      ]
+    },
+    "capabilities": {
+      "poolStats": false,
+      "totalStaked": false,
+      "queue": false,
+      "userViews": false
+    }
+  },
+  "findings": [],
+  "meta": {
+    "scan_options": {
+      "out": "reports/TestProject/20899208339_BUNDLE_Test/scans/0_wallet_L1",
+      "delay": 1000,
+      "kind": "wallet",
+      "level": 1,
+      "address": "0x1234567890abcdef",
+      "rpc": "https://rpc-mainnet.supra.com",
+      "pdf": true
+    },
+    "rpc_url": "https://rpc-mainnet.supra.com",
+    "duration_ms": 0,
+    "wallet_modules": []
+  },
+  "scan_level_num": 1,
+  "scan_level_str": "L1",
+  "badge": {
+    "tier": "NONE",
+    "label": "No Badge",
+    "expires_at_iso": null,
+    "continuously_monitored": false,
+    "reason": "Wallet Verified requires level 3 (all levels 1-3 must pass)"
+  }
+}
