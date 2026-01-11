@@ -36,15 +36,15 @@ on:
         required: false
         type: string
       pulse_score:
-        description: "Optional: Pulse risk score (0-100). Strongly recommended if pulse_tier is set."
+        description: "Optional: Pulse risk score (0-100). If provided, overrides PDF parsing."
         required: false
         type: string
       pulse_verdict:
-        description: "Optional: Pulse verdict (SAFE/OK/LOW/MEDIUM/HIGH). Strongly recommended if pulse_tier is set."
+        description: "Optional: Pulse verdict (SAFE/OK/LOW/MEDIUM/HIGH). If provided, overrides PDF parsing."
         required: false
         type: string
       pulse_timestamp:
-        description: "Optional: Pulse timestamp UTC (e.g., 2026-01-11T05:50:36Z). Strongly recommended if pulse_tier is set."
+        description: "Optional: Pulse timestamp UTC (e.g., 2026-01-11T05:50:36Z). If provided, overrides PDF parsing."
         required: false
         type: string
 
@@ -70,6 +70,7 @@ jobs:
           node-version: "20"
           cache: "npm"
 
+      # NOTE: npm ci fails if lockfile is out-of-sync (tsx missing)
       - name: Install (npm)
         run: npm install
 
@@ -225,11 +226,11 @@ jobs:
             report_type="SSA_FULL_INTEGRATED_REPORT"
           fi
 
-          # Pulse download (best effort; attachment only)
+          # Pulse download (best effort; used for parsing if PDF; also attachment)
           pulse_path=""
           pulse_error=""
           if [[ -n "$pulse_url" ]]; then
-            echo "⬇️ Downloading Supra Pulse report (optional attachment)..."
+            echo "⬇️ Downloading Supra Pulse report..."
             url_no_q="${pulse_url%%\?*}"
             ext="${url_no_q##*.}"
             ext="$(echo "$ext" | tr "[:upper:]" "[:lower:]")"
@@ -245,7 +246,7 @@ jobs:
             set -e
 
             if [[ $curl_rc -ne 0 || "$http_code" -lt 200 || "$http_code" -ge 300 ]]; then
-              echo "⚠️ Pulse download failed (rc=$curl_rc http=$http_code). Continuing without pulse attachment."
+              echo "⚠️ Pulse download failed (rc=$curl_rc http=$http_code). Continuing without pulse."
               rm -f "$pulse_path" || true
               pulse_path=""
               pulse_error="pulse_download_failed_rc_${curl_rc}_http_${http_code}"
@@ -326,33 +327,199 @@ jobs:
           qpdf --empty --pages "${pdfs[@]}" -- "$combined"
           echo "✅ Combined PDF: $combined"
 
-          # Pulse summary (NO PDF PARSING; metadata only)
+          # -------------------------------
+          # Pulse summary (NOW: READ THE PDF)
+          # Priority:
+          #   1) Explicit inputs (score/verdict/timestamp)
+          #   2) Pulse JSON file (if downloaded as .json)
+          #   3) Pulse PDF text extract via pdftotext + regex
+          # -------------------------------
           pulse_summary_path=""
-          if [[ -n "$pulse_tier" ]]; then
+          if [[ -n "$pulse_path" || -n "$pulse_tier" ]]; then
             pulse_summary_path="$bundle_dir/tmp/pulse_summary.json"
+            tier_final="${pulse_tier:-Standard}"
 
-            score_json="null"
-            if [[ "$pulse_score" =~ ^[0-9]+$ ]] && (( pulse_score >= 0 && pulse_score <= 100 )); then
-              score_json="$pulse_score"
+            # (1) Inputs override everything
+            if [[ -n "$pulse_score" || -n "$pulse_verdict" || -n "$pulse_timestamp" ]]; then
+              score_json="null"
+              if [[ "$pulse_score" =~ ^[0-9]+$ ]] && (( pulse_score >= 0 && pulse_score <= 100 )); then
+                score_json="$pulse_score"
+              fi
+
+              jq -n \
+                --arg tier "$tier_final" \
+                --arg project "${pulse_project:-}" \
+                --arg verdict "${pulse_verdict:-}" \
+                --arg timestamp_utc "${pulse_timestamp:-}" \
+                --arg source "workflow_inputs" \
+                --argjson score "$score_json" \
+                '{
+                  tier: $tier,
+                  project: $project,
+                  timestamp_utc: $timestamp_utc,
+                  score: $score,
+                  verdict: $verdict,
+                  source: $source
+                }' > "$pulse_summary_path"
+
+              echo "✅ pulse_summary.json from inputs: $pulse_summary_path"
+
+            else
+              # (2) If Pulse file is JSON, use it directly (still wrap a few fields)
+              if [[ -n "$pulse_path" && "$pulse_path" == *.json ]]; then
+                echo "✅ Using downloaded Pulse JSON directly."
+                jq -n \
+                  --arg tier "$tier_final" \
+                  --arg project "${pulse_project:-}" \
+                  --arg source "pulse_json" \
+                  --slurpfile raw "$pulse_path" \
+                  '{
+                    tier: $tier,
+                    project: $project,
+                    source: $source,
+                    raw: $raw[0]
+                  }' > "$pulse_summary_path"
+
+              # (3) Otherwise parse PDF text
+              elif [[ -n "$pulse_path" && "$pulse_path" == *.pdf ]]; then
+                echo "📄 Extracting Pulse PDF text (pdftotext)..."
+                pdftotext "$pulse_path" "$bundle_dir/tmp/pulse.txt" || true
+
+                echo "🔎 Parsing Pulse text (best-effort)..."
+                python3 - <<'PY'
+import os, re, json
+
+bundle_dir = os.environ["BUNDLE_DIR"]
+txt_path = os.path.join(bundle_dir, "tmp", "pulse.txt")
+
+tier = (os.environ.get("PULSE_TIER") or "Standard").strip() or "Standard"
+project = (os.environ.get("PULSE_PROJECT") or "").strip()
+
+raw = ""
+try:
+  raw = open(txt_path, "r", encoding="utf-8", errors="ignore").read()
+except Exception:
+  raw = ""
+
+# timestamp: first ISO8601 Z
+ts = ""
+m = re.search(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", raw)
+if m:
+  ts = m.group(0)
+
+# score: try multiple patterns
+score = None
+patterns = [
+  r"risk\s*score[^0-9]{0,30}(\d{1,3})",
+  r"\bscore\b[^0-9]{0,30}(\d{1,3})\b",
+  r"(\d{1,3})\s*/\s*100",
+]
+for pat in patterns:
+  mm = re.search(pat, raw, flags=re.IGNORECASE)
+  if mm:
+    try:
+      v = int(mm.group(1))
+      if 0 <= v <= 100:
+        score = v
+        break
+    except Exception:
+      pass
+
+# verdict: look for words like SAFE/LOW/MEDIUM/HIGH/OK
+verdict = ""
+mv = re.search(r"\b(verdict|risk)\b[^A-Z]{0,40}\b(SAFE|OK|LOW|MEDIUM|HIGH|CRITICAL|WARNING)\b", raw, flags=re.IGNORECASE)
+if mv:
+  verdict = mv.group(2).upper().strip()
+else:
+  # fallback: any standalone SAFE/LOW/MEDIUM/HIGH in the doc
+  mv2 = re.search(r"\b(SAFE|OK|LOW|MEDIUM|HIGH|CRITICAL|WARNING)\b", raw, flags=re.IGNORECASE)
+  if mv2:
+    verdict = mv2.group(1).upper().strip()
+
+out = {
+  "tier": tier,
+  "project": project,
+  "timestamp_utc": ts,
+  "score": score,
+  "verdict": verdict if verdict else "UNKNOWN",
+  "source": "pulse_pdf_text_extract",
+}
+print(json.dumps(out, indent=2))
+PY
+                # write python stdout to file
+                python3 - <<'PY' > "$pulse_summary_path"
+import os, re, json
+
+bundle_dir = os.environ["BUNDLE_DIR"]
+txt_path = os.path.join(bundle_dir, "tmp", "pulse.txt")
+
+tier = (os.environ.get("PULSE_TIER") or "Standard").strip() or "Standard"
+project = (os.environ.get("PULSE_PROJECT") or "").strip()
+
+raw = ""
+try:
+  raw = open(txt_path, "r", encoding="utf-8", errors="ignore").read()
+except Exception:
+  raw = ""
+
+ts = ""
+m = re.search(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", raw)
+if m:
+  ts = m.group(0)
+
+score = None
+patterns = [
+  r"risk\s*score[^0-9]{0,30}(\d{1,3})",
+  r"\bscore\b[^0-9]{0,30}(\d{1,3})\b",
+  r"(\d{1,3})\s*/\s*100",
+]
+for pat in patterns:
+  mm = re.search(pat, raw, flags=re.IGNORECASE)
+  if mm:
+    try:
+      v = int(mm.group(1))
+      if 0 <= v <= 100:
+        score = v
+        break
+    except Exception:
+      pass
+
+verdict = ""
+mv = re.search(r"\b(verdict|risk)\b[^A-Z]{0,40}\b(SAFE|OK|LOW|MEDIUM|HIGH|CRITICAL|WARNING)\b", raw, flags=re.IGNORECASE)
+if mv:
+  verdict = mv.group(2).upper().strip()
+else:
+  mv2 = re.search(r"\b(SAFE|OK|LOW|MEDIUM|HIGH|CRITICAL|WARNING)\b", raw, flags=re.IGNORECASE)
+  if mv2:
+    verdict = mv2.group(1).upper().strip()
+
+out = {
+  "tier": tier,
+  "project": project,
+  "timestamp_utc": ts,
+  "score": score,
+  "verdict": verdict if verdict else "UNKNOWN",
+  "source": "pulse_pdf_text_extract",
+}
+print(json.dumps(out, indent=2))
+PY
+                echo "✅ pulse_summary.json from PDF parse: $pulse_summary_path"
+              else
+                echo "ℹ️ No pulse file; creating minimal pulse_summary.json."
+                jq -n \
+                  --arg tier "$tier_final" \
+                  --arg project "${pulse_project:-}" \
+                  --arg source "missing_pulse" \
+                  '{
+                    tier: $tier,
+                    project: $project,
+                    timestamp_utc: "",
+                    score: null,
+                    verdict: "UNKNOWN",
+                    source: $source
+                  }' > "$pulse_summary_path"
+              fi
             fi
-
-            jq -n \
-              --arg tier "$pulse_tier" \
-              --arg project "${pulse_project:-}" \
-              --arg verdict "${pulse_verdict:-}" \
-              --arg timestamp_utc "${pulse_timestamp:-}" \
-              --arg source "workflow_inputs" \
-              --argjson score "$score_json" \
-              '{
-                tier: $tier,
-                project: $project,
-                timestamp_utc: $timestamp_utc,
-                score: $score,
-                verdict: $verdict,
-                source: $source
-              }' > "$pulse_summary_path"
-
-            echo "✅ pulse_summary.json ready: $pulse_summary_path"
           fi
 
           # Generate final_report.pdf via generate-report.js (requires Playwright)
@@ -443,6 +610,8 @@ jobs:
             }' > "$bundle_dir/bundle_inputs.json"
 
           echo "✅ bundle_inputs.json ready: $bundle_dir/bundle_inputs.json"
+        env:
+          BUNDLE_DIR: ${{ github.workspace }}/reports/${{ github.event.inputs.project_name }}/${{ github.run_id }}_BUNDLE
 
       - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
