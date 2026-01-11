@@ -1,0 +1,35 @@
+{
+  "dispatch_id": "",
+  "run_id": "20900457033",
+  "run_attempt": "1",
+  "workflow": "SSA Bundle Scan",
+  "repo": "supravault/SSA",
+  "ref": "refs/heads/main",
+  "sha": "ab79116cab953a2adbce555395dd0f6bf2b2674f",
+  "triggered_by": "supravault",
+  "ts_utc": "2026-01-11T19:14:24Z",
+  "project_name": "DXLYN",
+  "project_label": "",
+  "rpc": "https://rpc-mainnet.supra.com",
+  "report_type": "SSA_REPORT",
+  "continuous_monitoring": {
+    "enabled": false,
+    "cadence": null
+  },
+  "pulse": {
+    "attached": false,
+    "tier": "",
+    "url": "",
+    "error": ""
+  },
+  "bundle": {
+    "scans": [
+      {
+        "kind": "wallet",
+        "level": 3,
+        "target": "0xb364044ae268b711da93abe55ac1635246a1e9b3cb37df4ce021ed0fe40b165e",
+        "modulesAllowlist": ""
+      }
+    ]
+  }
+}

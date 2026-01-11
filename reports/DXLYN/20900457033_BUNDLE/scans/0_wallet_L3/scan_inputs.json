@@ -1,0 +1,9 @@
+{
+  "kind": "wallet",
+  "level": 3,
+  "target": "0xb364044ae268b711da93abe55ac1635246a1e9b3cb37df4ce021ed0fe40b165e",
+  "wallet_modules_allowlist": "",
+  "rpc": "https://rpc-mainnet.supra.com",
+  "pulse_attached": false,
+  "pulse_tier": ""
+}
