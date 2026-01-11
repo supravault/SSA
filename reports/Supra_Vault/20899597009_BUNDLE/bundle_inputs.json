@@ -1,0 +1,41 @@
+{
+  "dispatch_id": "",
+  "run_id": "20899597009",
+  "run_attempt": "1",
+  "workflow": "SSA Bundle Scan",
+  "repo": "supravault/SSA",
+  "ref": "refs/heads/main",
+  "sha": "26ce4a8ad57e4eed86d5acd0899414a52ed6ae02",
+  "triggered_by": "supravault",
+  "ts_utc": "2026-01-11T18:10:20Z",
+  "project_name": "Supra_Vault",
+  "project_label": "",
+  "rpc": "https://rpc-mainnet.supra.com",
+  "report_type": "SSA_FULL_INTEGRATED_REPORT",
+  "continuous_monitoring": {
+    "enabled": true,
+    "cadence": "24h"
+  },
+  "pulse": {
+    "attached": true,
+    "tier": "Spotlight",
+    "url": "https://base44.app/api/apps/696115a9afc894facb90128e/files/public/696115a9afc894facb90128e/d56e8b397_Supra_Vault__Report.pdf",
+    "error": ""
+  },
+  "bundle": {
+    "scans": [
+      {
+        "kind": "wallet",
+        "level": 3,
+        "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+        "modulesAllowlist": ""
+      },
+      {
+        "kind": "fa",
+        "level": 5,
+        "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+        "modulesAllowlist": ""
+      }
+    ]
+  }
+}
