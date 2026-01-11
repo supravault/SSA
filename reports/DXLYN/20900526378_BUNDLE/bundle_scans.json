@@ -1,0 +1,10 @@
+{
+  "scans": [
+    {
+      "kind": "wallet",
+      "level": 3,
+      "target": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3",
+      "modulesAllowlist": "staking_v24"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "target": {
+    "kind": "wallet",
+    "value": "0xd1c64ad544a0fe534f4e2641a4515b6a0629b26c29f36d6423014b192b7abee3"
+  },
+  "time_utc": "2026-01-11T19:19:58.693Z",
+  "level": 3,
+  "verdict": "pass",
+  "score": 0,
+  "severity": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "info": 0
+  },
+  "badge": {
+    "tier": "WALLET_VERIFIED",
+    "label": "SSA · Wallet Verified",
+    "security_verified": false,
+    "continuously_monitored": false,
+    "expires_at_iso": "2026-01-18T19:19:58.694Z"
+  },
+  "artifacts": {
+    "report_json": "report.json",
+    "report_pdf": "report.pdf",
+    "snapshot": null,
+    "diff": null,
+    "pulse": null
+  }
+}
