@@ -92,6 +92,7 @@ jobs:
         shell: bash
         env:
           SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
+
           PROJECT_NAME: ${{ github.event.inputs.project_name }}
           PROJECT_LABEL: ${{ github.event.inputs.project_label }}
           BUNDLE_JSON: ${{ github.event.inputs.bundle_json }}
@@ -146,6 +147,7 @@ jobs:
           fi
 
           mkdir -p "$bundle_dir/scans" "$bundle_dir/tmp"
+          export BUNDLE_DIR="$bundle_dir"
 
           # Resolve compiled SSA CLI path
           CLI=""
@@ -181,7 +183,7 @@ jobs:
             ln -s "$GITHUB_WORKSPACE/tools/icons" "$parent_dir/tools/icons"
           fi
 
-          # Normalize + validate bundle_json -> bundle_scans.json (jq only; no heredocs)
+          # Normalize + validate bundle_json -> bundle_scans.json (jq only)
           echo "$BUNDLE_JSON" | jq -e '
             def as_str: (if . == null then "" else tostring end);
             def allowlist:
@@ -381,31 +383,72 @@ jobs:
                   }' > "$pulse_summary_path"
                 echo "✅ pulse_summary.json from JSON: $pulse_summary_path"
 
-              # (3) Otherwise parse PDF text (YAML-SAFE: single physical line)
+              # (3) Otherwise parse PDF text (heredoc; YAML-safe)
               elif [[ -n "$pulse_path" && "$pulse_path" == *.pdf ]]; then
                 echo "📄 Extracting Pulse PDF text (pdftotext)..."
                 pdftotext "$pulse_path" "$bundle_dir/tmp/pulse.txt" || true
 
                 echo "🔎 Parsing Pulse text (best-effort)..."
-                python3 -c 'import os,re,json; bd=os.environ.get("BUNDLE_DIR",""); txt=os.path.join(bd,"tmp","pulse.txt"); tier=(os.environ.get("PULSE_TIER") or "Standard").strip() or "Standard"; proj=(os.environ.get("PULSE_PROJECT") or "").strip(); raw=""; 
-import builtins; 
-try: raw=open(txt,"r",encoding="utf-8",errors="ignore").read()
-except Exception: raw=""
-ts=""; m=re.search(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z",raw); ts=m.group(0) if m else ""; score=None
-for pat in [r"risk\s*score[^0-9]{0,30}(\d{1,3})", r"\bscore\b[^0-9]{0,30}(\d{1,3})\b", r"(\d{1,3})\s*/\s*100"]:
-  mm=re.search(pat,raw,flags=re.I)
-  if mm:
-    try:
-      v=int(mm.group(1))
-      if 0<=v<=100: score=v; break
-    except Exception: pass
-verdict=""; mv=re.search(r"\b(verdict|risk)\b[^A-Z]{0,40}\b(SAFE|OK|LOW|MEDIUM|HIGH|CRITICAL|WARNING)\b",raw,flags=re.I)
-if mv: verdict=mv.group(2).upper().strip()
-else:
-  mv2=re.search(r"\b(SAFE|OK|LOW|MEDIUM|HIGH|CRITICAL|WARNING)\b",raw,flags=re.I)
-  verdict=mv2.group(1).upper().strip() if mv2 else ""
-out={"tier":tier,"project":proj,"timestamp_utc":ts,"score":score,"verdict":(verdict if verdict else "UNKNOWN"),"source":"pulse_pdf_text_extract"}; print(json.dumps(out,indent=2))' > "$pulse_summary_path"
+                python3 - <<'PY' > "$pulse_summary_path"
+import os, re, json
 
+bundle_dir = os.environ.get("BUNDLE_DIR", "")
+txt_path = os.path.join(bundle_dir, "tmp", "pulse.txt")
+
+tier = (os.environ.get("PULSE_TIER") or "Standard").strip() or "Standard"
+project = (os.environ.get("PULSE_PROJECT") or "").strip()
+
+raw = ""
+try:
+    with open(txt_path, "r", encoding="utf-8", errors="ignore") as f:
+        raw = f.read()
+except Exception:
+    raw = ""
+
+# timestamp: first ISO8601 Z
+ts = ""
+m = re.search(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", raw)
+if m:
+    ts = m.group(0)
+
+# score: try multiple patterns
+score = None
+patterns = [
+    r"risk\s*score[^0-9]{0,30}(\d{1,3})",
+    r"\bscore\b[^0-9]{0,30}(\d{1,3})\b",
+    r"(\d{1,3})\s*/\s*100",
+]
+for pat in patterns:
+    mm = re.search(pat, raw, flags=re.IGNORECASE)
+    if mm:
+        try:
+            v = int(mm.group(1))
+            if 0 <= v <= 100:
+                score = v
+                break
+        except Exception:
+            pass
+
+# verdict
+verdict = ""
+mv = re.search(r"\b(verdict|risk)\b[^A-Z]{0,40}\b(SAFE|OK|LOW|MEDIUM|HIGH|CRITICAL|WARNING)\b", raw, flags=re.IGNORECASE)
+if mv:
+    verdict = mv.group(2).upper().strip()
+else:
+    mv2 = re.search(r"\b(SAFE|OK|LOW|MEDIUM|HIGH|CRITICAL|WARNING)\b", raw, flags=re.IGNORECASE)
+    if mv2:
+        verdict = mv2.group(1).upper().strip()
+
+out = {
+    "tier": tier,
+    "project": project,
+    "timestamp_utc": ts,
+    "score": score,
+    "verdict": verdict if verdict else "UNKNOWN",
+    "source": "pulse_pdf_text_extract",
+}
+print(json.dumps(out, indent=2))
+PY
                 echo "✅ pulse_summary.json from PDF parse: $pulse_summary_path"
               else
                 echo "ℹ️ No pulse file; creating minimal pulse_summary.json."
@@ -513,8 +556,6 @@ out={"tier":tier,"project":proj,"timestamp_utc":ts,"score":score,"verdict":(verd
             }' > "$bundle_dir/bundle_inputs.json"
 
           echo "✅ bundle_inputs.json ready: $bundle_dir/bundle_inputs.json"
-        env:
-          BUNDLE_DIR: ${{ github.workspace }}/reports/${{ github.event.inputs.project_name }}/${{ github.run_id }}_BUNDLE
 
       - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
@@ -540,6 +581,7 @@ out={"tier":tier,"project":proj,"timestamp_utc":ts,"score":score,"verdict":(verd
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
