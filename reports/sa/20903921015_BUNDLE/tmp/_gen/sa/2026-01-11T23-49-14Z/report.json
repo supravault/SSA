@@ -1,0 +1,835 @@
+{
+  "request_id": "ceab3436-347c-4a79-a3fc-cb242cc3de4c",
+  "target": {
+    "address": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f",
+    "module_name": "",
+    "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f",
+    "kind": "wallet",
+    "chain": "supra"
+  },
+  "scan_level": "standard",
+  "timestamp_iso": "2026-01-11T23:49:00.448Z",
+  "engine": {
+    "name": "ssa-scanner",
+    "version": "0.1.0",
+    "ruleset_version": "move-ruleset-0.1.0"
+  },
+  "artifact": {
+    "fetch_method": "rpc",
+    "artifact_hash": "wallet_0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f",
+    "binding_note": "Wallet scan for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f",
+    "artifact_origin": {
+      "kind": "supra_rpc_v3",
+      "path": "https://rpc-mainnet.supra.com/rpc/v3/accounts/0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f/modules"
+    }
+  },
+  "summary": {
+    "risk_score": 4,
+    "verdict": "pass",
+    "severity_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 6,
+      "low": 0,
+      "info": 0
+    },
+    "badge_eligibility": {
+      "scanned": true,
+      "no_critical": true,
+      "security_verified": false,
+      "continuously_monitored": false,
+      "reasons": []
+    },
+    "capabilities": {
+      "poolStats": false,
+      "totalStaked": false,
+      "queue": false,
+      "userViews": false
+    }
+  },
+  "findings": [
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale"
+    },
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions"
+    },
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3"
+    }
+  ],
+  "meta": {
+    "scan_options": {
+      "out": "reports/sa/20903921015_BUNDLE/scans/0_wallet_L2",
+      "delay": 1000,
+      "kind": "wallet",
+      "level": 2,
+      "address": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f",
+      "rpc": "https://rpc-mainnet.supra.com",
+      "pdf": true
+    },
+    "rpc_url": "https://rpc-mainnet.supra.com",
+    "duration_ms": 0,
+    "wallet_modules": [
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config",
+        "module_profile": "generic",
+        "module_profile_reason": "no staking naming hints; treating as generic",
+        "verdict": "pass",
+        "risk_score": 0,
+        "summary": {
+          "risk_score": 0,
+          "verdict": "pass",
+          "severity_counts": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": true,
+            "continuously_monitored": false,
+            "reasons": [
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T23:48:56.705Z"
+          },
+          "capabilities": {
+            "moduleProfile": "generic",
+            "moduleProfileReason": "no staking naming hints; treating as generic",
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [],
+        "meta": {
+          "scan_options": {
+            "scan_level": "standard",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 407,
+          "view_results": {},
+          "view_errors": [],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "module_profile": "generic",
+          "module_profile_reason": "no staking naming hints; treating as generic",
+          "allowed_views_effective": []
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale",
+        "module_profile": "generic",
+        "module_profile_reason": "no staking naming hints; treating as generic",
+        "verdict": "pass",
+        "risk_score": 4,
+        "summary": {
+          "risk_score": 4,
+          "verdict": "pass",
+          "severity_counts": {
+            "critical": 0,
+            "high": 0,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": true,
+            "continuously_monitored": false,
+            "reasons": [
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T23:48:57.112Z"
+          },
+          "capabilities": {
+            "moduleProfile": "generic",
+            "moduleProfileReason": "no staking naming hints; treating as generic",
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "standard",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 415,
+          "view_results": {},
+          "view_errors": [],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "module_profile": "generic",
+          "module_profile_reason": "no staking naming hints; treating as generic",
+          "allowed_views_effective": []
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2",
+        "module_profile": "generic",
+        "module_profile_reason": "no staking naming hints; treating as generic",
+        "verdict": "pass",
+        "risk_score": 0,
+        "summary": {
+          "risk_score": 0,
+          "verdict": "pass",
+          "severity_counts": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": true,
+            "continuously_monitored": false,
+            "reasons": [
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T23:48:57.527Z"
+          },
+          "capabilities": {
+            "moduleProfile": "generic",
+            "moduleProfileReason": "no staking naming hints; treating as generic",
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [],
+        "meta": {
+          "scan_options": {
+            "scan_level": "standard",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 404,
+          "view_results": {},
+          "view_errors": [],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "module_profile": "generic",
+          "module_profile_reason": "no staking naming hints; treating as generic",
+          "allowed_views_effective": []
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3",
+        "module_profile": "generic",
+        "module_profile_reason": "no staking naming hints; treating as generic",
+        "verdict": "pass",
+        "risk_score": 0,
+        "summary": {
+          "risk_score": 0,
+          "verdict": "pass",
+          "severity_counts": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": true,
+            "continuously_monitored": false,
+            "reasons": [
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T23:48:57.931Z"
+          },
+          "capabilities": {
+            "moduleProfile": "generic",
+            "moduleProfileReason": "no staking naming hints; treating as generic",
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [],
+        "meta": {
+          "scan_options": {
+            "scan_level": "standard",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 372,
+          "view_results": {},
+          "view_errors": [],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "module_profile": "generic",
+          "module_profile_reason": "no staking naming hints; treating as generic",
+          "allowed_views_effective": []
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2",
+        "module_profile": "generic",
+        "module_profile_reason": "no staking naming hints; treating as generic",
+        "verdict": "pass",
+        "risk_score": 4,
+        "summary": {
+          "risk_score": 4,
+          "verdict": "pass",
+          "severity_counts": {
+            "critical": 0,
+            "high": 0,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": true,
+            "continuously_monitored": false,
+            "reasons": [
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T23:48:58.303Z"
+          },
+          "capabilities": {
+            "moduleProfile": "generic",
+            "moduleProfileReason": "no staking naming hints; treating as generic",
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "standard",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 414,
+          "view_results": {},
+          "view_errors": [],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "module_profile": "generic",
+          "module_profile_reason": "no staking naming hints; treating as generic",
+          "allowed_views_effective": []
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3",
+        "module_profile": "generic",
+        "module_profile_reason": "no staking naming hints; treating as generic",
+        "verdict": "pass",
+        "risk_score": 4,
+        "summary": {
+          "risk_score": 4,
+          "verdict": "pass",
+          "severity_counts": {
+            "critical": 0,
+            "high": 0,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": true,
+            "continuously_monitored": false,
+            "reasons": [
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T23:48:58.717Z"
+          },
+          "capabilities": {
+            "moduleProfile": "generic",
+            "moduleProfileReason": "no staking naming hints; treating as generic",
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "standard",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 415,
+          "view_results": {},
+          "view_errors": [],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "module_profile": "generic",
+          "module_profile_reason": "no staking naming hints; treating as generic",
+          "allowed_views_effective": []
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions",
+        "module_profile": "generic",
+        "module_profile_reason": "no staking naming hints; treating as generic",
+        "verdict": "pass",
+        "risk_score": 4,
+        "summary": {
+          "risk_score": 4,
+          "verdict": "pass",
+          "severity_counts": {
+            "critical": 0,
+            "high": 0,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": true,
+            "continuously_monitored": false,
+            "reasons": [
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T23:48:59.132Z"
+          },
+          "capabilities": {
+            "moduleProfile": "generic",
+            "moduleProfileReason": "no staking naming hints; treating as generic",
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "standard",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 416,
+          "view_results": {},
+          "view_errors": [],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "module_profile": "generic",
+          "module_profile_reason": "no staking naming hints; treating as generic",
+          "allowed_views_effective": []
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2",
+        "module_profile": "generic",
+        "module_profile_reason": "no staking naming hints; treating as generic",
+        "verdict": "pass",
+        "risk_score": 4,
+        "summary": {
+          "risk_score": 4,
+          "verdict": "pass",
+          "severity_counts": {
+            "critical": 0,
+            "high": 0,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": true,
+            "continuously_monitored": false,
+            "reasons": [
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T23:48:59.548Z"
+          },
+          "capabilities": {
+            "moduleProfile": "generic",
+            "moduleProfileReason": "no staking naming hints; treating as generic",
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "standard",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 522,
+          "view_results": {},
+          "view_errors": [],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "module_profile": "generic",
+          "module_profile_reason": "no staking naming hints; treating as generic",
+          "allowed_views_effective": []
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3",
+        "module_profile": "generic",
+        "module_profile_reason": "no staking naming hints; treating as generic",
+        "verdict": "pass",
+        "risk_score": 4,
+        "summary": {
+          "risk_score": 4,
+          "verdict": "pass",
+          "severity_counts": {
+            "critical": 0,
+            "high": 0,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": true,
+            "continuously_monitored": false,
+            "reasons": [
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T23:49:00.070Z"
+          },
+          "capabilities": {
+            "moduleProfile": "generic",
+            "moduleProfileReason": "no staking naming hints; treating as generic",
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "standard",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 378,
+          "view_results": {},
+          "view_errors": [],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "module_profile": "generic",
+          "module_profile_reason": "no staking naming hints; treating as generic",
+          "allowed_views_effective": []
+        }
+      }
+    ]
+  },
+  "scan_level_num": 2,
+  "scan_level_str": "L2",
+  "badge": {
+    "tier": "NONE",
+    "label": "No Badge",
+    "expires_at_iso": null,
+    "continuously_monitored": false,
+    "reason": "Wallet Verified requires level 3 (all levels 1-3 must pass)"
+  }
+}

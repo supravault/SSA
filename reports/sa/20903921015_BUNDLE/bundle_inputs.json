@@ -1,0 +1,35 @@
+{
+  "dispatch_id": "",
+  "run_id": "20903921015",
+  "run_attempt": "1",
+  "workflow": "SSA Bundle Scan",
+  "repo": "supravault/SSA",
+  "ref": "refs/heads/main",
+  "sha": "a2ae7ec7a20bbff9294304f56d109d28197ed616",
+  "triggered_by": "supravault",
+  "ts_utc": "2026-01-11T23:49:16Z",
+  "project_name": "sa",
+  "project_label": "",
+  "rpc": "https://rpc-mainnet.supra.com",
+  "report_type": "SSA_REPORT",
+  "continuous_monitoring": {
+    "enabled": false,
+    "cadence": null
+  },
+  "pulse": {
+    "attached": false,
+    "tier": "",
+    "url": "",
+    "error": ""
+  },
+  "bundle": {
+    "scans": [
+      {
+        "kind": "wallet",
+        "level": 2,
+        "target": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f",
+        "modulesAllowlist": ""
+      }
+    ]
+  }
+}
