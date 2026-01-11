@@ -1,6 +1,6 @@
 name: SSA Bundle Scan
 
-'on':
+on:
   workflow_dispatch:
     inputs:
       project_name:
@@ -36,17 +36,24 @@ name: SSA Bundle Scan
         required: false
         type: string
       pulse_score:
-        description: "Optional: Pulse risk score (0-100). If provided, overrides PDF parsing."
+        description: "Optional: Pulse score (0-100). If provided, overrides parsing."
         required: false
         type: string
       pulse_verdict:
-        description: "Optional: Pulse verdict (SAFE/OK/LOW/MEDIUM/HIGH). If provided, overrides PDF parsing."
+        description: "Optional: Pulse verdict (SAFE/LOW/MEDIUM/HIGH/CRITICAL/OK). If provided, overrides parsing."
         required: false
         type: string
       pulse_timestamp:
-        description: "Optional: Pulse timestamp UTC (e.g., 2026-01-11T05:50:36Z). If provided, overrides PDF parsing."
+        description: "Optional: Pulse timestamp UTC (e.g., 2026-01-11T05:50:36Z). If provided, overrides parsing."
         required: false
         type: string
+
+  # Optional “continuous monitoring” runner:
+  # - Add a repo file: config/continuous_watch.json
+  #   Format:
+  #     {"project_name":"JONES","project_label":"AUTO","bundle_json":{"scans":[{"kind":"fa","level":5,"target":"0x..."}]}}
+  schedule:
+    - cron: "0 3 * * *"
 
 jobs:
   bundle_scan:
@@ -55,7 +62,7 @@ jobs:
       contents: write
 
     concurrency:
-      group: ssa-bundle-${{ github.event.inputs.project_name }}
+      group: ssa-bundle-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
       cancel-in-progress: false
 
     steps:
@@ -70,7 +77,7 @@ jobs:
           node-version: "20"
           cache: "npm"
 
-      # npm ci fails if lockfile is out-of-sync (e.g., tsx missing in package-lock)
+      # npm ci fails if lockfile is out-of-sync (e.g., tsx missing)
       - name: Install (npm)
         run: npm install
 
@@ -93,6 +100,7 @@ jobs:
         env:
           SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
 
+          # workflow_dispatch inputs (empty on schedule)
           PROJECT_NAME: ${{ github.event.inputs.project_name }}
           PROJECT_LABEL: ${{ github.event.inputs.project_label }}
           BUNDLE_JSON: ${{ github.event.inputs.bundle_json }}
@@ -113,6 +121,7 @@ jobs:
           SHA: ${{ github.sha }}
           ACTOR: ${{ github.actor }}
           GITHUB_WORKSPACE: ${{ github.workspace }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
 
@@ -121,16 +130,45 @@ jobs:
             exit 1
           fi
 
-          project="$(echo "${PROJECT_NAME}" | xargs)"
-          label="$(echo "${PROJECT_LABEL:-}" | xargs)"
-          dispatch_id="$(echo "${DISPATCH_ID:-}" | xargs)"
+          # ------------------------------
+          # Inputs resolution (dispatch vs schedule)
+          # ------------------------------
+          project="$(echo "${PROJECT_NAME:-}" | xargs || true)"
+          label="$(echo "${PROJECT_LABEL:-}" | xargs || true)"
+          dispatch_id="$(echo "${DISPATCH_ID:-}" | xargs || true)"
+          bundle_json_raw="${BUNDLE_JSON:-}"
 
-          pulse_url="$(echo "${PULSE_URL:-}" | xargs)"
-          pulse_tier="$(echo "${PULSE_TIER:-}" | xargs)"
-          pulse_project="$(echo "${PULSE_PROJECT:-}" | xargs)"
-          pulse_score="$(echo "${PULSE_SCORE:-}" | xargs)"
-          pulse_verdict="$(echo "${PULSE_VERDICT:-}" | xargs)"
-          pulse_timestamp="$(echo "${PULSE_TIMESTAMP:-}" | xargs)"
+          pulse_url="$(echo "${PULSE_URL:-}" | xargs || true)"
+          pulse_tier="$(echo "${PULSE_TIER:-}" | xargs || true)"
+          pulse_project="$(echo "${PULSE_PROJECT:-}" | xargs || true)"
+          pulse_score="$(echo "${PULSE_SCORE:-}" | xargs || true)"
+          pulse_verdict="$(echo "${PULSE_VERDICT:-}" | xargs || true)"
+          pulse_timestamp="$(echo "${PULSE_TIMESTAMP:-}" | xargs || true)"
+
+          if [[ "${EVENT_NAME:-}" == "schedule" ]]; then
+            if [[ -f "config/continuous_watch.json" ]]; then
+              echo "🕒 schedule trigger: loading config/continuous_watch.json"
+              project="$(jq -r '.project_name // "CONTINUOUS"' config/continuous_watch.json | xargs)"
+              label="$(jq -r '.project_label // ""' config/continuous_watch.json | xargs)"
+              bundle_json_raw="$(jq -c '.bundle_json // {}' config/continuous_watch.json)"
+              # pulse is optional in continuous mode
+              pulse_url="$(jq -r '.pulse_url // ""' config/continuous_watch.json | xargs)"
+              pulse_tier="$(jq -r '.pulse_tier // ""' config/continuous_watch.json | xargs)"
+              pulse_project="$(jq -r '.pulse_project // ""' config/continuous_watch.json | xargs)"
+              pulse_score="$(jq -r '.pulse_score // ""' config/continuous_watch.json | xargs)"
+              pulse_verdict="$(jq -r '.pulse_verdict // ""' config/continuous_watch.json | xargs)"
+              pulse_timestamp="$(jq -r '.pulse_timestamp // ""' config/continuous_watch.json | xargs)"
+              dispatch_id="$(jq -r '.dispatch_id // ""' config/continuous_watch.json | xargs)"
+            else
+              echo "ℹ️ schedule trigger but config/continuous_watch.json not found; exiting cleanly."
+              exit 0
+            fi
+          fi
+
+          if [[ -z "${project:-}" ]]; then
+            echo "❌ project_name is required."
+            exit 1
+          fi
 
           if [[ ! "$project" =~ ^[a-zA-Z0-9._-]+$ ]]; then
             echo "❌ project_name contains invalid characters. Allowed: letters, numbers, . _ -"
@@ -138,7 +176,9 @@ jobs:
           fi
 
           safe_label=""
-          if [[ -n "$label" ]]; then safe_label="$(echo "$label" | tr -cd 'a-zA-Z0-9._-')"; fi
+          if [[ -n "${label:-}" ]]; then
+            safe_label="$(echo "$label" | tr -cd 'a-zA-Z0-9._-')"
+          fi
 
           if [[ -n "$safe_label" ]]; then
             bundle_dir="reports/${project}/${RUN_ID}_BUNDLE_${safe_label}"
@@ -151,9 +191,9 @@ jobs:
 
           # Resolve compiled SSA CLI path
           CLI=""
-          if [ -f dist/cli/ssa.js ]; then
+          if [[ -f dist/cli/ssa.js ]]; then
             CLI="dist/cli/ssa.js"
-          elif [ -f dist/src/cli/ssa.js ]; then
+          elif [[ -f dist/src/cli/ssa.js ]]; then
             CLI="dist/src/cli/ssa.js"
           else
             echo "❌ SSA CLI not found after build."
@@ -163,11 +203,11 @@ jobs:
           fi
           echo "✅ Using CLI: $CLI"
 
-          # Resolve compiled report generator script path (optional)
+          # Resolve report generator (optional)
           GEN=""
-          if [ -f dist/scripts/generate-report.js ]; then
+          if [[ -f dist/scripts/generate-report.js ]]; then
             GEN="dist/scripts/generate-report.js"
-          elif [ -f dist/src/scripts/generate-report.js ]; then
+          elif [[ -f dist/src/scripts/generate-report.js ]]; then
             GEN="dist/src/scripts/generate-report.js"
           fi
           if [[ -n "$GEN" ]]; then
@@ -185,12 +225,14 @@ jobs:
 
           # ------------------------------------------
           # Normalize bundle_json -> bundle_scans.json
-          # (1) build normalized {scans:[...]}
-          # (2) validate in a separate jq call
+          # (two-pass jq to avoid shell quoting edge cases)
           # ------------------------------------------
           tmp_norm="$bundle_dir/tmp/_bundle_norm.json"
 
-          echo "$BUNDLE_JSON" | jq -e '
+          # IMPORTANT: bundle_json_raw may include newlines; write it to a file first
+          printf '%s' "$bundle_json_raw" > "$bundle_dir/tmp/_bundle_input.json"
+
+          jq -e '
             def as_str: (if . == null then "" else tostring end);
 
             def allowlist:
@@ -201,9 +243,9 @@ jobs:
 
             def norm:
               {
-                kind: ((.kind // "" | as_str) | ascii_downcase | gsub("\\s+";"")),
+                kind: ((.kind // "" | as_str) | ascii_downcase | gsub("[[:space:]]+";"")),
                 level: (.level | tonumber),
-                target: ((.target // "" | as_str) | gsub("^\\s+|\\s+$";"")),
+                target: ((.target // "" | as_str) | gsub("^[[:space:]]+|[[:space:]]+$";"")),
                 modulesAllowlist: allowlist
               };
 
@@ -215,7 +257,7 @@ jobs:
             scans as $s
             | if ($s|length)==0 then error("bundle_json has zero scans") else . end
             | { scans: [ $s[] | norm ] }
-          ' > "$tmp_norm"
+          ' "$bundle_dir/tmp/_bundle_input.json" > "$tmp_norm"
 
           jq -e '
             .scans as $n
@@ -246,7 +288,7 @@ jobs:
           # ------------------------------------------
           pulse_path=""
           pulse_error=""
-          if [[ -n "$pulse_url" ]]; then
+          if [[ -n "${pulse_url:-}" ]]; then
             echo "⬇️ Downloading Supra Pulse report..."
             url_no_q="${pulse_url%%\?*}"
             ext="${url_no_q##*.}"
@@ -338,7 +380,7 @@ jobs:
             mv "$scan_dir/report.pdf" "$scan_dir/${kind}_report.pdf"
             echo "$scan_dir/${kind}_report.pdf" >> "$bundle_dir/tmp/pdfs.txt"
 
-            # ---- FA L5: mark as "continuous monitored" in report.json (semantic flag) ----
+            # ---- FA L5: mark as "continuous monitored" + next_run_hint ----
             if [[ "$kind" == "fa" && "$level" == "5" && -f "$scan_dir/report.json" ]]; then
               tmp_report="$scan_dir/tmp_report.json"
               jq '
@@ -346,7 +388,8 @@ jobs:
                   enabled: true,
                   mode: "continuous",
                   cadence: "24h",
-                  note: "Declared by workflow for L5. True continuous monitoring requires scheduled re-scans + persisted state."
+                  next_run_hint_utc: null,
+                  note: "L5 implies continuous monitoring. Schedule runs are implemented via workflow schedule + config/continuous_watch.json."
                 }
               ' "$scan_dir/report.json" > "$tmp_report" && mv "$tmp_report" "$scan_dir/report.json"
               echo "✅ Patched FA L5 report.json with monitoring.enabled=true"
@@ -363,15 +406,16 @@ jobs:
           echo "✅ Combined PDF: $combined"
 
           # ------------------------------------------
-          # Pulse summary (READ PDF)
+          # Pulse summary (READ PDF / JSON)
           # Priority:
-          #   1) explicit inputs (score/verdict/timestamp)
-          #   2) pulse JSON (if downloaded)
+          #   1) explicit inputs
+          #   2) pulse JSON
           #   3) pulse PDF -> pdftotext -> regex
-          # + IMPORTANT: Pulse score is "goodness" (higher is safer)
+          # If verdict text not found but score exists, derive verdict from score.
+          # NOTE: This mapping assumes "higher score = safer".
           # ------------------------------------------
           pulse_summary_path=""
-          if [[ -n "$pulse_tier" || -n "$pulse_path" ]]; then
+          if [[ -n "${pulse_tier:-}" || -n "${pulse_path:-}" ]]; then
             pulse_summary_path="$bundle_dir/tmp/pulse_summary.json"
             export PULSE_TIER="$pulse_tier"
             export PULSE_PROJECT="$pulse_project"
@@ -381,7 +425,7 @@ jobs:
             export PULSE_PATH="$pulse_path"
 
             python3 - <<'PY' > "$pulse_summary_path"
-import os, re, json
+import os, re, json, subprocess
 
 tier = (os.environ.get("PULSE_TIER") or "Standard").strip() or "Standard"
 project = (os.environ.get("PULSE_PROJECT") or "").strip()
@@ -390,7 +434,8 @@ verdict_in = (os.environ.get("PULSE_VERDICT") or "").strip()
 ts_in = (os.environ.get("PULSE_TIMESTAMP") or "").strip()
 pulse_path = (os.environ.get("PULSE_PATH") or "").strip()
 bundle_dir = os.environ.get("BUNDLE_DIR") or ""
-txt_out = os.path.join(bundle_dir, "tmp", "pulse.txt")
+txt_out_a = os.path.join(bundle_dir, "tmp", "pulse_layout.txt")
+txt_out_b = os.path.join(bundle_dir, "tmp", "pulse_raw.txt")
 
 def clamp_score(x):
   try:
@@ -409,7 +454,6 @@ def verdict_from_score_good(score):
   if score >= 20: return "HIGH"
   return "CRITICAL"
 
-# 1) Inputs override
 score = clamp_score(score_in) if score_in else None
 verdict = verdict_in.upper().strip() if verdict_in else ""
 timestamp_utc = ts_in.strip() if ts_in else ""
@@ -417,38 +461,57 @@ source = "workflow_inputs" if (score_in or verdict_in or ts_in) else ""
 
 raw_obj = None
 
-# 2) JSON file
+def try_pull_from_dict(d):
+  global score, verdict, timestamp_utc
+  if not isinstance(d, dict):
+    return
+  for k in ["score","risk_score","riskScore","total_score","overall_score","overallScore"]:
+    if score is None and k in d:
+      score = clamp_score(d.get(k))
+  for k in ["verdict","risk","status","risk_level","riskLevel","rating"]:
+    if not verdict and k in d:
+      vv = str(d.get(k) or "").strip()
+      if vv: verdict = vv.upper()
+  for k in ["timestamp","timestamp_utc","ts","date","generated_at","generatedAt"]:
+    if not timestamp_utc and k in d:
+      timestamp_utc = str(d.get(k) or "").strip()
+
+# JSON
 if not source and pulse_path.lower().endswith(".json") and os.path.exists(pulse_path):
   try:
     with open(pulse_path, "r", encoding="utf-8", errors="ignore") as f:
       raw_obj = json.load(f)
     source = "pulse_json"
-    for k in ["score","risk_score","riskScore","total_score","overall_score"]:
-      if score is None and isinstance(raw_obj, dict) and k in raw_obj:
-        score = clamp_score(raw_obj.get(k))
-    for k in ["verdict","risk","status","risk_level","rating"]:
-      if not verdict and isinstance(raw_obj, dict) and k in raw_obj:
-        vv = str(raw_obj.get(k) or "").strip()
-        if vv: verdict = vv.upper()
-    for k in ["timestamp","timestamp_utc","ts","date","generated_at"]:
-      if not timestamp_utc and isinstance(raw_obj, dict) and k in raw_obj:
-        timestamp_utc = str(raw_obj.get(k) or "").strip()
+    try_pull_from_dict(raw_obj)
   except Exception:
     raw_obj = None
     source = ""
 
-# 3) PDF text extract
+# PDF text
 if not source and pulse_path.lower().endswith(".pdf") and os.path.exists(pulse_path):
   try:
-    if not os.path.exists(txt_out):
-      os.system(f'pdftotext -layout "{pulse_path}" "{txt_out}" >/dev/null 2>&1')
+    # run both modes; whichever yields more text wins
+    subprocess.run(["pdftotext", "-layout", pulse_path, txt_out_a], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["pdftotext", "-raw", pulse_path, txt_out_b], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    raw = ""
+    def read_file(p):
+      try:
+        with open(p, "r", encoding="utf-8", errors="ignore") as f:
+          return f.read()
+      except Exception:
+        return ""
+
+    raw_a = read_file(txt_out_a)
+    raw_b = read_file(txt_out_b)
+    raw = raw_a if len(raw_a) >= len(raw_b) else raw_b
+
+    # save head for debugging (kept with artifacts)
     try:
-      with open(txt_out, "r", encoding="utf-8", errors="ignore") as f:
-        raw = f.read()
+      head_path = os.path.join(bundle_dir, "tmp", "pulse_head.txt")
+      with open(head_path, "w", encoding="utf-8") as f:
+        f.write(raw[:4000])
     except Exception:
-      raw = ""
+      pass
 
     source = "pulse_pdf_text_extract"
 
@@ -456,19 +519,12 @@ if not source and pulse_path.lower().endswith(".pdf") and os.path.exists(pulse_p
       m = re.search(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", raw)
       if m: timestamp_utc = m.group(0)
 
-    # Prefer a standalone line number (catches big "91" score)
+    # SCORE: accept "91", "Score 91", "91/100"
     if score is None:
-      for line in raw.splitlines():
-        s = line.strip()
-        if re.fullmatch(r"\d{1,3}", s):
-          v = clamp_score(s)
-          if v is not None:
-            score = v
-            break
-
-    if score is None:
+      # common labels
       patterns = [
-        r"\b(?:overall\s+)?score\b[^0-9]{0,80}(\d{1,3})\b",
+        r"\b(?:overall\s+)?score\b[^0-9]{0,120}(\d{1,3})\b",
+        r"\brisk\s*score\b[^0-9]{0,120}(\d{1,3})\b",
         r"(\d{1,3})\s*/\s*100",
       ]
       for pat in patterns:
@@ -478,8 +534,9 @@ if not source and pulse_path.lower().endswith(".pdf") and os.path.exists(pulse_p
           if score is not None:
             break
 
+    # VERDICT: accept many forms (SAFE/LOW/MEDIUM/HIGH/CRITICAL/OK) + "UNKNOWN" fallback
     if not verdict:
-      m = re.search(r"\b(verdict|risk\s*level|risk)\b[^A-Z]{0,80}\b(SAFE|OK|LOW|MEDIUM|HIGH|CRITICAL|WARNING)\b", raw, flags=re.IGNORECASE)
+      m = re.search(r"\b(verdict|risk\s*level|risk)\b[^A-Z]{0,140}\b(SAFE|OK|LOW|MEDIUM|HIGH|CRITICAL|WARNING)\b", raw, flags=re.IGNORECASE)
       if m:
         verdict = m.group(2).upper().strip()
       else:
@@ -506,13 +563,11 @@ if raw_obj is not None:
 
 print(json.dumps(out, indent=2))
 PY
-
             echo "✅ pulse_summary.json ready: $pulse_summary_path"
           fi
 
           # ------------------------------------------
-          # Generate final_report.pdf via generate-report.js (requires Playwright)
-          # (only if generator exists AND pulse_summary exists)
+          # Generate final_report.pdf via generate-report.js (optional)
           # ------------------------------------------
           if [[ -n "$GEN" && -n "$pulse_summary_path" ]]; then
             echo "🧩 Installing Playwright browser (chromium) for final report..."
@@ -607,8 +662,8 @@ PY
       - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
         with:
-          name: ssa-bundle-${{ github.event.inputs.project_name }}-${{ github.run_id }}
-          path: reports/${{ github.event.inputs.project_name }}/
+          name: ssa-bundle-${{ github.event_name }}-${{ github.run_id }}
+          path: reports/
           if-no-files-found: error
           retention-days: 7
 
@@ -619,15 +674,18 @@ PY
           git config user.name "ssa-bot"
           git config user.email "ssa-bot@users.noreply.github.com"
 
-          git add -f "reports/${{ github.event.inputs.project_name }}/"
+          git add -f "reports/"
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
 
-          git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
+          git commit -m "SSA BUNDLE: run ${{ github.run_id }} (${{
+            github.event_name
+          }})"
           git push
+
 
 
 
