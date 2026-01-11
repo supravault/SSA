@@ -242,6 +242,13 @@ async function scanWallet(
 
   const moduleScans: Array<{
     module_id: string;
+
+    // ✅ Added: module profile + quick per-module summary fields
+    module_profile?: string;
+    module_profile_reason?: string;
+    verdict?: "pass" | "warn" | "fail" | "inconclusive" | string;
+    risk_score?: number;
+
     summary: any;
     findings: any[];
     meta: any;
@@ -280,6 +287,13 @@ async function scanWallet(
 
       moduleScans.push({
         module_id: `${moduleId.address}::${moduleId.module_name}`,
+
+        // ✅ NEW: keep per-module classification + reason (if your rules set it)
+        module_profile: scanResult.meta?.module_profile,
+        module_profile_reason: scanResult.meta?.module_profile_reason,
+        verdict: scanResult.summary?.verdict,
+        risk_score: scanResult.summary?.risk_score,
+
         summary: scanResult.summary,
         findings: annotatedFindings,
         meta: scanResult.meta,
@@ -290,6 +304,19 @@ async function scanWallet(
           error instanceof Error ? error.message : String(error)
         }`
       );
+
+      // Still record a stub entry so report.meta.wallet_modules stays complete
+      moduleScans.push({
+        module_id: `${moduleId.address}::${moduleId.module_name}`,
+        module_profile: "unknown",
+        module_profile_reason: "Scan threw error before module_profile could be computed",
+        verdict: "inconclusive",
+        risk_score: 0,
+        summary: null,
+        findings: [],
+        meta: { error: error instanceof Error ? error.message : String(error) },
+      });
+      if (verdict === "pass") verdict = "inconclusive";
     }
   }
 
@@ -593,5 +620,7 @@ program
   });
 
 program.parse(process.argv);
+
+
 
 
