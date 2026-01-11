@@ -383,7 +383,7 @@ jobs:
             mv "$scan_dir/report.pdf" "$scan_dir/${kind}_report.pdf"
             echo "$scan_dir/${kind}_report.pdf" >> "$bundle_dir/tmp/pdfs.txt"
 
-            # ✅ FA L5: patch "continuous monitoring" flags (keep everything else same)
+            # ---- FA L5: mark as "continuous monitored" (badge policy reads meta.monitoring_enabled) ----
             if [[ "$kind" == "fa" && "$level" == "5" && -f "$scan_dir/report.json" ]]; then
               tmp_report="$scan_dir/tmp_report.json"
               jq '
@@ -394,13 +394,13 @@ jobs:
                   next_run_hint_utc: null,
                   note: "L5 implies continuous monitoring. Schedule runs are implemented via workflow schedule + config/continuous_watch.json."
                 }
-                | .badge = ((.badge // {}) + { continuously_monitored: true })
-                | .summary.badge_eligibility = ((.summary.badge_eligibility // {}) + { continuously_monitored: true })
-                | .summary.badge_eligibility.reasons =
-                    ((.summary.badge_eligibility.reasons // [])
-                     | map(select(. != "Continuous monitoring not enabled")))
+                | .meta = ((.meta // {}) + {
+                  monitoring_enabled: true,
+                  monitoring_mode: "continuous",
+                  monitoring_cadence: "24h"
+                })
               ' "$scan_dir/report.json" > "$tmp_report" && mv "$tmp_report" "$scan_dir/report.json"
-              echo "✅ Patched FA L5 report.json: monitoring + continuously_monitored=true"
+              echo "✅ Patched FA L5 report.json: monitoring.enabled=true + meta.monitoring_enabled=true"
             fi
           done
 
@@ -527,7 +527,7 @@ jobs:
 
           printf '%s' "${pulse_summary_path:-}" > .pulse_summary_path
 
-      - name: Generate final_report.pdf (if generator + pulse summary exist)
+      - name: Generate final_report.pdf (if generator exists; with or without pulse)
         shell: bash
         run: |
           set -euo pipefail
@@ -535,12 +535,12 @@ jobs:
           GEN="$(cat .gen_path || true)"
           pulse_summary_path="$(cat .pulse_summary_path || true)"
 
-          if [[ -n "${GEN:-}" && -n "${pulse_summary_path:-}" ]]; then
+          if [[ -n "${GEN:-}" ]]; then
             echo "🧩 Installing Playwright browser (chromium) for final report..."
             export PLAYWRIGHT_BROWSERS_PATH=0
             npx playwright install --with-deps chromium
 
-            echo "🏁 Generating final_report.pdf via generate-report.js..."
+            echo "🏁 Generating report via generate-report.js (pulse optional)..."
             ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
             primary_scan="$(ls -1 "$bundle_dir"/scans/*_coin_L*/report.json 2>/dev/null | head -n 1 || true)"
@@ -554,24 +554,44 @@ jobs:
               outdir="$bundle_dir/tmp/_gen"
               mkdir -p "$outdir"
 
-              args=( --scan "$primary_scan" --pulse "$pulse_summary_path" --project-name "$(basename "$(dirname "$bundle_dir")")" --ts-utc "$ts_utc" --out "$outdir" )
-              if [[ -n "$wallet_scan" && "$wallet_scan" != "$primary_scan" ]]; then args+=( --wallet-scan "$wallet_scan" ); fi
-              if [[ -n "$fa_scan" && "$fa_scan" != "$primary_scan" ]]; then args+=( --fa "$fa_scan" ); fi
+              # If pulse summary exists -> full integrated mode
+              if [[ -n "${pulse_summary_path:-}" ]]; then
+                args=( --scan "$primary_scan" --pulse "$pulse_summary_path" --project-name "$(basename "$(dirname "$bundle_dir")")" --ts-utc "$ts_utc" --out "$outdir" )
+                if [[ -n "$wallet_scan" && "$wallet_scan" != "$primary_scan" ]]; then args+=( --wallet-scan "$wallet_scan" ); fi
+                if [[ -n "$fa_scan" && "$fa_scan" != "$primary_scan" ]]; then args+=( --fa "$fa_scan" ); fi
 
-              node "$GEN" "${args[@]}"
+                node "$GEN" "${args[@]}"
 
-              newest_final="$(find "$outdir" -name final_report.pdf -print | sort | tail -n 1 || true)"
-              if [[ -n "$newest_final" ]]; then
-                cp -f "$newest_final" "$bundle_dir/final_report.pdf"
-                echo "✅ final_report.pdf ready: $bundle_dir/final_report.pdf"
+                newest_pdf="$(find "$outdir" -name final_report.pdf -print | sort | tail -n 1 || true)"
+                if [[ -n "$newest_pdf" ]]; then
+                  cp -f "$newest_pdf" "$bundle_dir/final_report.pdf"
+                  echo "✅ final_report.pdf (integrated) ready: $bundle_dir/final_report.pdf"
+                else
+                  echo "⚠️ generate-report ran (integrated) but final_report.pdf not found under $outdir"
+                fi
+
+              # No pulse summary -> standard mode (still nice-looking). Copy report.pdf -> final_report.pdf
               else
-                echo "⚠️ generate-report ran but final_report.pdf not found under $outdir"
+                args=( --scan "$primary_scan" --project-name "$(basename "$(dirname "$bundle_dir")")" --ts-utc "$ts_utc" --out "$outdir" )
+                if [[ -n "$wallet_scan" && "$wallet_scan" != "$primary_scan" ]]; then args+=( --wallet-scan "$wallet_scan" ); fi
+                if [[ -n "$fa_scan" && "$fa_scan" != "$primary_scan" ]]; then args+=( --fa "$fa_scan" ); fi
+
+                node "$GEN" "${args[@]}"
+
+                newest_pdf="$(find "$outdir" -name report.pdf -print | sort | tail -n 1 || true)"
+                if [[ -n "$newest_pdf" ]]; then
+                  cp -f "$newest_pdf" "$bundle_dir/final_report.pdf"
+                  echo "✅ final_report.pdf (standard) ready: $bundle_dir/final_report.pdf"
+                else
+                  echo "⚠️ generate-report ran (standard) but report.pdf not found under $outdir"
+                fi
               fi
+
             else
-              echo "⚠️ No scan report.json found; skipping final integrated report."
+              echo "⚠️ No scan report.json found; skipping final report generation."
             fi
           else
-            echo "ℹ️ Skipping final_report.pdf generation (missing generator or pulse summary)."
+            echo "ℹ️ Skipping final_report.pdf generation (missing generator)."
           fi
 
       - name: Write bundle_inputs.json (Base44 correlation)
@@ -676,6 +696,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: run ${{ github.run_id }} (${{ github.event_name }})"
           git push
+
 
 
 
