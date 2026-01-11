@@ -33,7 +33,7 @@ on:
 
 jobs:
   bundle_scan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
 
@@ -165,12 +165,7 @@ jobs:
             echo "⚠️ generate-report.js not found in dist/. final_report.pdf will be skipped."
           fi
 
-          # -------------------------------------------------------------------
           # Fix SVG path mismatch in Actions:
-          # generator logs look for /home/runner/work/SSA/tools/icons/*
-          # but actual path is /home/runner/work/SSA/SSA/tools/icons/*
-          # Create a symlink so both exist.
-          # -------------------------------------------------------------------
           parent_dir="$(cd "$GITHUB_WORKSPACE/.." && pwd)"
           mkdir -p "$parent_dir/tools"
           if [[ ! -e "$parent_dir/tools/icons" ]]; then
@@ -385,11 +380,7 @@ jobs:
           fi
           echo "✅ Combined PDF: $combined"
 
-          # ------------------------------------------------------------
           # Build pulse_summary.json for final integrated report
-          # - If pulse is JSON: use it directly
-          # - If pulse is PDF: pdftotext + python regex extraction
-          # ------------------------------------------------------------
           pulse_summary_path=""
           if [[ -n "$pulse_path" && "$pulse_path" == *.json ]]; then
             pulse_summary_path="$pulse_path"
@@ -411,12 +402,10 @@ jobs:
           except Exception:
             raw = ""
 
-          # timestamp: ISO Z
           ts = ""
           m = re.search(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", raw)
           if m: ts = m.group(0)
 
-          # score heuristics: look for "score" near a number, or "Risk Score: 82", "Score 82/100"
           score = None
           patterns = [
             r"risk\s*score[^0-9]{0,20}(\d{1,3})",
@@ -434,7 +423,6 @@ jobs:
               except Exception:
                 pass
 
-          # verdict heuristics if present
           verdict = ""
           mv = re.search(r"\bverdict\b[^A-Z]{0,20}([A-Z]{3,20})", raw)
           if mv:
@@ -454,17 +442,13 @@ jobs:
           PY
           fi
 
-          # ------------------------------------------------------------
           # Generate final_report.pdf (JONES-style) via generate-report.js
-          # Requires: Playwright browsers installed + pulse_summary_path present
-          # ------------------------------------------------------------
           if [[ -n "$GEN" && -n "$pulse_summary_path" ]]; then
             echo "🧩 Installing Playwright browser (chromium) for final report..."
             export PLAYWRIGHT_BROWSERS_PATH=0
             npx playwright install --with-deps chromium
 
             echo "🏁 Generating final_report.pdf via generate-report.js..."
-            # Prefer coin scan as primary, else FA, else wallet
             primary_scan="$(ls -1 "$bundle_dir"/scans/*_coin_L*/report.json 2>/dev/null | head -n 1 || true)"
             if [[ -z "$primary_scan" ]]; then
               primary_scan="$(ls -1 "$bundle_dir"/scans/*_fa_L*/report.json 2>/dev/null | head -n 1 || true)"
@@ -487,7 +471,6 @@ jobs:
 
               node "$GEN" "${args[@]}"
 
-              # Find the newest generated final_report.pdf
               set +o pipefail
               newest_final="$(find "$bundle_dir/tmp/_gen" -name final_report.pdf -print | sort | tail -n 1 || true)"
               set -o pipefail
@@ -520,7 +503,6 @@ jobs:
           git config user.name "ssa-bot"
           git config user.email "ssa-bot@users.noreply.github.com"
 
-          # Force add even if gitignored (Base44 reads repo contents)
           git add -f "reports/${{ github.event.inputs.project_name }}/"
 
           if git diff --cached --quiet; then
@@ -530,6 +512,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
