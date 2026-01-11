@@ -1,0 +1,148 @@
+{
+  "meta": {
+    "schema_version": "3.0",
+    "timestamp_iso": "2026-01-11T15:43:13.833Z",
+    "rpc_url": "https://rpc-mainnet.supra.com",
+    "scanner_version": "0.1.0"
+  },
+  "identity": {
+    "faAddress": "0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+    "objectOwner": "0x67a655e90c143a0ebba2243bd9495026397ed6a10dec47c83df5f5b0e8989af5"
+  },
+  "supply": {
+    "supplyCurrentBase": "3807271508693067",
+    "supplyMaxBase": "340282366920938463463374607431768211455",
+    "decimals": 8
+  },
+  "capabilities": {
+    "hasMintRef": false,
+    "hasBurnRef": false,
+    "hasTransferRef": false,
+    "hasDepositHook": false,
+    "hasWithdrawHook": false,
+    "hasDerivedBalanceHook": false
+  },
+  "control_surface": {
+    "relevantModules": [],
+    "modules": {},
+    "hookModules": [],
+    "hookModulePins": [],
+    "ownerModulesCount": 0
+  },
+  "coverage": {
+    "coverage": "complete",
+    "reasons": []
+  },
+  "findings": [
+    {
+      "id": "FA-FREEZE-001",
+      "severity": "info",
+      "title": "Freeze/Blacklist/Pause Capability Unknown"
+    },
+    {
+      "id": "FA-UPGRADE-001",
+      "severity": "info",
+      "title": "Upgrade/Admin Controls Unknown"
+    },
+    {
+      "id": "FA-META-001",
+      "severity": "low",
+      "title": "Missing or Incomplete Metadata"
+    },
+    {
+      "id": "FA-OWNER-001",
+      "severity": "info",
+      "title": "FA object owner present"
+    },
+    {
+      "id": "FA-SUPPLY-001",
+      "severity": "info",
+      "title": "Supply info detected"
+    }
+  ],
+  "hashes": {
+    "moduleSurfaceHash": {},
+    "overallSurfaceHash": "e3b0c44298fc1c14"
+  },
+  "privileges": {
+    "byClass": {
+      "MINT": [],
+      "BURN": [],
+      "FREEZE_RESTRICT": [],
+      "ADMIN_OWNERSHIP": [],
+      "UPGRADE_PUBLISH": [],
+      "METADATA_MUTATION": [],
+      "HOOK_CONFIG": [],
+      "UNKNOWN_PRIVILEGE": []
+    },
+    "all": [],
+    "hasOpaqueControl": true
+  },
+  "invariants": {
+    "items": [
+      {
+        "id": "FA_OWNER_KNOWN",
+        "status": "ok",
+        "title": "FA owner is known",
+        "detail": "Owner address: 0x67a655e90c143a0ebba2243bd9495026397ed6a10dec47c83df5f5b0e8989af5"
+      },
+      {
+        "id": "FA_OWNER_STABILITY_SIGNAL",
+        "status": "unknown",
+        "title": "Owner stability signal",
+        "detail": "Owner stability requires historical comparison (Level 3)"
+      },
+      {
+        "id": "FA_HAS_WITHDRAW_HOOK",
+        "status": "warning",
+        "title": "Withdraw hook not found",
+        "detail": "No withdraw hook detected. Withdrawals may not be gated."
+      },
+      {
+        "id": "FA_UNKNOWN_HOOK_MODULE",
+        "status": "ok",
+        "title": "All hook modules known",
+        "detail": "All hook modules have accessible ABIs"
+      },
+      {
+        "id": "FA_MAX_SUPPLY_PRESENT",
+        "status": "ok",
+        "title": "Max supply is set",
+        "detail": "Max supply: 340282366920938463463374607431768211455"
+      },
+      {
+        "id": "FA_MAX_SUPPLY_EXCEEDED",
+        "status": "ok",
+        "title": "Max supply not exceeded",
+        "detail": "Current supply (3807271508693067) is within max supply (3.402823669209385e+38)"
+      }
+    ],
+    "overall": "warning"
+  },
+  "evidence": {
+    "sourcesUsed": [
+      "rpc_v3",
+      "suprascan"
+    ],
+    "parity": [
+      {
+        "id": "SUPPLY_PARITY",
+        "status": "unknown",
+        "detail": "One or both supply sources unavailable",
+        "evidence": {
+          "rpcSupply": "3807271508693067",
+          "suprascanSupply": null
+        }
+      },
+      {
+        "id": "OWNER_PARITY",
+        "status": "match",
+        "detail": "Owner matches: 0x67a655e90c143a0ebba2243bd9495026397ed6a10dec47c83df5f5b0e8989af5",
+        "evidence": {
+          "rpcOwner": "0x67a655e90c143a0ebba2243bd9495026397ed6a10dec47c83df5f5b0e8989af5",
+          "suprascanOwner": "0x67a655e90c143a0ebba2243bd9495026397ed6a10dec47c83df5f5b0e8989af5"
+        }
+      }
+    ]
+  }
+}

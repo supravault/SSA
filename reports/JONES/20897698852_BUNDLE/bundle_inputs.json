@@ -1,0 +1,37 @@
+{
+  "dispatch_id": "",
+  "run_id": "20897698852",
+  "run_attempt": "1",
+  "workflow": "SSA Bundle Scan",
+  "repo": "supravault/SSA",
+  "ref": "refs/heads/main",
+  "sha": "47a4a3aa24aa4421d37be53c689f1e698ebe4ad2",
+  "triggered_by": "supravault",
+  "ts_utc": "2026-01-11T15:43:45Z",
+  "project_name": "JONES",
+  "project_label": "",
+  "rpc": "https://rpc-mainnet.supra.com",
+  "report_type": "SSA_FULL_INTEGRATED_REPORT",
+  "pulse": {
+    "attached": true,
+    "tier": "Spotlight",
+    "url": "https://base44.app/api/apps/696115a9afc894facb90128e/files/public/696115a9afc894facb90128e/f74f352ca_JONES_ON_SUPRA__Report.pdf",
+    "error": ""
+  },
+  "bundle": {
+    "scans": [
+      {
+        "kind": "wallet",
+        "level": 3,
+        "target": "0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+        "modulesAllowlist": ""
+      },
+      {
+        "kind": "fa",
+        "level": 5,
+        "target": "0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+        "modulesAllowlist": ""
+      }
+    ]
+  }
+}
