@@ -1,4 +1,4 @@
-**
+/**
  * Core data types for SSA Scanner
  */
 
@@ -713,5 +713,6 @@ export interface RuleContext {
   scanLevel: ScanLevel;
   capabilities?: RuleCapabilities; // Optional to support test scenarios, but normalized in executeRules
 }
+
 
 
