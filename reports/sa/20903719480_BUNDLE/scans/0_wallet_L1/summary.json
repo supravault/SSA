@@ -1,0 +1,32 @@
+{
+  "target": {
+    "kind": "wallet",
+    "value": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f"
+  },
+  "time_utc": "2026-01-11T23:32:37.654Z",
+  "level": 1,
+  "verdict": "pass",
+  "score": 4,
+  "severity": {
+    "critical": 0,
+    "high": 0,
+    "medium": 6,
+    "low": 0,
+    "info": 0
+  },
+  "badge": {
+    "tier": "NONE",
+    "label": "No Badge",
+    "security_verified": false,
+    "continuously_monitored": false,
+    "expires_at_iso": null,
+    "reason": "Wallet Verified requires level 3 (all levels 1-3 must pass)"
+  },
+  "artifacts": {
+    "report_json": "report.json",
+    "report_pdf": "report.pdf",
+    "snapshot": null,
+    "diff": null,
+    "pulse": null
+  }
+}
