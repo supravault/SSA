@@ -620,7 +620,7 @@ print(json.dumps(out, indent=2))
           fi
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
-          git push
+          git push 
 
 
 
