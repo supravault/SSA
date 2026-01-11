@@ -1,0 +1,2 @@
+reports/WE/20890282942_BUNDLE/scans/0_wallet_L3/wallet_report.pdf
+reports/WE/20890282942_BUNDLE/scans/1_coin_L3/coin_report.pdf

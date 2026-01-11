@@ -1,0 +1,582 @@
+{
+  "request_id": "79c0d90d-8bfa-4ae4-9a91-31267ebdb673",
+  "target": {
+    "chain": "supra",
+    "module_address": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637",
+    "module_name": "cdp_multi",
+    "module_id": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::cdp_multi",
+    "kind": "coin"
+  },
+  "scan_level": "quick",
+  "timestamp_iso": "2026-01-11T05:42:45.909Z",
+  "engine": {
+    "name": "ssa-scanner",
+    "version": "0.1.0",
+    "ruleset_version": "move-ruleset-0.1.0"
+  },
+  "artifact": {
+    "fetch_method": "rpc",
+    "artifact_hash": "coin_0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::cdp_multi::CASH",
+    "binding_note": "Coin token scan for 0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::cdp_multi::CASH",
+    "metadata": {
+      "coin_metadata": {
+        "coinType": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::cdp_multi::CASH",
+        "publisherAddress": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637",
+        "moduleName": "cdp_multi",
+        "structName": "CASH",
+        "supplyParityCheck": {
+          "driftDetected": false,
+          "tolerance": 0.01
+        },
+        "rpcPlan": {
+          "provider_chain": [
+            "suprascan_graphql",
+            "v3_modules"
+          ],
+          "v3_modules": {
+            "url": "https://rpc-mainnet.supra.com/rpc/v3/accounts/0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637/modules",
+            "used": true
+          },
+          "suprascan_graphql": {
+            "url": "https://suprascan.io/api/graphql",
+            "queryName": "GetCoinDetails",
+            "used": false
+          },
+          "framework_views_enabled": false,
+          "suprascan_graphql_success": false
+        }
+      },
+      "metadata_fetch_method": "unknown"
+    }
+  },
+  "summary": {
+    "risk_score": 66,
+    "verdict": "inconclusive",
+    "severity_counts": {
+      "critical": 0,
+      "high": 4,
+      "medium": 3,
+      "low": 1,
+      "info": 0
+    },
+    "badge_eligibility": {
+      "scanned": true,
+      "no_critical": true,
+      "security_verified": false,
+      "continuously_monitored": false,
+      "reasons": [
+        "Found 4 high severity finding(s)",
+        "Continuous monitoring not enabled"
+      ]
+    },
+    "capabilities": {
+      "poolStats": false,
+      "totalStaked": false,
+      "queue": false,
+      "userViews": false
+    },
+    "assurance_level": "code_verified"
+  },
+  "findings": [
+    {
+      "id": "COIN-SEC-001",
+      "title": "Dangerous Function Without Clear Access Control",
+      "severity": "high",
+      "confidence": 0.8,
+      "description": "Module \"events\" contains exposed function \"emit_debt_minted_event\" matching dangerous patterns (mint) but lacks clear gating mechanisms (admin/owner checks, capability verification).",
+      "recommendation": "Implement strict access control checks (e.g., `only_admin`, `only_owner`, capability checks) for functions that modify token state or configuration.",
+      "evidence": {
+        "kind": "abi_pattern",
+        "matched": [
+          "mint"
+        ],
+        "locations": [
+          {
+            "fn": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::events::emit_debt_minted_event",
+            "note": "Function matches dangerous pattern without clear gating"
+          }
+        ]
+      },
+      "references": []
+    },
+    {
+      "id": "COIN-SEC-001",
+      "title": "Dangerous Function Without Clear Access Control",
+      "severity": "medium",
+      "confidence": 0.8,
+      "description": "Module \"events\" contains exposed function \"err_not_admin\" matching dangerous patterns (admin) but lacks clear gating mechanisms (admin/owner checks, capability verification).",
+      "recommendation": "Implement strict access control checks (e.g., `only_admin`, `only_owner`, capability checks) for functions that modify token state or configuration.",
+      "evidence": {
+        "kind": "abi_pattern",
+        "matched": [
+          "admin"
+        ],
+        "locations": [
+          {
+            "fn": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::events::err_not_admin",
+            "note": "Function matches dangerous pattern without clear gating"
+          }
+        ]
+      },
+      "references": []
+    },
+    {
+      "id": "COIN-SEC-001",
+      "title": "Dangerous Function Without Clear Access Control",
+      "severity": "high",
+      "confidence": 0.8,
+      "description": "Module \"cdp_multi\" contains exposed function \"deposit_or_mint\" matching dangerous patterns (mint) but lacks clear gating mechanisms (admin/owner checks, capability verification).",
+      "recommendation": "Implement strict access control checks (e.g., `only_admin`, `only_owner`, capability checks) for functions that modify token state or configuration.",
+      "evidence": {
+        "kind": "abi_pattern",
+        "matched": [
+          "mint"
+        ],
+        "locations": [
+          {
+            "fn": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::cdp_multi::deposit_or_mint",
+            "note": "Function matches dangerous pattern without clear gating"
+          }
+        ]
+      },
+      "references": []
+    },
+    {
+      "id": "COIN-SEC-001",
+      "title": "Dangerous Function Without Clear Access Control",
+      "severity": "high",
+      "confidence": 0.8,
+      "description": "Module \"vault_core\" contains exposed function \"max_mint\" matching dangerous patterns (mint) but lacks clear gating mechanisms (admin/owner checks, capability verification).",
+      "recommendation": "Implement strict access control checks (e.g., `only_admin`, `only_owner`, capability checks) for functions that modify token state or configuration.",
+      "evidence": {
+        "kind": "abi_pattern",
+        "matched": [
+          "mint"
+        ],
+        "locations": [
+          {
+            "fn": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::vault_core::max_mint",
+            "note": "Function matches dangerous pattern without clear gating"
+          }
+        ]
+      },
+      "references": []
+    },
+    {
+      "id": "COIN-SEC-001",
+      "title": "Dangerous Function Without Clear Access Control",
+      "severity": "medium",
+      "confidence": 0.8,
+      "description": "Module \"vault_core\" contains exposed function \"pause\" matching dangerous patterns (pause) but lacks clear gating mechanisms (admin/owner checks, capability verification).",
+      "recommendation": "Implement strict access control checks (e.g., `only_admin`, `only_owner`, capability checks) for functions that modify token state or configuration.",
+      "evidence": {
+        "kind": "abi_pattern",
+        "matched": [
+          "pause"
+        ],
+        "locations": [
+          {
+            "fn": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::vault_core::pause",
+            "note": "Function matches dangerous pattern without clear gating"
+          }
+        ]
+      },
+      "references": []
+    },
+    {
+      "id": "COIN-SEC-001",
+      "title": "Dangerous Function Without Clear Access Control",
+      "severity": "high",
+      "confidence": 0.8,
+      "description": "Module \"vault_core\" contains exposed function \"preview_mint\" matching dangerous patterns (mint) but lacks clear gating mechanisms (admin/owner checks, capability verification).",
+      "recommendation": "Implement strict access control checks (e.g., `only_admin`, `only_owner`, capability checks) for functions that modify token state or configuration.",
+      "evidence": {
+        "kind": "abi_pattern",
+        "matched": [
+          "mint"
+        ],
+        "locations": [
+          {
+            "fn": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::vault_core::preview_mint",
+            "note": "Function matches dangerous pattern without clear gating"
+          }
+        ]
+      },
+      "references": []
+    },
+    {
+      "id": "COIN-SEC-001",
+      "title": "Dangerous Function Without Clear Access Control",
+      "severity": "medium",
+      "confidence": 0.8,
+      "description": "Module \"vault_core\" contains exposed function \"unpause\" matching dangerous patterns (pause) but lacks clear gating mechanisms (admin/owner checks, capability verification).",
+      "recommendation": "Implement strict access control checks (e.g., `only_admin`, `only_owner`, capability checks) for functions that modify token state or configuration.",
+      "evidence": {
+        "kind": "abi_pattern",
+        "matched": [
+          "pause"
+        ],
+        "locations": [
+          {
+            "fn": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::vault_core::unpause",
+            "note": "Function matches dangerous pattern without clear gating"
+          }
+        ]
+      },
+      "references": []
+    },
+    {
+      "id": "COIN-META-001",
+      "title": "Missing or Incomplete Metadata",
+      "severity": "low",
+      "confidence": 0.9,
+      "description": "Coin metadata is missing or incomplete. Missing: symbol, decimals, totalSupply",
+      "recommendation": "Ensure all standard coin metadata fields are available via view functions or indexer.",
+      "evidence": {
+        "kind": "metadata",
+        "matched": [],
+        "locations": []
+      },
+      "references": []
+    }
+  ],
+  "meta": {
+    "scan_options": {
+      "rpc_url": "https://rpc-mainnet.supra.com"
+    },
+    "rpc_url": "https://rpc-mainnet.supra.com",
+    "duration_ms": 5973,
+    "artifact_mode": "view_plus_onchain_module",
+    "artifact_loaded": false,
+    "artifact_components": {
+      "hasSource": false,
+      "hasAbi": true,
+      "hasBytecode": true,
+      "origin": {
+        "kind": "manual",
+        "path": "coin_metadata_only"
+      },
+      "onChainBytecodeFetched": true
+    },
+    "rule_capabilities": {
+      "viewOnly": false,
+      "hasAbi": true,
+      "hasBytecodeOrSource": true,
+      "artifactMode": "view_plus_onchain_module"
+    },
+    "verdict_reason": "Coin metadata unavailable via RPC views/indexer. No metadata found",
+    "verdict_tier": "inconclusive",
+    "security_verified": false,
+    "metadata_verified": false,
+    "code_verified": true,
+    "coin_metadata": {
+      "coinType": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::cdp_multi::CASH",
+      "publisherAddress": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637",
+      "moduleName": "cdp_multi",
+      "structName": "CASH",
+      "supplyParityCheck": {
+        "driftDetected": false,
+        "tolerance": 0.01
+      },
+      "rpcPlan": {
+        "provider_chain": [
+          "suprascan_graphql",
+          "v3_modules"
+        ],
+        "v3_modules": {
+          "url": "https://rpc-mainnet.supra.com/rpc/v3/accounts/0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637/modules",
+          "used": true
+        },
+        "suprascan_graphql": {
+          "url": "https://suprascan.io/api/graphql",
+          "queryName": "GetCoinDetails",
+          "used": false
+        },
+        "framework_views_enabled": false,
+        "suprascan_graphql_success": false
+      }
+    },
+    "coin_modules_exist": true,
+    "coin_bytecode_fetched": true,
+    "coin_publisher_modules": [
+      "config",
+      "events",
+      "cdp_multi",
+      "positions",
+      "vault_core",
+      "price_oracle",
+      "strategy_core",
+      "enhanced_price_oracle"
+    ],
+    "coin_publisher_modules_count": 8,
+    "coin_scanned_modules_count": 8,
+    "coin_rpc_plan": {
+      "provider_chain": [
+        "suprascan_graphql",
+        "v3_modules"
+      ],
+      "v3_modules": {
+        "url": "https://rpc-mainnet.supra.com/rpc/v3/accounts/0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637/modules",
+        "used": true
+      },
+      "suprascan_graphql": {
+        "url": "https://suprascan.io/api/graphql",
+        "queryName": "GetCoinDetails",
+        "used": false
+      },
+      "framework_views_enabled": false,
+      "suprascan_graphql_success": false
+    },
+    "surface_report": {
+      "kind": "coin",
+      "publisher": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637",
+      "modules_total": 8,
+      "modules_list": [
+        "config",
+        "events",
+        "cdp_multi",
+        "positions",
+        "vault_core",
+        "price_oracle",
+        "strategy_core",
+        "enhanced_price_oracle"
+      ],
+      "entry_functions_by_module": {
+        "config": [
+          "get_config",
+          "get_operation_status",
+          "is_valid_collateral"
+        ],
+        "cdp_multi": [
+          "add_collateral",
+          "close_trove",
+          "deposit_or_mint",
+          "get_collateral_config",
+          "get_collateral_price",
+          "get_collateral_price_raw",
+          "get_fee_collector",
+          "get_lr_collector",
+          "get_operation_status",
+          "get_total_stats",
+          "get_user_position",
+          "initialize",
+          "is_redemption_provider",
+          "is_valid_collateral",
+          "liquidate",
+          "open_trove",
+          "partial_liquidate",
+          "redeem",
+          "redeem_multiple",
+          "register_as_redemption_provider",
+          "register_collateral_coin",
+          "register_debtToken_coin",
+          "remove_enhanced_oracle",
+          "repay_or_withdraw",
+          "set_config",
+          "set_fee_collector",
+          "set_operation_status",
+          "set_oracle",
+          "set_primary_rate_oracle",
+          "verify_collateral_ratio"
+        ],
+        "positions": [
+          "get_position",
+          "is_redemption_provider"
+        ],
+        "vault_core": [
+          "claim_withdrawal",
+          "convert_to_assets",
+          "convert_to_shares",
+          "deposit",
+          "deposit_for",
+          "deposit_with_slippage",
+          "execute_liquidation_only",
+          "get_all_pending_requests",
+          "get_claimable_amount",
+          "get_fund_manager",
+          "get_min_withdrawal_amount",
+          "get_vault_resource_address",
+          "get_withdrawal_details",
+          "harvest",
+          "harvest_aggregator",
+          "harvest_permissionless",
+          "has_pending_withdrawal",
+          "initialize",
+          "initialize_account",
+          "is_account_ready",
+          "max_deposit",
+          "max_mint",
+          "max_redeem",
+          "max_withdraw",
+          "pause",
+          "preview_deposit",
+          "preview_mint",
+          "preview_redeem",
+          "preview_withdraw",
+          "redeem",
+          "redeem_to",
+          "set_fee_recipient",
+          "set_fund_manager",
+          "set_min_withdrawal_amount",
+          "set_performance_fee",
+          "set_tvl_limit",
+          "set_withdraw_delay",
+          "set_withdrawal_fee",
+          "sync_assets",
+          "sync_assets_with_fee",
+          "total_assets",
+          "total_shares",
+          "transfer_assets_to_strategy",
+          "unpause",
+          "withdraw",
+          "withdraw_to"
+        ],
+        "price_oracle": [
+          "get_oracle_id",
+          "get_price",
+          "get_price_raw"
+        ],
+        "strategy_core": [
+          "balance_of",
+          "execute_liquidation_only",
+          "get_slippage",
+          "get_strategy_resource_address",
+          "initialize",
+          "setup",
+          "update_slippage"
+        ],
+        "enhanced_price_oracle": [
+          "get_oracle_id",
+          "get_price",
+          "get_price_raw",
+          "initialize_enhanced_oracle"
+        ]
+      },
+      "exposed_functions_empty_modules": [],
+      "capability_hits_by_module": {
+        "cdp_multi": [
+          "LRCollectorCapability (struct)",
+          "0x1::account::SignerCapability (struct field)",
+          "SignerCapability (struct)",
+          "0x1::coin::MintCapability<0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::cdp_multi::CASH> (struct field)",
+          "0x1::coin::BurnCapability<0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::cdp_multi::CASH> (struct field)",
+          "0x1::coin::FreezeCapability<0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::cdp_multi::CASH> (struct field)",
+          "Capability (bytecode string)",
+          "SignerCapability (bytecode string)",
+          "MintCap (bytecode string)",
+          "MintCapability (bytecode string)",
+          "BurnCap (bytecode string)",
+          "BurnCapability (bytecode string)"
+        ],
+        "vault_core": [
+          "DelayedWithdrawalCapability (struct)",
+          "0x1::account::SignerCapability (struct field)",
+          "FreezeCapabilityStore (struct)",
+          "0x1::coin::FreezeCapability<0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::vault_core::VaultShare> (struct field)",
+          "ShareTokenCapability (struct)",
+          "0x1::coin::MintCapability<0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::vault_core::VaultShare> (struct field)",
+          "0x1::coin::BurnCapability<0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::vault_core::VaultShare> (struct field)",
+          "VaultCapability (struct)",
+          "Capability (bytecode string)",
+          "SignerCapability (bytecode string)",
+          "MintCap (bytecode string)",
+          "MintCapability (bytecode string)",
+          "BurnCap (bytecode string)",
+          "BurnCapability (bytecode string)"
+        ],
+        "strategy_core": [
+          "StrategyCapability (struct)",
+          "0x1::account::SignerCapability (struct field)",
+          "Capability (bytecode string)",
+          "SignerCapability (bytecode string)"
+        ]
+      },
+      "capability_hits_total": 30,
+      "opaque_abi": {
+        "flagged": false,
+        "severity": "medium",
+        "reason": "Tradable status unknown (signal: unknown)"
+      },
+      "entry_functions_total": 95
+    },
+    "coin_creator_account": {
+      "address": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637",
+      "accountStatus": "active",
+      "modulesPublished": [
+        "config",
+        "events",
+        "cdp_multi",
+        "positions",
+        "vault_core",
+        "price_oracle",
+        "strategy_core",
+        "enhanced_price_oracle"
+      ],
+      "suspiciousAdminCapabilities": [
+        {
+          "module": "events",
+          "capability": "emit_debt_minted_event",
+          "severity": "high"
+        },
+        {
+          "module": "events",
+          "capability": "err_not_admin",
+          "severity": "medium"
+        },
+        {
+          "module": "cdp_multi",
+          "capability": "deposit_or_mint",
+          "severity": "high"
+        },
+        {
+          "module": "vault_core",
+          "capability": "max_mint",
+          "severity": "high"
+        },
+        {
+          "module": "vault_core",
+          "capability": "pause",
+          "severity": "medium"
+        },
+        {
+          "module": "vault_core",
+          "capability": "preview_mint",
+          "severity": "high"
+        },
+        {
+          "module": "vault_core",
+          "capability": "unpause",
+          "severity": "medium"
+        }
+      ],
+      "ownershipLinks": [],
+      "deploySignals": [],
+      "upgradeSignals": [],
+      "modulesPublishedCount": 8
+    },
+    "coin_cross_checks": {
+      "moduleAddressMatchesCreator": true,
+      "relationshipExplanation": "Coin's module address matches creator address",
+      "supplyMetadataClaimsMatch": true,
+      "opaqueAbiButTradable": false,
+      "opaqueAbiExplanation": "Tradable status unknown (signal: unknown)"
+    }
+  },
+  "scan_level_num": 3,
+  "scan_level_str": "L3",
+  "badge": {
+    "tier": "NONE",
+    "label": "No Badge",
+    "expires_at_iso": null,
+    "continuously_monitored": false,
+    "reason": "Verdict is inconclusive, requires 'pass' for contract badges"
+  },
+  "external_intel": {
+    "supra_pulse": {
+      "attached": true,
+      "kind": "pdf",
+      "sha256": "424266ce3546b372c4f6ca451b0087936ceff5c779c7396a48c6f9bfe43a68d4",
+      "filename": "supra_pulse.pdf"
+    }
+  }
+}

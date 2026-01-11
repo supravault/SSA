@@ -1,0 +1,36 @@
+{
+  "run_id": "20890282942",
+  "run_attempt": "1",
+  "workflow": "SSA Bundle Scan",
+  "repo": "supravault/SSA",
+  "ref": "refs/heads/main",
+  "sha": "e5af0e7608d716d02cc657adb8e7d0cdedee5465",
+  "triggered_by": "supravault",
+  "ts_utc": "2026-01-11T05:42:40Z",
+  "project_name": "WE",
+  "project_label": "",
+  "rpc": "https://rpc-mainnet.supra.com",
+  "report_type": "SSA_FULL_INTEGRATED_REPORT",
+  "pulse": {
+    "attached": true,
+    "tier": "Spotlight",
+    "url": "https://base44.app/api/apps/696115a9afc894facb90128e/files/public/696115a9afc894facb90128e/fcb932ece_JONES_ON_SUPRA__Report.pdf",
+    "error": ""
+  },
+  "bundle": {
+    "scans": [
+      {
+        "kind": "wallet",
+        "level": 3,
+        "target": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637",
+        "modulesAllowlist": ""
+      },
+      {
+        "kind": "coin",
+        "level": 3,
+        "target": "0x9176f70f125199a3e3d5549ce795a8e906eed75901d535ded623802f15ae3637::cdp_multi::CASH",
+        "modulesAllowlist": ""
+      }
+    ]
+  }
+}
