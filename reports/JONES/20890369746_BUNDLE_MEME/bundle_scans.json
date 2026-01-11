@@ -1,0 +1,16 @@
+{
+  "scans": [
+    {
+      "kind": "wallet",
+      "level": 3,
+      "target": "0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+      "modulesAllowlist": ""
+    },
+    {
+      "kind": "fa",
+      "level": 3,
+      "target": "0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+      "modulesAllowlist": ""
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "run_id": "20890369746",
+  "run_attempt": "1",
+  "workflow": "SSA Bundle Scan",
+  "repo": "supravault/SSA",
+  "ref": "refs/heads/main",
+  "sha": "fda5810a50a3b14cc5966410b8595953ea36496c",
+  "triggered_by": "supravault",
+  "ts_utc": "2026-01-11T05:50:36Z",
+  "project_name": "JONES",
+  "project_label": "MEME",
+  "rpc": "https://rpc-mainnet.supra.com",
+  "report_type": "SSA_FULL_INTEGRATED_REPORT",
+  "pulse": {
+    "attached": true,
+    "tier": "Spotlight",
+    "url": "https://base44.app/api/apps/696115a9afc894facb90128e/files/public/696115a9afc894facb90128e/7db0c8cde_JONES_ON_SUPRA__Report.pdf",
+    "error": ""
+  },
+  "bundle": {
+    "scans": [
+      {
+        "kind": "wallet",
+        "level": 3,
+        "target": "0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+        "modulesAllowlist": ""
+      },
+      {
+        "kind": "fa",
+        "level": 3,
+        "target": "0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+        "modulesAllowlist": ""
+      }
+    ]
+  }
+}
