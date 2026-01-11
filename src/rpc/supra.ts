@@ -1,4 +1,5 @@
 import { viewCallSmart } from "./viewCallSmart.js";
+import type { ModuleId, ArtifactView } from "../core/types.js";
 
 /**
  * Required views for scanning (minimum set)
@@ -8,10 +9,7 @@ export const REQUIRED_VIEWS = ["pool_stats", "total_staked"];
 /**
  * V24 queue views (newer API)
  */
-export const V24_QUEUE_VIEWS = [
-  "view_withdraw_requests",
-  "view_claim_requests",
-];
+export const V24_QUEUE_VIEWS = ["view_withdraw_requests", "view_claim_requests"];
 
 /**
  * Legacy queue views (older API)
@@ -31,10 +29,7 @@ export const OPTIONAL_VIEWS: string[] = [];
 /**
  * Views that require a user address as argument
  */
-export const USER_REQUIRED_VIEWS = [
-  "view_withdrawal_amount_of",
-  "view_claim_amount_of",
-];
+export const USER_REQUIRED_VIEWS = ["view_withdrawal_amount_of", "view_claim_amount_of"];
 
 /**
  * Check if a view requires a user address
@@ -92,11 +87,14 @@ export async function fetchModuleViewData(
   let queueMode: QueueMode = "none";
 
   // If custom allowed views specified, use them directly (skip probing)
-  if (allowedViews.length > 0) {
+  // NOTE: allowedViews === undefined is different from [].
+  // - undefined => scanner wants "default behavior" (staking profile)
+  // - []        => scanner wants "no view calls" (generic profile safe mode)
+  if (Array.isArray(allowedViews) && allowedViews.length > 0) {
     // Direct mode: call all specified views
     for (const viewFn of allowedViews) {
       const fullFn = `${fullModuleId}::${viewFn}`;
-      
+
       if (requiresUserAddress(viewFn) && !userAddress) {
         skippedUserViews.push(viewFn);
         continue;
@@ -134,6 +132,20 @@ export async function fetchModuleViewData(
       skippedUserViews,
       unsupportedViews: [],
       queueMode: "none", // Unknown in custom mode
+      probedViews: {},
+    };
+  }
+
+  // If caller explicitly set allowedViews = [], treat as "NO views" (generic safe mode).
+  // This prevents probing/calling staking views on non-staking modules.
+  if (Array.isArray(allowedViews) && allowedViews.length === 0) {
+    return {
+      viewResults: {},
+      viewErrors: [],
+      fetch_method: fetchMethod,
+      skippedUserViews: USER_REQUIRED_VIEWS.slice(),
+      unsupportedViews: [],
+      queueMode: "none",
       probedViews: {},
     };
   }
@@ -494,7 +506,7 @@ export function extractExposedFunctions(abi: any): string[] {
         }
       }
     }
-    
+
     // Extract from nested abi.abi.functions
     if (Array.isArray(abi.abi.functions)) {
       for (const fn of abi.abi.functions) {
@@ -527,7 +539,6 @@ export function buildArtifactViewFromViews(
   const functionNames = Object.keys(viewResults);
 
   // Infer entry functions from view function names
-  // Views are typically read-only, but we can detect patterns
   const entryFunctions = functionNames.filter(
     (fn) =>
       fn.startsWith("view_") ||
@@ -542,28 +553,26 @@ export function buildArtifactViewFromViews(
     if (typeof value === "string") {
       strings.push(value);
     } else if (typeof value === "object" && value !== null) {
-      // Try to extract string fields from objects
       try {
         const jsonStr = JSON.stringify(value);
-        // Extract potential function names or patterns
         const matches = jsonStr.match(/"([a-z_][a-z0-9_]*)"/gi);
         if (matches) {
           strings.push(...matches.map((m) => m.slice(1, -1)));
         }
       } catch {
-        // Ignore JSON stringify errors
+        // ignore
       }
     }
   }
 
   return {
     moduleId,
-    bytecode: null, // Not available via view calls
-    abi: null, // Not available via view calls
+    bytecode: null,
+    abi: null,
     functionNames,
     entryFunctions,
     strings,
-    metadata: viewResults, // Store view results as metadata
+    metadata: viewResults,
   };
 }
 
@@ -595,4 +604,4 @@ export interface FetchModuleViewDataOptions {
   userAddress?: string;
 }
 
-import type { ModuleId, ArtifactView } from "../core/types.js";
+
