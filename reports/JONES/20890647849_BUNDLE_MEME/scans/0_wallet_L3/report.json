@@ -1,0 +1,86 @@
+{
+  "request_id": "a1ccc9a5-5a03-47a7-ac51-3d83404cd26c",
+  "target": {
+    "chain": "supra",
+    "module_address": "0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+    "module_name": "",
+    "module_id": "0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+    "address": "0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+    "kind": "wallet"
+  },
+  "scan_level": "full",
+  "timestamp_iso": "2026-01-11T06:14:48.189Z",
+  "engine": {
+    "name": "ssa-scanner",
+    "version": "0.1.0",
+    "ruleset_version": "move-ruleset-0.1.0"
+  },
+  "artifact": {
+    "fetch_method": "rpc",
+    "artifact_hash": "wallet_0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+    "binding_note": "Wallet scan for 0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+    "artifact_origin": {
+      "kind": "supra_rpc_v3",
+      "path": "https://rpc-mainnet.supra.com/rpc/v3/accounts/0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c/modules"
+    }
+  },
+  "summary": {
+    "risk_score": 0,
+    "verdict": "pass",
+    "severity_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "badge_eligibility": {
+      "scanned": true,
+      "no_critical": true,
+      "security_verified": false,
+      "continuously_monitored": false,
+      "reasons": [
+        "No modules found at wallet address"
+      ],
+      "expires_at_iso": "2026-01-18T06:14:48.189Z"
+    },
+    "capabilities": {
+      "poolStats": false,
+      "totalStaked": false,
+      "queue": false,
+      "userViews": false
+    }
+  },
+  "findings": [],
+  "meta": {
+    "scan_options": {
+      "out": "reports/JONES/20890647849_BUNDLE_MEME/scans/0_wallet_L3",
+      "delay": 1000,
+      "kind": "wallet",
+      "level": 3,
+      "address": "0x8fd1550a61055c1406e04d1a0ddf7049d00c889b59f6823f21ca7d842e1eaf3c",
+      "rpc": "https://rpc-mainnet.supra.com",
+      "pdf": true,
+      "pulse": "reports/JONES/20890647849_BUNDLE_MEME/tmp/pulse_input.pdf"
+    },
+    "rpc_url": "https://rpc-mainnet.supra.com",
+    "duration_ms": 0,
+    "wallet_modules": []
+  },
+  "scan_level_num": 3,
+  "scan_level_str": "L3",
+  "badge": {
+    "tier": "WALLET_VERIFIED",
+    "label": "SSA · Wallet Verified",
+    "expires_at_iso": "2026-01-18T06:14:48.189Z",
+    "continuously_monitored": false
+  },
+  "external_intel": {
+    "supra_pulse": {
+      "attached": true,
+      "kind": "pdf",
+      "sha256": "424266ce3546b372c4f6ca451b0087936ceff5c779c7396a48c6f9bfe43a68d4",
+      "filename": "supra_pulse.pdf"
+    }
+  }
+}
