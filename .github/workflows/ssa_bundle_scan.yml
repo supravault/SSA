@@ -29,7 +29,7 @@ on:
 
 jobs:
   bundle_scan:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     permissions:
       contents: write
 
@@ -52,12 +52,6 @@ jobs:
       - name: Install (npm)
         run: npm install
 
-      - name: Install Playwright browsers (for Full Integrated PDF)
-        shell: bash
-        run: |
-          set -euo pipefail
-          npx playwright install --with-deps chromium
-
       - name: Build
         run: npm run build
 
@@ -79,6 +73,7 @@ jobs:
           sudo apt-get install -y qpdf poppler-utils
           qpdf --version || true
           pdfunite -v || true
+          pdftotext -v || true
 
       - name: Debug dist output (top 200)
         shell: bash
@@ -94,7 +89,7 @@ jobs:
             exit 1
           fi
 
-      - name: Run SSA Bundle Scan (with Full Integrated final_report.pdf)
+      - name: Run SSA Bundle Scan
         shell: bash
         env:
           SUPRA_RPC_URL: ${{ secrets.SUPRA_RPC_URL }}
@@ -143,6 +138,7 @@ jobs:
 
           mkdir -p "$bundle_dir/scans" "$bundle_dir/tmp"
 
+          # Resolve compiled SSA CLI path
           CLI=""
           if [ -f dist/cli/ssa.js ]; then
             CLI="dist/cli/ssa.js"
@@ -158,21 +154,20 @@ jobs:
           fi
           echo "✅ Using CLI: $CLI"
 
+          # Resolve compiled report generator script path
           GEN=""
           if [ -f dist/scripts/generate-report.js ]; then
             GEN="dist/scripts/generate-report.js"
           elif [ -f dist/src/scripts/generate-report.js ]; then
             GEN="dist/src/scripts/generate-report.js"
-          else
-            echo "❌ generate-report script not found after build."
-            echo "Searched: dist/scripts/generate-report.js, dist/src/scripts/generate-report.js"
-            set +o pipefail
-            (find dist -type f -print | head -n 200) || true
-            set -o pipefail
-            exit 1
           fi
-          echo "✅ Using generator: $GEN"
+          if [[ -n "$GEN" ]]; then
+            echo "✅ Using generator: $GEN"
+          else
+            echo "⚠️ generate-report script not found in dist/. We will skip final_report.pdf generation."
+          fi
 
+          # Normalize + validate bundle_json -> bundle_scans.json
           node --input-type=module - <<'NODE'
           import fs from "node:fs";
 
@@ -216,12 +211,14 @@ jobs:
 
           mv bundle_scans.json "$bundle_dir/bundle_scans.json"
 
+          # Determine report type (for metadata)
           tier_lc="$(echo "${pulse_tier:-}" | tr '[:upper:]' '[:lower:]' | xargs)"
           report_type="SSA_REPORT"
           if [[ "$tier_lc" == "premium" || "$tier_lc" == "spotlight" ]]; then
             report_type="SSA_FULL_INTEGRATED_REPORT"
           fi
 
+          # Pulse download (best effort)
           pulse_path=""
           pulse_error=""
           if [[ -n "$pulse_url" ]]; then
@@ -255,6 +252,7 @@ jobs:
           pulse_attached=false
           if [[ -n "$pulse_path" ]]; then pulse_attached=true; fi
 
+          # Write bundle_inputs.json
           ts_utc="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           export BUNDLE_DIR="$bundle_dir"
           export TS_UTC="$ts_utc"
@@ -296,6 +294,7 @@ jobs:
           console.log("✅ Wrote bundle_inputs.json");
           NODE
 
+          # Run scans + collect PDFs
           : > "$bundle_dir/tmp/pdfs.txt"
           total="$(jq -r '.scans | length' "$bundle_dir/bundle_scans.json")"
           echo "▶ Running bundle scans: $total scan(s)"
@@ -360,22 +359,19 @@ jobs:
             echo "$scan_dir/${kind}_report.pdf" >> "$bundle_dir/tmp/pdfs.txt"
           done
 
+          # Merge scan PDFs into combined_report.pdf
           echo "🧩 Building combined_report.pdf (qpdf/pdfunite)..."
           combined="$bundle_dir/combined_report.pdf"
 
+          mapfile -t pdfs < "$bundle_dir/tmp/pdfs.txt"
+          if [[ "${#pdfs[@]}" -lt 1 ]]; then
+            echo "❌ No PDFs listed in tmp/pdfs.txt"
+            exit 1
+          fi
+
           if command -v qpdf >/dev/null 2>&1; then
-            mapfile -t pdfs < "$bundle_dir/tmp/pdfs.txt"
-            if [[ "${#pdfs[@]}" -lt 1 ]]; then
-              echo "❌ No PDFs listed in tmp/pdfs.txt"
-              exit 1
-            fi
             qpdf --empty --pages "${pdfs[@]}" -- "$combined"
           elif command -v pdfunite >/dev/null 2>&1; then
-            mapfile -t pdfs < "$bundle_dir/tmp/pdfs.txt"
-            if [[ "${#pdfs[@]}" -lt 1 ]]; then
-              echo "❌ No PDFs listed in tmp/pdfs.txt"
-              exit 1
-            fi
             pdfunite "${pdfs[@]}" "$combined"
           else
             echo "❌ Neither qpdf nor pdfunite is available."
@@ -388,67 +384,90 @@ jobs:
           fi
           echo "✅ Combined PDF: $combined"
 
-          echo "🧾 Generating HTML->PDF integrated final_report.pdf (same pipeline as local)..."
+          # ------------------------------------------------------------
+          # Build pulse_summary.json (so generate-report can create JONES-style final_report.pdf)
+          # ------------------------------------------------------------
+          pulse_summary_path=""
+          if [[ -n "$pulse_path" && "$pulse_path" == *.pdf ]]; then
+            echo "🧠 Extracting Pulse summary from PDF text (best effort)..."
+            pdftotext "$pulse_path" "$bundle_dir/tmp/pulse.txt" || true
 
-          wallet_json="$(find "$bundle_dir/scans" -maxdepth 2 -type f -name report.json | grep -i wallet | head -n 1 || true)"
-          fa_json="$(find "$bundle_dir/scans" -maxdepth 2 -type f -name report.json | grep -i '_fa_' | head -n 1 || true)"
-          coin_json="$(find "$bundle_dir/scans" -maxdepth 2 -type f -name report.json | grep -i '_coin_' | head -n 1 || true)"
+            # Try to find a score like 82 or "Score: 82"
+            score="$(grep -Eoi 'score[^0-9]{0,10}[0-9]{1,3}' "$bundle_dir/tmp/pulse.txt" | head -n 1 | grep -Eo '[0-9]{1,3}' || true)"
 
-          primary_json=""
-          if [[ -n "$wallet_json" ]]; then
-            primary_json="$wallet_json"
-          elif [[ -n "$fa_json" ]]; then
-            primary_json="$fa_json"
-          elif [[ -n "$coin_json" ]]; then
-            primary_json="$coin_json"
-          else
-            primary_json="$(find "$bundle_dir/scans" -maxdepth 2 -type f -name report.json | head -n 1 || true)"
-          fi
+            # Try to find ISO timestamp
+            ts="$(grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z' "$bundle_dir/tmp/pulse.txt" | head -n 1 || true)"
 
-          if [[ -z "$primary_json" ]]; then
-            echo "❌ Could not find any scan report.json to feed generate-report."
-            find "$bundle_dir/scans" -maxdepth 3 -type f -print || true
-            exit 1
-          fi
-
-          pulse_arg=()
-          if [[ -n "$pulse_path" && "$pulse_path" == *.json ]]; then
-            pulse_arg=( --pulse "$pulse_path" )
-          fi
-
-          gen_out="$bundle_dir/tmp/_gen"
-          mkdir -p "$gen_out"
-
-          gen_args=( --scan "$primary_json" --project-name "$project" --ts-utc "$ts_utc" --out "$gen_out" --debug )
-          if [[ -n "$wallet_json" ]]; then gen_args+=( --wallet-scan "$wallet_json" ); fi
-          if [[ -n "$fa_json" ]]; then gen_args+=( --fa "$fa_json" ); fi
-
-          node "$GEN" "${gen_args[@]}" "${pulse_arg[@]}"
-
-          timestamp_safe="${ts_utc//:/-}"
-          archive_path="$gen_out/$project/$timestamp_safe"
-
-          if [[ -f "$archive_path/final_report.pdf" ]]; then
-            cp "$archive_path/final_report.pdf" "$bundle_dir/final_report.pdf"
-            echo "✅ final_report.pdf saved to: $bundle_dir/final_report.pdf"
-          elif [[ -f "$archive_path/report.pdf" ]]; then
-            cp "$archive_path/report.pdf" "$bundle_dir/final_report.pdf"
-            echo "✅ (fallback) report.pdf saved as final_report.pdf to: $bundle_dir/final_report.pdf"
-          else
-            echo "❌ Generator did not produce expected PDF."
-            echo "Expected one of:"
-            echo "  $archive_path/final_report.pdf"
-            echo "  $archive_path/report.pdf"
-            echo "Archive listing:"
-            (find "$gen_out" -maxdepth 5 -type f -print | head -n 200) || true
-            exit 1
-          fi
-
-          for f in inputs.json checksum.txt supra_pulse_summary.json badge.json badge.sig; do
-            if [[ -f "$archive_path/$f" ]]; then
-              cp "$archive_path/$f" "$bundle_dir/$f"
+            if [[ -n "${pulse_tier:-}" ]]; then
+              pulse_summary_path="$bundle_dir/tmp/pulse_summary.json"
+              jq -n \
+                --arg tier "${pulse_tier:-}" \
+                --arg score "${score:-}" \
+                --arg ts "${ts:-}" \
+                '{
+                  tier: $tier,
+                  score: ($score | tonumber?),
+                  timestamp_utc: ($ts | select(length>0)),
+                  source: "pulse_pdf_text_extract"
+                }' > "$pulse_summary_path"
+              echo "✅ Wrote pulse_summary.json: $pulse_summary_path"
             fi
-          done
+          elif [[ -n "$pulse_path" && "$pulse_path" == *.json ]]; then
+            # If they passed JSON directly, use it
+            pulse_summary_path="$pulse_path"
+          fi
+
+          # ------------------------------------------------------------
+          # Generate JONES-style final_report.pdf using generate-report.js
+          # ------------------------------------------------------------
+          if [[ -n "$GEN" && -n "$pulse_summary_path" ]]; then
+            echo "🏁 Generating final_report.pdf (Full Integrated via generate-report.js)..."
+
+            # Pick primary scan for the integrated report:
+            # Prefer coin, else fa, else wallet
+            primary_scan=""
+            wallet_scan=""
+            fa_scan=""
+
+            # discover report.json files
+            coin_report="$(ls -1 "$bundle_dir"/scans/*_coin_L*/report.json 2>/dev/null | head -n 1 || true)"
+            fa_report="$(ls -1 "$bundle_dir"/scans/*_fa_L*/report.json 2>/dev/null | head -n 1 || true)"
+            wallet_report="$(ls -1 "$bundle_dir"/scans/*_wallet_L*/report.json 2>/dev/null | head -n 1 || true)"
+
+            if [[ -n "$coin_report" ]]; then primary_scan="$coin_report"; fi
+            if [[ -z "$primary_scan" && -n "$fa_report" ]]; then primary_scan="$fa_report"; fi
+            if [[ -z "$primary_scan" && -n "$wallet_report" ]]; then primary_scan="$wallet_report"; fi
+
+            if [[ -n "$wallet_report" ]]; then wallet_scan="$wallet_report"; fi
+            if [[ -n "$fa_report" ]]; then fa_scan="$fa_report"; fi
+
+            if [[ -z "$primary_scan" ]]; then
+              echo "⚠️ No scan report.json files found for final integrated report."
+            else
+              args=( --scan "$primary_scan" --pulse "$pulse_summary_path" --project-name "$project" --ts-utc "$ts_utc" --out "$bundle_dir" )
+
+              if [[ -n "$wallet_scan" && "$wallet_scan" != "$primary_scan" ]]; then
+                args+=( --wallet-scan "$wallet_scan" )
+              fi
+              if [[ -n "$fa_scan" && "$fa_scan" != "$primary_scan" ]]; then
+                args+=( --fa "$fa_scan" )
+              fi
+
+              node "$GEN" "${args[@]}"
+
+              # generate-report archives to: <out>/<project>/<timestampSafe>/final_report.pdf
+              # Find newest final_report.pdf under bundle_dir/project/
+              newest_final="$(find "$bundle_dir/$project" -name final_report.pdf -print | sort | tail -n 1 || true)"
+              if [[ -n "$newest_final" ]]; then
+                cp -f "$newest_final" "$bundle_dir/final_report.pdf"
+                echo "✅ final_report.pdf ready: $bundle_dir/final_report.pdf"
+              else
+                echo "⚠️ generate-report ran but final_report.pdf not found under $bundle_dir/$project/"
+              fi
+            fi
+          else
+            echo "ℹ️ Skipping final_report.pdf generation (missing generator or pulse summary JSON)."
+          fi
 
       - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
@@ -458,22 +477,15 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Commit & Push (best-effort; reports may be gitignored)
+      - name: Commit & Push (force add reports for Base44 ingestion)
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "ssa-bot"
           git config user.email "ssa-bot@users.noreply.github.com"
 
-          set +e
-          git add "reports/${{ github.event.inputs.project_name }}/"
-          add_rc=$?
-          set -e
-
-          if [[ $add_rc -ne 0 ]]; then
-            echo "⚠️ reports/ appears to be gitignored; skipping commit. (Artifacts still uploaded.)"
-            exit 0
-          fi
+          # Force add even if gitignored (Base44 needs repo contents, not artifacts)
+          git add -f "reports/${{ github.event.inputs.project_name }}/"
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
@@ -482,6 +494,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
