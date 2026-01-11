@@ -1,0 +1,2620 @@
+{
+  "request_id": "1cef8aed-b7a6-493c-8655-52fa6e9460b8",
+  "target": {
+    "address": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f",
+    "module_name": "",
+    "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f",
+    "kind": "wallet",
+    "chain": "supra"
+  },
+  "scan_level": "full",
+  "timestamp_iso": "2026-01-11T20:07:13.164Z",
+  "engine": {
+    "name": "ssa-scanner",
+    "version": "0.1.0",
+    "ruleset_version": "move-ruleset-0.1.0"
+  },
+  "artifact": {
+    "fetch_method": "rpc",
+    "artifact_hash": "wallet_0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f",
+    "binding_note": "Wallet scan for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f",
+    "artifact_origin": {
+      "kind": "supra_rpc_v3",
+      "path": "https://rpc-mainnet.supra.com/rpc/v3/accounts/0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f/modules"
+    }
+  },
+  "summary": {
+    "risk_score": 74,
+    "verdict": "fail",
+    "severity_counts": {
+      "critical": 0,
+      "high": 36,
+      "medium": 6,
+      "low": 0,
+      "info": 0
+    },
+    "badge_eligibility": {
+      "scanned": true,
+      "no_critical": true,
+      "security_verified": false,
+      "continuously_monitored": false,
+      "reasons": []
+    },
+    "capabilities": {
+      "poolStats": false,
+      "totalStaked": false,
+      "queue": false,
+      "userViews": false
+    }
+  },
+  "findings": [
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config"
+    },
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions"
+    },
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2"
+    },
+    {
+      "id": "SVSSA-MOVE-009",
+      "title": "External Dependency/Oracle Usage Without Clear Bounds",
+      "severity": "medium",
+      "confidence": 0.6,
+      "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+      "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+      "evidence": {
+        "kind": "bytecode_pattern",
+        "matched": [
+          "price"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-001",
+      "title": "Missing Required View Functions",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+      "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "pool_stats",
+          "total_staked"
+        ],
+        "locations": [
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          },
+          {
+            "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked",
+            "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+          }
+        ]
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3"
+    },
+    {
+      "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+      "title": "Missing Queue Capability",
+      "severity": "high",
+      "confidence": 1,
+      "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+      "recommendation": "Verify module deployment and ensure queue view functions are available.",
+      "evidence": {
+        "kind": "heuristic",
+        "matched": [
+          "queue",
+          "capability"
+        ],
+        "locations": []
+      },
+      "references": [],
+      "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3"
+    }
+  ],
+  "meta": {
+    "scan_options": {
+      "out": "reports/sss/20901105094_BUNDLE/scans/0_wallet_L3",
+      "delay": 1000,
+      "kind": "wallet",
+      "level": 3,
+      "address": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f",
+      "rpc": "https://rpc-mainnet.supra.com",
+      "pdf": true
+    },
+    "rpc_url": "https://rpc-mainnet.supra.com",
+    "duration_ms": 0,
+    "wallet_modules": [
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config",
+        "summary": {
+          "risk_score": 70,
+          "verdict": "fail",
+          "severity_counts": {
+            "critical": 0,
+            "high": 4,
+            "medium": 0,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 4 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:06:36.134Z"
+          },
+          "capabilities": {
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 4563,
+          "view_results": {},
+          "view_errors": [
+            {
+              "viewName": "pool_stats",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "total_staked",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "verdict_reason": "Missing required view capabilities (poolStats or totalStaked)"
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale",
+        "summary": {
+          "risk_score": 74,
+          "verdict": "fail",
+          "severity_counts": {
+            "critical": 0,
+            "high": 4,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 4 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:06:40.697Z"
+          },
+          "capabilities": {
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 4165,
+          "view_results": {},
+          "view_errors": [
+            {
+              "viewName": "pool_stats",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "total_staked",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "verdict_reason": "Missing required view capabilities (poolStats or totalStaked)"
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2",
+        "summary": {
+          "risk_score": 70,
+          "verdict": "fail",
+          "severity_counts": {
+            "critical": 0,
+            "high": 4,
+            "medium": 0,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 4 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:06:44.863Z"
+          },
+          "capabilities": {
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 4016,
+          "view_results": {},
+          "view_errors": [
+            {
+              "viewName": "pool_stats",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "total_staked",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v2::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "verdict_reason": "Missing required view capabilities (poolStats or totalStaked)"
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3",
+        "summary": {
+          "risk_score": 70,
+          "verdict": "fail",
+          "severity_counts": {
+            "critical": 0,
+            "high": 4,
+            "medium": 0,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 4 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:06:48.879Z"
+          },
+          "capabilities": {
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 3738,
+          "view_results": {},
+          "view_errors": [
+            {
+              "viewName": "pool_stats",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "total_staked",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_config_v3::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "verdict_reason": "Missing required view capabilities (poolStats or totalStaked)"
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2",
+        "summary": {
+          "risk_score": 74,
+          "verdict": "fail",
+          "severity_counts": {
+            "critical": 0,
+            "high": 4,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 4 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:06:52.617Z"
+          },
+          "capabilities": {
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 4704,
+          "view_results": {},
+          "view_errors": [
+            {
+              "viewName": "pool_stats",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "total_staked",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v2::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "verdict_reason": "Missing required view capabilities (poolStats or totalStaked)"
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3",
+        "summary": {
+          "risk_score": 74,
+          "verdict": "fail",
+          "severity_counts": {
+            "critical": 0,
+            "high": 4,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 4 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:06:57.321Z"
+          },
+          "capabilities": {
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 4165,
+          "view_results": {},
+          "view_errors": [
+            {
+              "viewName": "pool_stats",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "total_staked",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_presale_v3::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "verdict_reason": "Missing required view capabilities (poolStats or totalStaked)"
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions",
+        "summary": {
+          "risk_score": 74,
+          "verdict": "fail",
+          "severity_counts": {
+            "critical": 0,
+            "high": 4,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 4 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:07:01.487Z"
+          },
+          "capabilities": {
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 3635,
+          "view_results": {},
+          "view_errors": [
+            {
+              "viewName": "pool_stats",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "total_staked",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "verdict_reason": "Missing required view capabilities (poolStats or totalStaked)"
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2",
+        "summary": {
+          "risk_score": 74,
+          "verdict": "fail",
+          "severity_counts": {
+            "critical": 0,
+            "high": 4,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 4 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:07:05.122Z"
+          },
+          "capabilities": {
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 3813,
+          "view_results": {},
+          "view_errors": [
+            {
+              "viewName": "pool_stats",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "total_staked",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v2::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "verdict_reason": "Missing required view capabilities (poolStats or totalStaked)"
+        }
+      },
+      {
+        "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3",
+        "summary": {
+          "risk_score": 74,
+          "verdict": "fail",
+          "severity_counts": {
+            "critical": 0,
+            "high": 4,
+            "medium": 1,
+            "low": 0,
+            "info": 0
+          },
+          "badge_eligibility": {
+            "scanned": true,
+            "no_critical": true,
+            "security_verified": false,
+            "continuously_monitored": false,
+            "reasons": [
+              "Found 4 high severity finding(s)",
+              "Continuous monitoring not enabled"
+            ],
+            "expires_at_iso": "2026-01-25T20:07:08.935Z"
+          },
+          "capabilities": {
+            "poolStats": false,
+            "totalStaked": false,
+            "queue": false,
+            "userViews": false
+          }
+        },
+        "findings": [
+          {
+            "id": "SVSSA-MOVE-009",
+            "title": "External Dependency/Oracle Usage Without Clear Bounds",
+            "severity": "medium",
+            "confidence": 0.6,
+            "description": "Detected oracle/external dependency patterns (price) but limited bounds checking hints. Oracle manipulation or stale data can lead to financial losses.",
+            "recommendation": "Verify that oracle values are bounded (min/max) and consider adding staleness checks and multiple oracle sources.",
+            "evidence": {
+              "kind": "bytecode_pattern",
+              "matched": [
+                "price"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-001",
+            "title": "Missing Required View Functions",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Failed to fetch 2 required view function(s): pool_stats, total_staked. This prevents complete security analysis.",
+            "recommendation": "Ensure all required view functions are available and accessible. Check RPC endpoint connectivity and module deployment status.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "pool_stats",
+                "total_staked"
+              ],
+              "locations": [
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                },
+                {
+                  "fn": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked",
+                  "note": "Failed: Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)"
+                }
+              ]
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3"
+          },
+          {
+            "id": "SVSSA-MOVE-VIEW-QUEUE-MISSING",
+            "title": "Missing Queue Capability",
+            "severity": "high",
+            "confidence": 1,
+            "description": "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+            "recommendation": "Verify module deployment and ensure queue view functions are available.",
+            "evidence": {
+              "kind": "heuristic",
+              "matched": [
+                "queue",
+                "capability"
+              ],
+              "locations": []
+            },
+            "references": [],
+            "module_id": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3"
+          }
+        ],
+        "meta": {
+          "scan_options": {
+            "scan_level": "full",
+            "rpc_url": "https://rpc-mainnet.supra.com"
+          },
+          "rpc_url": "https://rpc-mainnet.supra.com",
+          "duration_ms": 4229,
+          "view_results": {},
+          "view_errors": [
+            {
+              "viewName": "pool_stats",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::pool_stats\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "total_staked",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked",
+              "error": "Supra view call failed for 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked: Supra view RPC failed (500): {\"message\":\"could not find entry function by 0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::total_staked\"} (endpoint: https://rpc-mainnet.supra.com/rpc/v1/view)",
+              "type": "error"
+            },
+            {
+              "viewName": "view_withdrawal_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::view_withdrawal_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            },
+            {
+              "viewName": "view_claim_amount_of",
+              "functionId": "0xdf015c749bea2080c9096f1655ab4c40cfe0782b52520a48fb3f56d6a08f436f::vaultpay_subscriptions_v3::view_claim_amount_of",
+              "error": "TARGET_USER not provided",
+              "type": "skipped"
+            }
+          ],
+          "skipped_user_views": [
+            "view_withdrawal_amount_of",
+            "view_claim_amount_of"
+          ],
+          "queue_mode": "none",
+          "rule_capabilities": {
+            "viewOnly": false,
+            "hasAbi": true,
+            "hasBytecodeOrSource": true,
+            "artifactMode": "artifact_only"
+          },
+          "verdict_reason": "Missing required view capabilities (poolStats or totalStaked)"
+        }
+      }
+    ]
+  },
+  "scan_level_num": 3,
+  "scan_level_str": "L3",
+  "badge": {
+    "tier": "NONE",
+    "label": "No Badge",
+    "expires_at_iso": null,
+    "continuously_monitored": false,
+    "reason": "Verdict is fail, requires 'pass' for wallet badge"
+  }
+}
