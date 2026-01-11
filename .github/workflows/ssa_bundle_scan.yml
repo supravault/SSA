@@ -71,7 +71,7 @@ jobs:
           cache: "npm"
 
       - name: Install (npm)
-        run: npm ci
+        run: npm install
 
       - name: Build
         run: npm run build
@@ -468,6 +468,7 @@ jobs:
 
           git commit -m "SSA BUNDLE: ${{ github.event.inputs.project_name }} (run ${{ github.run_id }})"
           git push
+
 
 
 
