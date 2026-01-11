@@ -1,4 +1,4 @@
-/**
+**
  * Core data types for SSA Scanner
  */
 
@@ -62,7 +62,11 @@ export interface SeverityCounts {
  * Scanner capability summary.
  * Note: viewOnly is not part of Capabilities — it belongs to RuleCapabilities.
  *
- * NEW: moduleProfile fields added to support profile-aware scanning (staking vs generic).
+ * NEW: module profile fields added to support profile-aware scanning (staking vs generic).
+ *
+ * Important: we keep BOTH naming styles for compatibility:
+ * - camelCase fields (moduleProfile, moduleProfileReason) for in-code ergonomics
+ * - snake_case fields (module_profile, module_profile_reason) for report meta alignment
  */
 export interface Capabilities {
   poolStats: boolean;
@@ -70,9 +74,13 @@ export interface Capabilities {
   queue: boolean;
   userViews: boolean;
 
-  // NEW (optional): profile-aware scanning
+  // NEW (optional): profile-aware scanning (camelCase)
   moduleProfile?: "staking" | "generic";
   moduleProfileReason?: string;
+
+  // NEW (optional): profile-aware scanning (snake_case, compatibility)
+  module_profile?: "staking" | "generic";
+  module_profile_reason?: string;
 }
 
 export interface Summary {
@@ -216,10 +224,15 @@ export interface ScanResult {
     };
 
     // -----------------------------
-    // NEW: Module profiling metadata
+    // NEW: Module profiling metadata (report-level meta)
     // -----------------------------
     module_profile?: "staking" | "generic";
     module_profile_reason?: string;
+
+    /**
+     * For profile-aware scanners that compute an "effective" view allowlist
+     * (e.g., staking profile => required views + queue probes).
+     */
     allowed_views_effective?: string[] | undefined;
 
     // FA-specific metadata
@@ -700,4 +713,5 @@ export interface RuleContext {
   scanLevel: ScanLevel;
   capabilities?: RuleCapabilities; // Optional to support test scenarios, but normalized in executeRules
 }
+
 
