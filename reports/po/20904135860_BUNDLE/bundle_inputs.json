@@ -1,0 +1,35 @@
+{
+  "dispatch_id": "",
+  "run_id": "20904135860",
+  "run_attempt": "1",
+  "workflow": "SSA Bundle Scan",
+  "repo": "supravault/SSA",
+  "ref": "refs/heads/main",
+  "sha": "99181bac8c754ca5de03e526f0f1f01835cbe15a",
+  "triggered_by": "supravault",
+  "ts_utc": "2026-01-12T00:07:59Z",
+  "project_name": "po",
+  "project_label": "",
+  "rpc": "https://rpc-mainnet.supra.com",
+  "report_type": "SSA_REPORT",
+  "continuous_monitoring": {
+    "enabled": true,
+    "cadence": "24h"
+  },
+  "pulse": {
+    "attached": false,
+    "tier": "",
+    "url": "",
+    "error": ""
+  },
+  "bundle": {
+    "scans": [
+      {
+        "kind": "fa",
+        "level": 5,
+        "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+        "modulesAllowlist": ""
+      }
+    ]
+  }
+}
