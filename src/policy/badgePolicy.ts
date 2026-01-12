@@ -84,30 +84,31 @@ export function formatBadgeLabel(tier: BadgeTier): string {
 /**
  * Derive badge tier from scan result
  * This is the single source of truth for badge determination
- * 
+ *
  * POLICY ENFORCEMENT:
  * - Badges represent positive verification states only
  * - Critical findings block all badges (except Surface Verified with warning)
  * - High findings block Security Verified
  * - Risk states are separate from badges (never issued as badges)
- * 
+ *
  * See: docs/ssa-badges-and-risk-policy.md
  */
-export function deriveBadge(
-  scanResult: ScanResult,
-  config: BadgePolicyConfig = {}
-): BadgeResult {
+export function deriveBadge(scanResult: ScanResult, config: BadgePolicyConfig = {}): BadgeResult {
   const cfg = { ...DEFAULT_CONFIG, ...config };
   const now = getIsoTimestamp();
   const target = scanResult.target as any;
   const kind = target?.kind || "unknown";
-  const scanLevel = (scanResult as any).scan_level_num || 
-    (typeof scanResult.scan_level === "string" 
+
+  const scanLevel =
+    (scanResult as any).scan_level_num ||
+    (typeof scanResult.scan_level === "string"
       ? parseInt(scanResult.scan_level.replace(/[^0-9]/g, "")) || 1
       : 1);
+
   // Safely extract verdict, risk score, and severity counts with fallbacks
   const verdict = scanResult.summary?.verdict ?? (scanResult as any).verdict ?? "UNKNOWN";
   const riskScore = scanResult.summary?.risk_score ?? (scanResult as any)?.risk?.score ?? 0;
+
   const severityCounts = scanResult.summary?.severity_counts ?? {
     critical: 0,
     high: 0,
@@ -115,7 +116,13 @@ export function deriveBadge(
     low: 0,
     info: 0,
   };
-  const monitoringEnabled = (scanResult.meta as any)?.monitoring_enabled === true;
+
+  // ✅ Monitoring gate (customer-defensible):
+  // - meta.monitoring_enabled is the canonical boolean for issuance
+  // - meta.monitoring.monitoring_active is accepted as a compatible alias
+  const metaAny = (scanResult.meta as any) || {};
+  const monitoringEnabled =
+    metaAny.monitoring_enabled === true || metaAny?.monitoring?.monitoring_active === true;
 
   // POLICY ENFORCEMENT: Badge Suppression Rules
   // Rule 1: Critical findings block all badges (except Surface Verified with warning)
@@ -148,7 +155,6 @@ export function deriveBadge(
     }
 
     // Wallet verified: pass verdict at level >= 3
-    // Note: Wallet scans support levels 1-3 only, so level >= 3 means all levels passed
     if (verdict === "pass" && scanLevel >= 3) {
       return {
         tier: BadgeTier.WALLET_VERIFIED,
@@ -195,7 +201,6 @@ export function deriveBadge(
     }
 
     // POLICY ENFORCEMENT: Critical findings block Security Verified and Continuously Monitored
-    // Surface Verified may be issued with warning (implementation decision: we block it for safety)
     if (hasCritical) {
       return {
         tier: BadgeTier.NONE,
@@ -207,12 +212,8 @@ export function deriveBadge(
     }
 
     // POLICY ENFORCEMENT: High findings block Security Verified and Continuously Monitored
-    // Surface Verified may still be issued (with optional warning)
     if (hasHigh) {
-      // High findings block Security Verified and Continuously Monitored
-      // Only Surface Verified may be considered (if level >= 1)
       if (scanLevel >= 1) {
-        // Surface Verified may be issued with warning
         return {
           tier: BadgeTier.SURFACE_VERIFIED,
           label: formatBadgeLabel(BadgeTier.SURFACE_VERIFIED),
@@ -220,20 +221,15 @@ export function deriveBadge(
           continuously_monitored: false,
           reason: `High risk findings detected (${severityCounts.high} finding(s)). Security Verified badge is blocked. Surface Verified issued with warning.`,
         };
-      } else {
-        return {
-          tier: BadgeTier.NONE,
-          label: formatBadgeLabel(BadgeTier.NONE),
-          expires_at_iso: null,
-          continuously_monitored: false,
-          reason: `High risk findings detected (${severityCounts.high} finding(s)). Badges require level 1+ and no high findings for Security Verified.`,
-        };
       }
+      return {
+        tier: BadgeTier.NONE,
+        label: formatBadgeLabel(BadgeTier.NONE),
+        expires_at_iso: null,
+        continuously_monitored: false,
+        reason: `High risk findings detected (${severityCounts.high} finding(s)). Badges require level 1+ and no high findings for Security Verified.`,
+      };
     }
-
-    // At this point: pass verdict, no critical findings, no high findings
-    // Badges may be issued normally
-    // Note: Full Integrated is NOT a badge tier - it's a report status that triggers the red wax seal
 
     // Priority 1: CONTINUOUSLY_MONITORED
     // Requires: level >= 5, pass verdict, monitoring enabled, no critical/high findings
@@ -241,13 +237,19 @@ export function deriveBadge(
       return {
         tier: BadgeTier.CONTINUOUSLY_MONITORED,
         label: formatBadgeLabel(BadgeTier.CONTINUOUSLY_MONITORED),
-        expires_at_iso: null, // Rolling expiry (but badge must include expiry timestamp)
+        // ✅ rolling expiry (customer-defensible); can later be tied to cadence if desired
+        expires_at_iso: addDays(now, 7),
         continuously_monitored: true,
       };
     }
 
+    // Optional: if level >= 5 but monitoring not enabled, be explicit (helps support tickets)
+    if (scanLevel >= 5 && !monitoringEnabled) {
+      // fall through to Security Verified, but include a reason only if you want to surface it
+      // (we keep normal badge behavior: Security Verified for L5 pass)
+    }
+
     // Priority 2: SECURITY_VERIFIED
-    // Requires: level >= 3, pass verdict, no critical/high findings
     if (scanLevel >= 3) {
       return {
         tier: BadgeTier.SECURITY_VERIFIED,
@@ -258,7 +260,6 @@ export function deriveBadge(
     }
 
     // Priority 3: SURFACE_VERIFIED
-    // Requires: level >= 1, pass verdict, no critical/high findings
     if (scanLevel >= 1) {
       return {
         tier: BadgeTier.SURFACE_VERIFIED,
@@ -268,7 +269,6 @@ export function deriveBadge(
       };
     }
 
-    // No badge for level < 1
     return {
       tier: BadgeTier.NONE,
       label: formatBadgeLabel(BadgeTier.NONE),
@@ -287,3 +287,5 @@ export function deriveBadge(
     reason: `Unknown scan kind: ${kind}`,
   };
 }
+
+
