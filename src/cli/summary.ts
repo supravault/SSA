@@ -29,6 +29,16 @@ import { attachSupraPulse, type PulseMetadata } from "./pulse.js";
 import { deriveBadge } from "../policy/badgePolicy.js";
 import { signBadge, type SignedBadge, type BadgePayload } from "../crypto/badgeSigner.js";
 
+// Monitoring (opt-in registry; NO auto-enroll)
+import {
+  getEntry as getMonitorEntry,
+  computeMonitoringStatus,
+  touchRun as touchMonitorRun,
+  canonicalKey as canonicalMonitorKey,
+  type MonitorKind as MonitoringKind,
+} from "../monitoring/registry.js";
+import { handleMonitorCommand } from "./monitor.js";
+
 dotenv.config();
 
 const program = new Command();
@@ -185,6 +195,29 @@ function deriveWalletPerformedMetrics(moduleScans: any[]) {
   return performed;
 }
 
+// ---------------------------------------------------------------------------
+// Monitoring CLI (explicit opt-in)
+// ---------------------------------------------------------------------------
+program
+  .command("monitor")
+  .description("Manage monitoring registry (explicit opt-in)")
+  .argument("<subcommand>", "enable | disable | status | list")
+  .option("--kind <kind>", "fa | coin | wallet")
+  .option("--target <value>", "FA address, coin type, or wallet address")
+  .option("--cadence <hours>", "Cadence in hours (for enable)")
+  .action(async (subcommand: string, opts: Record<string, any>) => {
+    try {
+      await handleMonitorCommand(String(subcommand).toLowerCase(), {
+        kind: opts.kind,
+        target: opts.target,
+        cadence: opts.cadence,
+      });
+    } catch (e) {
+      console.error(e instanceof Error ? e.message : String(e));
+      process.exit(1);
+    }
+  });
+
 /**
  * List all modules for an account address
  * Handles RPC v3/v2/v1 and SupraScan GraphQL fallback
@@ -221,9 +254,7 @@ async function listAccountModules(
       }
     }
   } catch (error) {
-    console.warn(
-      `RPC v3/v2 module enumeration failed: ${error instanceof Error ? error.message : String(error)}`
-    );
+    console.warn(`RPC v3/v2 module enumeration failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   // Fallback to RPC v1 if v3 failed or returned empty
@@ -268,11 +299,7 @@ async function listAccountModules(
             };
           };
         };
-      }>(
-        query,
-        { address, blockchainEnvironment: "mainnet" },
-        { env: "mainnet", timeoutMs: 8000 }
-      );
+      }>(query, { address, blockchainEnvironment: "mainnet" }, { env: "mainnet", timeoutMs: 8000 });
 
       // Parse resources to extract module names
       const resourcesStr = data.data?.addressDetail?.addressDetailSupra?.resources;
@@ -739,15 +766,13 @@ program
           }
 
           // Record directed evidence for summary.json
-          // Try to create a compact "changes" object if diff exposes counts
           const changes: Record<string, any> = {};
           if (diff && typeof diff === "object") {
-            // Best-effort extraction: support multiple diff schemas
             const maybeCounts =
-              diff.counts ||
-              diff.summary ||
-              diff.stats ||
-              (diff.changes && typeof diff.changes === "object" ? diff.changes : null);
+              (diff as any).counts ||
+              (diff as any).summary ||
+              (diff as any).stats ||
+              ((diff as any).changes && typeof (diff as any).changes === "object" ? (diff as any).changes : null);
 
             if (maybeCounts && typeof maybeCounts === "object") {
               for (const [k, v] of Object.entries(maybeCounts)) {
@@ -765,6 +790,46 @@ program
             changes: Object.keys(changes).length > 0 ? changes : undefined,
           };
         }
+      }
+
+      // ------------------------------------------------------------------
+      // Monitoring proof (Level 5 for FA/Coin)
+      // - NEVER auto-registers
+      // - Only touches last_run_utc if registry entry exists AND enabled
+      // - Emits customer-defensible status into scanResult.meta.monitoring
+      // ------------------------------------------------------------------
+      try {
+        const monKind = normalizedKind as MonitoringKind;
+
+        if ((monKind === "fa" || monKind === "coin") && level >= 5) {
+          // Update last_run_* only if already enabled in registry
+          touchMonitorRun(monKind, target, scanResult.request_id);
+        }
+
+        const entry = (monKind === "fa" || monKind === "coin") ? getMonitorEntry(monKind, target) : undefined;
+        const status = computeMonitoringStatus(entry);
+
+        // Canonical “Monitoring must be enabled” truth used by badge policy:
+        // must be enabled + recent enough (monitoring_active)
+        (scanResult as any).meta.monitoring_enabled = status.monitoring_active === true;
+
+        (scanResult as any).meta.monitoring = {
+          ...status,
+          kind: monKind,
+          target,
+          key: canonicalMonitorKey(monKind, target),
+          evidence: "data/monitor_registry.json",
+        };
+      } catch (e) {
+        (scanResult as any).meta.monitoring_enabled = false;
+        (scanResult as any).meta.monitoring = {
+          enabled: false,
+          monitoring_active: false,
+          reason: `monitoring_error:${e instanceof Error ? e.message : String(e)}`,
+          kind: normalizedKind,
+          target,
+          evidence: "data/monitor_registry.json",
+        };
       }
 
       // Derive badge using authoritative policy
@@ -851,5 +916,7 @@ program
   });
 
 program.parse(process.argv);
+
+
 
 
