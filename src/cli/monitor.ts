@@ -17,8 +17,8 @@ import {
   listRegistry,
   computeMonitoringStatus,
   canonicalKey,
-  MonitorKind,
-} from "../monitoring/registry";
+  type MonitorKind,
+} from "../monitoring/registry.js";
 
 /* ------------------------------------------------------------------ */
 /* Argument Helpers                                                   */
@@ -160,3 +160,4 @@ async function cmdList(): Promise<void> {
 
   console.log(JSON.stringify(rows, null, 2));
 }
+
