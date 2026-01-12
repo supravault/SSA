@@ -29,16 +29,8 @@ import { attachSupraPulse, type PulseMetadata } from "./pulse.js";
 import { deriveBadge } from "../policy/badgePolicy.js";
 import { signBadge, type SignedBadge, type BadgePayload } from "../crypto/badgeSigner.js";
 
-import {
-  computeMonitoringStatus,
-  recordMonitorRun,
-  enableMonitoring,
-  disableMonitoring,
-  loadRegistry,
-  canonicalMonitorKey,
-  DEFAULT_REGISTRY_REL_PATH,
-  type MonitoringKind,
-} from "../monitoring/registry.js";
+import { handleMonitorCommand } from "./monitor.js";
+import { canonicalKey, computeMonitoringStatus, getEntry, touchRun, type MonitorKind } from "../monitoring/registry.js";
 
 dotenv.config();
 
@@ -47,80 +39,168 @@ const program = new Command();
 program.name("ssa").description("SSA Scanner - Unified security scanning for Supra Move").version("0.1.0");
 
 // ---------------------------------------------------------------------------
-// Monitoring subcommands (opt-in registry)
+// Monitoring subcommand (single canonical implementation: src/cli/monitor.ts)
 // ---------------------------------------------------------------------------
-const monitor = program.command("monitor").description("Manage monitoring registry (opt-in)");
+//
+// NOTE:
+// - This is ONLY a router. All logic lives in ./monitor.ts
+// - Registry ships empty; scans never auto-register
+//
+program
+  .command("monitor")
+  .description("Manage monitoring registry (opt-in)")
+  .argument("<action>", "enable | disable | status | list")
+  .option("--kind <kind>", "Target kind: fa | coin | wallet")
+  .option("--target <value>", "FA address, coin type, or wallet address")
+  .option("--cadence <hours>", "Cadence in hours (enable only)", "6")
+  .action(async (action: string, opts: any) => {
+    await handleMonitorCommand(action, {
+      kind: opts.kind,
+      target: opts.target,
+      cadence: opts.cadence,
+    });
+  });
 
-monitor
-  .command("enable")
-  .description("Enable monitoring for a target (writes to data/monitor_registry.json)")
-  .requiredOption("--kind <kind>", "Target kind: fa | coin | wallet")
-  .requiredOption("--target <value>", "FA address, coin type, or wallet address")
-  .option("--cadence <hours>", "Cadence in hours (default: 6)", "6")
-  .option("--registry <path>", `Registry path (default: ${DEFAULT_REGISTRY_REL_PATH})`)
-  .action((opts) => {
-    const kind = String(opts.kind).toLowerCase() as MonitoringKind;
-    const target = String(opts.target);
-    const cadence = Math.max(1, Math.floor(Number(opts.cadence)));
-    const entry = enableMonitoring(kind, target, cadence, opts.registry);
-    console.log(
-      JSON.stringify(
-        {
-          ok: true,
-          action: "enable",
-          key: canonicalMonitorKey(kind, target),
-          entry,
-        },
-        null,
-        2
-      )
+// -----------------------------
+// helpers
+// -----------------------------
+function isObj(v: any): v is Record<string, any> {
+  return !!v && typeof v === "object" && !Array.isArray(v);
+}
+function asNum(v: any): number | null {
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+function asStr(v: any): string | null {
+  return typeof v === "string" && v.trim().length > 0 ? v : null;
+}
+function bump(map: Record<string, number>, key: string) {
+  map[key] = (map[key] || 0) + 1;
+}
+function safeTopK(map: Record<string, number>, k: number): Array<{ key: string; count: number }> {
+  return Object.entries(map)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, k)
+    .map(([key, count]) => ({ key, count }));
+}
+function safeList<T>(v: any): T[] {
+  return Array.isArray(v) ? (v as T[]) : [];
+}
+
+/**
+ * Attempt to derive "directed" proof-of-work metrics from module scan meta.
+ * This is best-effort: it will only include metrics if present in meta.
+ */
+function deriveWalletPerformedMetrics(moduleScans: any[]) {
+  const performed: any = {
+    l1: {
+      modules_scanned: moduleScans.length,
+      modules_ok: 0,
+      modules_inconclusive: 0,
+      entrypoints_indexed: null as number | null,
+      opaque_abi_modules: 0,
+      module_profiles_top: [] as Array<{ profile: string; count: number }>,
+      sources_used: ["rpc"],
+    },
+    l2: {
+      tx_sampled: null as number | null,
+      window_days: null as number | null,
+      unique_counterparties: null as number | null,
+      top_calls: [] as string[],
+      sources_used: [] as string[],
+    },
+    l3: {
+      role: null as string | null,
+      confidence: null as number | null,
+      model_version: null as string | null,
+      sources_used: [] as string[],
+      top_signals: [] as string[],
+    },
+  };
+
+  const profileCounts: Record<string, number> = {};
+  let entrypointsSum = 0;
+  let entrypointsSeen = false;
+
+  for (const ms of moduleScans) {
+    const v = asStr(ms?.verdict) || asStr(ms?.summary?.verdict) || null;
+    if (v === "inconclusive") performed.l1.modules_inconclusive += 1;
+    else if (v === "pass" || v === "warn" || v === "fail") performed.l1.modules_ok += 1;
+
+    const prof = asStr(ms?.module_profile) || asStr(ms?.meta?.module_profile) || "unknown";
+    bump(profileCounts, prof);
+
+    const opaque =
+      ms?.meta?.surface?.opaque_abi === true ||
+      ms?.meta?.opaque_abi === true ||
+      ms?.meta?.surface?.abi_opaque === true;
+    if (opaque) performed.l1.opaque_abi_modules += 1;
+
+    const epCount =
+      asNum(ms?.meta?.surface?.entrypoints_count) ??
+      asNum(ms?.meta?.surface?.exposed_entrypoints_count) ??
+      (Array.isArray(ms?.meta?.surface?.entrypoints) ? ms.meta.surface.entrypoints.length : null) ??
+      (Array.isArray(ms?.meta?.surface?.exposed_functions) ? ms.meta.surface.exposed_functions.length : null);
+
+    if (epCount !== null) {
+      entrypointsSeen = true;
+      entrypointsSum += epCount;
+    }
+
+    const txSampled = asNum(ms?.meta?.behavior?.tx_sampled) ?? asNum(ms?.meta?.agent?.behavior?.tx_sampled) ?? null;
+    const windowDays = asNum(ms?.meta?.behavior?.window_days) ?? asNum(ms?.meta?.agent?.behavior?.window_days) ?? null;
+    const uniq =
+      asNum(ms?.meta?.behavior?.unique_counterparties) ??
+      asNum(ms?.meta?.agent?.behavior?.unique_counterparties) ??
+      null;
+
+    if (txSampled !== null && performed.l2.tx_sampled === null) performed.l2.tx_sampled = txSampled;
+    if (windowDays !== null && performed.l2.window_days === null) performed.l2.window_days = windowDays;
+    if (uniq !== null && performed.l2.unique_counterparties === null) performed.l2.unique_counterparties = uniq;
+
+    const topCalls = safeList<any>(ms?.meta?.behavior?.top_calls ?? ms?.meta?.agent?.behavior?.top_calls);
+    for (const c of topCalls) {
+      const fn = asStr(c?.fn) || asStr(c?.function) || (typeof c === "string" ? c : null);
+      if (fn) performed.l2.top_calls.push(fn);
+    }
+
+    const l2Sources = safeList<string>(ms?.meta?.behavior?.sources_used ?? ms?.meta?.agent?.behavior?.sources_used);
+    for (const s of l2Sources) performed.l2.sources_used.push(s);
+
+    const role = asStr(ms?.meta?.attribution?.role) ?? asStr(ms?.meta?.agent?.attribution?.role) ?? null;
+    const conf = asNum(ms?.meta?.attribution?.confidence) ?? asNum(ms?.meta?.agent?.attribution?.confidence) ?? null;
+    const ver =
+      asStr(ms?.meta?.risk_model?.model_version) ?? asStr(ms?.meta?.agent?.risk_model?.model_version) ?? null;
+
+    if (role && !performed.l3.role) performed.l3.role = role;
+    if (conf !== null && performed.l3.confidence === null) performed.l3.confidence = conf;
+    if (ver && !performed.l3.model_version) performed.l3.model_version = ver;
+
+    const l3Sources = safeList<string>(
+      ms?.meta?.attribution?.sources_used ??
+        ms?.meta?.agent?.attribution?.sources_used ??
+        ms?.meta?.risk_model?.sources_used ??
+        ms?.meta?.agent?.risk_model?.sources_used
     );
-  });
+    for (const s of l3Sources) performed.l3.sources_used.push(s);
 
-monitor
-  .command("disable")
-  .description("Disable monitoring for a target (does not delete the entry)")
-  .requiredOption("--kind <kind>", "Target kind: fa | coin | wallet")
-  .requiredOption("--target <value>", "FA address, coin type, or wallet address")
-  .option("--registry <path>", `Registry path (default: ${DEFAULT_REGISTRY_REL_PATH})`)
-  .action((opts) => {
-    const kind = String(opts.kind).toLowerCase() as MonitoringKind;
-    const target = String(opts.target);
-    const ok = disableMonitoring(kind, target, opts.registry);
-    console.log(
-      JSON.stringify(
-        {
-          ok,
-          action: "disable",
-          key: canonicalMonitorKey(kind, target),
-        },
-        null,
-        2
-      )
-    );
-  });
+    const signals = safeList<any>(ms?.meta?.risk_model?.signals ?? ms?.meta?.agent?.risk_model?.signals);
+    for (const sig of signals) {
+      const name = asStr(sig?.name) || asStr(sig?.signal) || (typeof sig === "string" ? sig : null);
+      if (name) performed.l3.top_signals.push(name);
+    }
+  }
 
-monitor
-  .command("status")
-  .description("Show monitoring status for a target (customer-defensible)")
-  .requiredOption("--kind <kind>", "Target kind: fa | coin | wallet")
-  .requiredOption("--target <value>", "FA address, coin type, or wallet address")
-  .option("--registry <path>", `Registry path (default: ${DEFAULT_REGISTRY_REL_PATH})`)
-  .action((opts) => {
-    const kind = String(opts.kind).toLowerCase() as MonitoringKind;
-    const target = String(opts.target);
-    const status = computeMonitoringStatus(kind, target, opts.registry);
-    console.log(JSON.stringify({ ok: true, status }, null, 2));
-  });
+  performed.l1.module_profiles_top = safeTopK(profileCounts, 5).map((x) => ({ profile: x.key, count: x.count }));
+  performed.l1.entrypoints_indexed = entrypointsSeen ? entrypointsSum : null;
 
-monitor
-  .command("list")
-  .description("List all registry entries")
-  .option("--registry <path>", `Registry path (default: ${DEFAULT_REGISTRY_REL_PATH})`)
-  .action((opts) => {
-    const { path, registry } = loadRegistry(opts.registry);
-    console.log(JSON.stringify({ ok: true, path, registry }, null, 2));
-  });
+  performed.l2.sources_used = Array.from(new Set(performed.l2.sources_used));
+  performed.l2.top_calls = Array.from(new Set(performed.l2.top_calls)).slice(0, 10);
+
+  performed.l3.sources_used = Array.from(new Set(performed.l3.sources_used));
+  performed.l3.top_signals = Array.from(new Set(performed.l3.top_signals)).slice(0, 10);
+
+  return performed;
+}
 
 /**
  * List all modules for an account address
@@ -158,9 +238,7 @@ async function listAccountModules(
       }
     }
   } catch (error) {
-    console.warn(
-      `RPC v3/v2 module enumeration failed: ${error instanceof Error ? error.message : String(error)}`
-    );
+    console.warn(`RPC v3/v2 module enumeration failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   // Fallback to RPC v1 if v3 failed or returned empty
@@ -207,7 +285,6 @@ async function listAccountModules(
         };
       }>(query, { address, blockchainEnvironment: "mainnet" }, { env: "mainnet", timeoutMs: 8000 });
 
-      // Parse resources to extract module names
       const resourcesStr = data.data?.addressDetail?.addressDetailSupra?.resources;
       if (resourcesStr && typeof resourcesStr === "string") {
         try {
@@ -234,13 +311,11 @@ async function listAccountModules(
             }
           }
         } catch {
-          // Resources parsing failed, continue
+          // ignore
         }
       }
     } catch (error) {
-      console.warn(
-        `SupraScan GraphQL module enumeration failed: ${error instanceof Error ? error.message : String(error)}`
-      );
+      console.warn(`SupraScan GraphQL module enumeration failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -317,6 +392,31 @@ async function scanWallet(
         rpc_url: rpcUrl,
         duration_ms: 0,
         wallet_modules: [],
+        performed: {
+          l1: {
+            modules_scanned: 0,
+            modules_ok: 0,
+            modules_inconclusive: 0,
+            entrypoints_indexed: 0,
+            opaque_abi_modules: 0,
+            module_profiles_top: [],
+            sources_used: ["rpc"],
+          },
+          l2: {
+            tx_sampled: null,
+            window_days: null,
+            unique_counterparties: null,
+            top_calls: [],
+            sources_used: [],
+          },
+          l3: {
+            role: null,
+            confidence: null,
+            model_version: null,
+            sources_used: [],
+            top_signals: [],
+          },
+        },
       } as any,
     };
   }
@@ -325,13 +425,10 @@ async function scanWallet(
 
   const moduleScans: Array<{
     module_id: string;
-
-    // ✅ Added: module profile + quick per-module summary fields
     module_profile?: string;
     module_profile_reason?: string;
     verdict?: "pass" | "warn" | "fail" | "inconclusive" | string;
     risk_score?: number;
-
     summary: any;
     findings: any[];
     meta: any;
@@ -370,13 +467,10 @@ async function scanWallet(
 
       moduleScans.push({
         module_id: `${moduleId.address}::${moduleId.module_name}`,
-
-        // ✅ NEW: keep per-module classification + reason (if your rules set it)
         module_profile: scanResult.meta?.module_profile,
         module_profile_reason: scanResult.meta?.module_profile_reason,
         verdict: scanResult.summary?.verdict,
         risk_score: scanResult.summary?.risk_score,
-
         summary: scanResult.summary,
         findings: annotatedFindings,
         meta: scanResult.meta,
@@ -388,7 +482,6 @@ async function scanWallet(
         }`
       );
 
-      // Still record a stub entry so report.meta.wallet_modules stays complete
       moduleScans.push({
         module_id: `${moduleId.address}::${moduleId.module_name}`,
         module_profile: "unknown",
@@ -402,6 +495,11 @@ async function scanWallet(
       if (verdict === "pass") verdict = "inconclusive";
     }
   }
+
+  const performed = deriveWalletPerformedMetrics(moduleScans);
+
+  if (level >= 2 && performed.l2.sources_used.length === 0) performed.l2.sources_used = ["rpc"];
+  if (level >= 3 && performed.l3.sources_used.length === 0) performed.l3.sources_used = ["rpc"];
 
   return {
     request_id: randomUUID(),
@@ -448,6 +546,7 @@ async function scanWallet(
       rpc_url: rpcUrl,
       duration_ms: 0,
       wallet_modules: moduleScans,
+      performed,
     } as any,
   };
 }
@@ -530,6 +629,7 @@ program
         }
         target = options.address;
       }
+
       if (!target) {
         console.error("Error: Invalid target for scan kind");
         process.exit(1);
@@ -568,6 +668,9 @@ program
         chain: "supra",
       };
 
+      // Ensure meta exists
+      if (!isObj((scanResult as any).meta)) (scanResult as any).meta = {};
+
       // Handle level 4/5 snapshot/diff logic for coin/fa
       if ((normalizedKind === "coin" || normalizedKind === "fa") && level >= 4) {
         if (level === 4) {
@@ -578,14 +681,24 @@ program
               : await buildFASnapshot({ scanResult, rpcUrl: rpc });
 
           writeFileSync(join(artifactsDir, "snapshot.json"), JSON.stringify(snapshot, null, 2));
+
+          // directed evidence for summary.json
+          (scanResult as any).meta.performed = (scanResult as any).meta.performed || {};
+          (scanResult as any).meta.performed.l4 = {
+            snapshot_generated: true,
+            snapshot_file: "artifacts/snapshot.json",
+            sources_used: ["rpc"],
+          };
         }
 
         if (level === 5) {
+          let diff: any;
+
           if (prev && curr) {
             console.log("Creating diff from provided snapshots...");
             const prevSnapshot = JSON.parse(readFileSync(prev, "utf-8"));
             const currSnapshot = JSON.parse(readFileSync(curr, "utf-8"));
-            const diff = diffSnapshots(prevSnapshot, currSnapshot);
+            diff = diffSnapshots(prevSnapshot, currSnapshot);
             writeFileSync(join(artifactsDir, "diff.json"), JSON.stringify(diff, null, 2));
           } else {
             console.log("Creating snapshot v1...");
@@ -612,46 +725,71 @@ program
 
             writeFileSync(join(artifactsDir, "snapshot_v2.json"), JSON.stringify(snapshot2, null, 2));
 
-            const diff = diffSnapshots(snapshot1, snapshot2);
+            diff = diffSnapshots(snapshot1, snapshot2);
             writeFileSync(join(artifactsDir, "diff.json"), JSON.stringify(diff, null, 2));
           }
+
+          // directed evidence for summary.json
+          const changes: Record<string, any> = {};
+          if (diff && typeof diff === "object") {
+            const maybeCounts = diff.counts || diff.summary || diff.stats || (diff.changes && typeof diff.changes === "object" ? diff.changes : null);
+            if (maybeCounts && typeof maybeCounts === "object") {
+              for (const [k, v] of Object.entries(maybeCounts)) {
+                if (typeof v === "number" || typeof v === "boolean" || typeof v === "string") changes[k] = v;
+              }
+            }
+          }
+
+          (scanResult as any).meta.performed = (scanResult as any).meta.performed || {};
+          (scanResult as any).meta.performed.l5 = {
+            diff_generated: true,
+            diff_file: "artifacts/diff.json",
+            sources_used: ["rpc"],
+            changes: Object.keys(changes).length > 0 ? changes : undefined,
+          };
         }
       }
 
       // ------------------------------------------------------------------
-      // Monitoring (Level 5+) — customer-defensible proof
-      // - Monitoring is opt-in (registry-driven)
+      // Monitoring (Level 5) — customer-defensible proof
+      //
+      // Rules:
+      // - Registry ships empty (opt-in)
       // - Scans NEVER auto-register
-      // - A Level 5 scan may record a run only if monitoring is already enabled
+      // - Level 5 touches last_run only if already enabled
+      // - Badge policy reads scanResult.meta.monitoring_enabled (boolean)
       // ------------------------------------------------------------------
       try {
-        const monKind = normalizedKind as MonitoringKind;
+        // Only FA/Coin have level 5 today; wallet levels are 1-3.
+        const monKind = normalizedKind as MonitorKind;
 
         if ((monKind === "fa" || monKind === "coin") && level >= 5) {
-          // Only update last_run_utc if the target is already enabled in registry
-          recordMonitorRun(monKind, target, scanResult.request_id);
+          // Only updates if entry exists and enabled (touchRun enforces)
+          touchRun(monKind, target, scanResult.request_id);
         }
 
-        const monStatus =
-          monKind === "fa" || monKind === "coin"
-            ? computeMonitoringStatus(monKind, target)
-            : {
-                enabled: false,
-                reason: "Monitoring not applicable for this target kind",
-                kind: monKind,
-                target,
-              };
+        const entry = (monKind === "fa" || monKind === "coin" || monKind === "wallet") ? getEntry(monKind, target) : undefined;
+        const status = computeMonitoringStatus(entry);
 
-        (scanResult.meta as any).monitoring_enabled = monStatus.enabled === true;
-        (scanResult.meta as any).monitoring = monStatus;
+        // monitoring_enabled must reflect ACTIVE monitoring for badge eligibility
+        (scanResult as any).meta.monitoring_enabled = status.monitoring_active === true;
+
+        // attach customer-facing proof block
+        (scanResult as any).meta.monitoring = {
+          kind: monKind,
+          target,
+          key: canonicalKey(monKind, target),
+          ...status,
+        };
       } catch (e) {
-        // Safe default: never assume monitoring
-        (scanResult.meta as any).monitoring_enabled = false;
-        (scanResult.meta as any).monitoring = {
+        (scanResult as any).meta.monitoring_enabled = false;
+        (scanResult as any).meta.monitoring = {
           enabled: false,
-          reason: `Monitoring status error: ${e instanceof Error ? e.message : String(e)}`,
+          monitoring_active: false,
+          reason: `monitoring_status_error:${e instanceof Error ? e.message : String(e)}`,
           kind: normalizedKind,
           target,
+          key: `${normalizedKind}:${target}`,
         };
       }
 
@@ -702,10 +840,10 @@ program
         }
       }
 
-      // Generate summary.json (includes badge)
+      // Generate summary.json (includes badge + monitoring evidence)
       const summary = generateSummaryJson(
         scanResult,
-        normalizedKind,
+        normalizedKind as any,
         target,
         level,
         out,
@@ -739,6 +877,8 @@ program
   });
 
 program.parse(process.argv);
+
+
 
 
 
