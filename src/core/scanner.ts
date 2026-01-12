@@ -1,5 +1,6 @@
+// src/core/scanner.ts
 import { randomUUID } from "crypto";
-import type { ModuleId, ScanLevel, ScanResult, Verdict, ArtifactMode } from "./types.js";
+import type { ModuleId, ScanLevel, ScanResult, Verdict, ArtifactMode, Finding } from "./types.js";
 import {
   fetchModuleViewData,
   REQUIRED_VIEWS,
@@ -26,7 +27,6 @@ import { fetchAccountModuleV3 } from "../rpc/supraAccountsV3.js";
 import type { RpcClientOptions } from "../rpc/supraRpcClient.js";
 import { fetchAllTransactionsFromSupraScan } from "../rpc/supraScanGraphql.js";
 import type { SupraScanTransactionSummary } from "../rpc/supraScanGraphql.js";
-import type { Finding } from "./types.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -109,18 +109,9 @@ function uniq<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
 }
 
-function asNum(v: any): number | null {
-  return typeof v === "number" && Number.isFinite(v) ? v : null;
-}
-
-function asStr(v: any): string | null {
-  return typeof v === "string" && v.trim().length > 0 ? v : null;
-}
-
 function countEntrypointsFromAbi(abi: any): number | null {
   if (!abi) return null;
 
-  // Support multiple ABI shapes
   const exposed =
     (Array.isArray(abi?.exposed_functions) ? abi.exposed_functions : null) ||
     (Array.isArray(abi?.exposedFunctions) ? abi.exposedFunctions : null) ||
@@ -128,11 +119,10 @@ function countEntrypointsFromAbi(abi: any): number | null {
 
   if (!exposed) return null;
 
-  // Count "entry"/callable-ish functions, best-effort
   let n = 0;
   for (const f of exposed) {
     if (!f) continue;
-    // some shapes have `visibility`/`is_entry`/`isEntry`
+
     const isEntry =
       f.is_entry === true ||
       f.isEntry === true ||
@@ -140,6 +130,7 @@ function countEntrypointsFromAbi(abi: any): number | null {
       f.visibility === "public(friend)" ||
       f.visibility === "public_script" ||
       f.visibility === "public_entry";
+
     if (isEntry) n += 1;
     else n += 1; // fallback: count all if we can't classify
   }
@@ -344,7 +335,8 @@ export async function runScan(moduleId: ModuleId, options: ScanOptions = {}): Pr
     queue:
       moduleProfile === "staking"
         ? (viewData.queueMode === "v24" || viewData.queueMode === "legacy") &&
-          (V24_QUEUE_VIEWS.some((v) => v in viewData.viewResults) || LEGACY_QUEUE_VIEWS.some((v) => v in viewData.viewResults))
+          (V24_QUEUE_VIEWS.some((v) => v in viewData.viewResults) ||
+            LEGACY_QUEUE_VIEWS.some((v) => v in viewData.viewResults))
         : false,
 
     userViews: targetUser !== undefined && USER_REQUIRED_VIEWS.every((v) => v in viewData.viewResults),
@@ -446,8 +438,7 @@ export async function runScan(moduleId: ModuleId, options: ScanOptions = {}): Pr
   const duration = Date.now() - startTime;
 
   // ---------
-  // NEW: directed "performed" metrics (what did we actually do?)
-  // These are used by src/cli/summary.ts to generate non-generic level descriptions.
+  // directed "performed" metrics (what did we actually do?)
   // ---------
   const entrypointsCount = countEntrypointsFromAbi(artifactView.abi ?? loadedArtifact?.abi);
   const opaqueAbi = detectOpaqueAbi(artifactView.abi ?? loadedArtifact?.abi);
@@ -468,33 +459,56 @@ export async function runScan(moduleId: ModuleId, options: ScanOptions = {}): Pr
       queue_mode: viewData.queueMode,
       entrypoints_count: entrypointsCount,
       opaque_abi: opaqueAbi,
-      sources_used: uniq([
-        hasViewResults ? "rpc_views" : null,
-        hasOnChainModule ? "rpc_module_v3" : null,
-        hasLocalArtifact ? "local_artifact" : null,
-      ].filter(Boolean) as string[]),
+      sources_used: uniq(
+        [
+          hasViewResults ? "rpc_views" : null,
+          hasOnChainModule ? "rpc_module_v3" : null,
+          hasLocalArtifact ? "local_artifact" : null,
+        ].filter(Boolean) as string[]
+      ),
     },
     l2: {
-      // "behavior/exposure" can be extended here later (contract call patterns, invariants touched, etc.)
-      // For now, we include the concrete tx preview count if agent mode fetched it.
       agent_mode: agentMode,
       tx_preview_count: txPreview?.length || 0,
       zero_value_tx_flagged: txFindings.some((f) => f.id === "TX-SPAM-001"),
-      sources_used: uniq([
-        agentMode && (txPreview?.length ? "suprascan_tx" : "suprascan_tx_attempted"),
-      ].filter(Boolean) as string[]),
+      sources_used: uniq(
+        [agentMode && (txPreview?.length ? "suprascan_tx" : "suprascan_tx_attempted")].filter(Boolean) as string[]
+      ),
     },
     l3: {
-      // Placeholder fields that should be populated once you integrate
-      // true attribution + risk modeling (signals, role, confidence, model version).
-      // This file now emits *where* it came from, and summary.ts can display it.
       agent_mode: agentMode,
       attribution_present: false,
       risk_model_present: false,
-      sources_used: uniq([
-        agentMode ? "agent_pipeline" : null,
-      ].filter(Boolean) as string[]),
+      sources_used: uniq([agentMode ? "agent_pipeline" : null].filter(Boolean) as string[]),
     },
+  };
+
+  // IMPORTANT:
+  // Some repos have a stricter `ScanResult["meta"]` type. To avoid TS2353
+  // ("object literal may only specify known properties"), we build meta as `any`.
+  const meta: any = {
+    scan_options: options,
+    rpc_url: rpcUrl,
+    duration_ms: duration,
+    previous_artifact_hash: options.previous_artifact_hash,
+
+    // debug
+    view_results: viewData.viewResults,
+    view_errors: viewData.viewErrors,
+    skipped_user_views: viewData.skippedUserViews,
+    target_user: targetUser || undefined,
+    queue_mode: viewData.queueMode,
+    rule_capabilities: ruleCapabilities,
+    verdict_reason: verdictReason,
+    tx_preview: txPreview,
+
+    // module profiling
+    module_profile: moduleProfile,
+    module_profile_reason: profileGuess.reason,
+    allowed_views_effective: allowedViews,
+
+    // ✅ proof-of-work payload used by summary.json
+    performed,
   };
 
   const result: ScanResult = {
@@ -521,34 +535,13 @@ export async function runScan(moduleId: ModuleId, options: ScanOptions = {}): Pr
       capabilities,
     },
     findings,
-    meta: {
-      scan_options: options,
-      rpc_url: rpcUrl,
-      duration_ms: duration,
-      previous_artifact_hash: options.previous_artifact_hash,
-
-      // debug
-      view_results: viewData.viewResults,
-      view_errors: viewData.viewErrors,
-      skipped_user_views: viewData.skippedUserViews,
-      target_user: targetUser || undefined,
-      queue_mode: viewData.queueMode,
-      rule_capabilities: ruleCapabilities,
-      verdict_reason: verdictReason,
-      tx_preview: txPreview,
-
-      // module profiling
-      module_profile: moduleProfile,
-      module_profile_reason: profileGuess.reason,
-      allowed_views_effective: allowedViews,
-
-      // ✅ NEW: proof-of-work payload used by summary.json
-      performed,
-    },
+    meta,
   };
 
   return result;
 }
+
+
 
 
 
