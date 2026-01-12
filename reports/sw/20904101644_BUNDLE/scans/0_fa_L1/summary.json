@@ -1,0 +1,31 @@
+{
+  "target": {
+    "kind": "fa",
+    "value": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358"
+  },
+  "time_utc": "2026-01-12T00:04:43.248Z",
+  "level": 1,
+  "verdict": "pass",
+  "score": 14,
+  "severity": {
+    "critical": 0,
+    "high": 0,
+    "medium": 2,
+    "low": 1,
+    "info": 5
+  },
+  "badge": {
+    "tier": "SURFACE_VERIFIED",
+    "label": "SSA · Surface Verified",
+    "security_verified": false,
+    "continuously_monitored": false,
+    "expires_at_iso": "2026-01-26T00:04:57.221Z"
+  },
+  "artifacts": {
+    "report_json": "report.json",
+    "report_pdf": "report.pdf",
+    "snapshot": null,
+    "diff": null,
+    "pulse": null
+  }
+}
