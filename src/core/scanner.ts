@@ -99,13 +99,63 @@ function guessModuleProfile(moduleName: string): { profile: ModuleProfile; reaso
  * - staking => undefined (use fetchModuleViewData defaults)
  * - generic => [] (but ONLY works if fetchModuleViewData treats [] as override!)
  */
-function computeAllowedViews(
-  profile: ModuleProfile,
-  userAllowedViews?: string[]
-): string[] | undefined {
+function computeAllowedViews(profile: ModuleProfile, userAllowedViews?: string[]): string[] | undefined {
   if (Array.isArray(userAllowedViews)) return userAllowedViews;
   if (profile === "staking") return undefined;
   return [];
+}
+
+function uniq<T>(arr: T[]): T[] {
+  return Array.from(new Set(arr));
+}
+
+function asNum(v: any): number | null {
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+
+function asStr(v: any): string | null {
+  return typeof v === "string" && v.trim().length > 0 ? v : null;
+}
+
+function countEntrypointsFromAbi(abi: any): number | null {
+  if (!abi) return null;
+
+  // Support multiple ABI shapes
+  const exposed =
+    (Array.isArray(abi?.exposed_functions) ? abi.exposed_functions : null) ||
+    (Array.isArray(abi?.exposedFunctions) ? abi.exposedFunctions : null) ||
+    (Array.isArray(abi?.functions) ? abi.functions : null);
+
+  if (!exposed) return null;
+
+  // Count "entry"/callable-ish functions, best-effort
+  let n = 0;
+  for (const f of exposed) {
+    if (!f) continue;
+    // some shapes have `visibility`/`is_entry`/`isEntry`
+    const isEntry =
+      f.is_entry === true ||
+      f.isEntry === true ||
+      f.visibility === "public" ||
+      f.visibility === "public(friend)" ||
+      f.visibility === "public_script" ||
+      f.visibility === "public_entry";
+    if (isEntry) n += 1;
+    else n += 1; // fallback: count all if we can't classify
+  }
+  return n;
+}
+
+function detectOpaqueAbi(abi: any): boolean {
+  if (!abi) return true;
+
+  const exposed =
+    (Array.isArray(abi?.exposed_functions) ? abi.exposed_functions : null) ||
+    (Array.isArray(abi?.exposedFunctions) ? abi.exposedFunctions : null) ||
+    (Array.isArray(abi?.functions) ? abi.functions : null);
+
+  // If ABI exists but has no exposed functions, treat as opaque
+  return Array.isArray(exposed) ? exposed.length === 0 : true;
 }
 
 /**
@@ -144,11 +194,7 @@ export async function runScan(moduleId: ModuleId, options: ScanOptions = {}): Pr
     };
 
     try {
-      const rpcResult = await fetchAccountModuleV3(
-        moduleId.address,
-        moduleId.module_name,
-        rpcOptions
-      );
+      const rpcResult = await fetchAccountModuleV3(moduleId.address, moduleId.module_name, rpcOptions);
 
       if (!loadedArtifact) {
         loadedArtifact = {
@@ -194,9 +240,7 @@ export async function runScan(moduleId: ModuleId, options: ScanOptions = {}): Pr
     } catch (error) {
       const debug = process.env.SSA_DEBUG_VIEW === "1" || process.env.DEBUG_VIEW === "1";
       if (debug) {
-        console.debug(
-          `[Hybrid] RPC module fetch failed: ${error instanceof Error ? error.message : String(error)}`
-        );
+        console.debug(`[Hybrid] RPC module fetch failed: ${error instanceof Error ? error.message : String(error)}`);
         console.debug(`[Hybrid] Falling back to view-only mode`);
       }
     }
@@ -214,36 +258,26 @@ export async function runScan(moduleId: ModuleId, options: ScanOptions = {}): Pr
   // Profile-specific required views
   const requiredViewsForProfile = moduleProfile === "staking" ? REQUIRED_VIEWS : [];
   const requiredViewErrors = viewData.viewErrors.filter(
-    (e) =>
-      requiredViewsForProfile.includes(e.viewName as any) &&
-      (!e.type || e.type === "error")
+    (e) => requiredViewsForProfile.includes(e.viewName as any) && (!e.type || e.type === "error")
   );
   const hasRequiredViewFailures = requiredViewErrors.length > 0;
 
   // Build artifact view for rules
-  const artifactView = buildArtifactViewHybrid(
-    moduleId,
-    viewData.viewResults,
-    loadedArtifact || undefined
-  );
+  const artifactView = buildArtifactViewHybrid(moduleId, viewData.viewResults, loadedArtifact || undefined);
 
   const hasAbi = artifactView.abi !== null && artifactView.abi !== undefined;
   const hasBytecodeOrSource =
-    artifactView.bytecode !== null ||
-    artifactView.strings.length > 0 ||
-    loadedArtifact?.sourceText !== undefined;
+    artifactView.bytecode !== null || artifactView.strings.length > 0 || loadedArtifact?.sourceText !== undefined;
   const viewOnly = !hasAbi && !hasBytecodeOrSource;
 
   const hasViewResults = Object.keys(viewData.viewResults).length > 0;
   const hasLocalArtifact =
     !!loadedArtifact &&
-    (loadedArtifact.artifactOrigin.kind === "supra_ide_export" ||
-      loadedArtifact.artifactOrigin.kind === "manual");
+    (loadedArtifact.artifactOrigin.kind === "supra_ide_export" || loadedArtifact.artifactOrigin.kind === "manual");
   const hasOnChainModule =
     loadedArtifact?.onChainBytecodeFetched ||
     (loadedArtifact?.bytecodeBuffer &&
-      (loadedArtifact.artifactOrigin.kind === "supra_rpc_v1" ||
-        loadedArtifact.artifactOrigin.kind === "supra_rpc_v3"));
+      (loadedArtifact.artifactOrigin.kind === "supra_rpc_v1" || loadedArtifact.artifactOrigin.kind === "supra_rpc_v3"));
 
   let artifactMode: ArtifactMode;
   if (hasViewResults && hasLocalArtifact) artifactMode = "hybrid_local";
@@ -310,12 +344,10 @@ export async function runScan(moduleId: ModuleId, options: ScanOptions = {}): Pr
     queue:
       moduleProfile === "staking"
         ? (viewData.queueMode === "v24" || viewData.queueMode === "legacy") &&
-          (V24_QUEUE_VIEWS.some((v) => v in viewData.viewResults) ||
-            LEGACY_QUEUE_VIEWS.some((v) => v in viewData.viewResults))
+          (V24_QUEUE_VIEWS.some((v) => v in viewData.viewResults) || LEGACY_QUEUE_VIEWS.some((v) => v in viewData.viewResults))
         : false,
 
-    userViews:
-      targetUser !== undefined && USER_REQUIRED_VIEWS.every((v) => v in viewData.viewResults),
+    userViews: targetUser !== undefined && USER_REQUIRED_VIEWS.every((v) => v in viewData.viewResults),
   };
 
   // Only add queue-missing finding if staking
@@ -326,8 +358,7 @@ export async function runScan(moduleId: ModuleId, options: ScanOptions = {}): Pr
         title: "Missing Queue Capability",
         severity: "high",
         confidence: 1.0,
-        description:
-          "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
+        description: "Neither v24 nor legacy queue views are available. Queue inspection capabilities are missing.",
         recommendation: "Verify module deployment and ensure queue view functions exist.",
         evidence: { kind: "heuristic", matched: ["queue_missing"], locations: [] },
         references: [],
@@ -401,12 +432,7 @@ export async function runScan(moduleId: ModuleId, options: ScanOptions = {}): Pr
   }
 
   // Build artifact object
-  const artifact = buildArtifactHybrid(
-    moduleId,
-    viewData.viewResults,
-    viewData.fetch_method,
-    loadedArtifact || undefined
-  );
+  const artifact = buildArtifactHybrid(moduleId, viewData.viewResults, viewData.fetch_method, loadedArtifact || undefined);
 
   // Badge eligibility
   const badgeEligibility = calculateBadgeEligibility(
@@ -418,6 +444,58 @@ export async function runScan(moduleId: ModuleId, options: ScanOptions = {}): Pr
   );
 
   const duration = Date.now() - startTime;
+
+  // ---------
+  // NEW: directed "performed" metrics (what did we actually do?)
+  // These are used by src/cli/summary.ts to generate non-generic level descriptions.
+  // ---------
+  const entrypointsCount = countEntrypointsFromAbi(artifactView.abi ?? loadedArtifact?.abi);
+  const opaqueAbi = detectOpaqueAbi(artifactView.abi ?? loadedArtifact?.abi);
+
+  const performed: any = {
+    l1: {
+      module_profile: moduleProfile,
+      module_profile_reason: profileGuess.reason,
+      artifact_mode: artifactMode,
+      has_abi: hasAbi,
+      has_bytecode_or_source: hasBytecodeOrSource,
+      view_only: viewOnly,
+      views_attempted: Array.isArray(allowedViews) ? allowedViews.length : null,
+      views_returned: Object.keys(viewData.viewResults || {}).length,
+      view_errors: viewData.viewErrors?.length || 0,
+      required_views: requiredViewsForProfile.length,
+      required_view_failures: requiredViewErrors.length,
+      queue_mode: viewData.queueMode,
+      entrypoints_count: entrypointsCount,
+      opaque_abi: opaqueAbi,
+      sources_used: uniq([
+        hasViewResults ? "rpc_views" : null,
+        hasOnChainModule ? "rpc_module_v3" : null,
+        hasLocalArtifact ? "local_artifact" : null,
+      ].filter(Boolean) as string[]),
+    },
+    l2: {
+      // "behavior/exposure" can be extended here later (contract call patterns, invariants touched, etc.)
+      // For now, we include the concrete tx preview count if agent mode fetched it.
+      agent_mode: agentMode,
+      tx_preview_count: txPreview?.length || 0,
+      zero_value_tx_flagged: txFindings.some((f) => f.id === "TX-SPAM-001"),
+      sources_used: uniq([
+        agentMode && (txPreview?.length ? "suprascan_tx" : "suprascan_tx_attempted"),
+      ].filter(Boolean) as string[]),
+    },
+    l3: {
+      // Placeholder fields that should be populated once you integrate
+      // true attribution + risk modeling (signals, role, confidence, model version).
+      // This file now emits *where* it came from, and summary.ts can display it.
+      agent_mode: agentMode,
+      attribution_present: false,
+      risk_model_present: false,
+      sources_used: uniq([
+        agentMode ? "agent_pipeline" : null,
+      ].filter(Boolean) as string[]),
+    },
+  };
 
   const result: ScanResult = {
     request_id: requestId,
@@ -463,10 +541,14 @@ export async function runScan(moduleId: ModuleId, options: ScanOptions = {}): Pr
       module_profile: moduleProfile,
       module_profile_reason: profileGuess.reason,
       allowed_views_effective: allowedViews,
+
+      // ✅ NEW: proof-of-work payload used by summary.json
+      performed,
     },
   };
 
   return result;
 }
+
 
 
