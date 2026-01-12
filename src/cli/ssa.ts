@@ -29,11 +29,98 @@ import { attachSupraPulse, type PulseMetadata } from "./pulse.js";
 import { deriveBadge } from "../policy/badgePolicy.js";
 import { signBadge, type SignedBadge, type BadgePayload } from "../crypto/badgeSigner.js";
 
+import {
+  computeMonitoringStatus,
+  recordMonitorRun,
+  enableMonitoring,
+  disableMonitoring,
+  loadRegistry,
+  canonicalMonitorKey,
+  DEFAULT_REGISTRY_REL_PATH,
+  type MonitoringKind,
+} from "../monitoring/registry.js";
+
 dotenv.config();
 
 const program = new Command();
 
 program.name("ssa").description("SSA Scanner - Unified security scanning for Supra Move").version("0.1.0");
+
+// ---------------------------------------------------------------------------
+// Monitoring subcommands (opt-in registry)
+// ---------------------------------------------------------------------------
+const monitor = program.command("monitor").description("Manage monitoring registry (opt-in)");
+
+monitor
+  .command("enable")
+  .description("Enable monitoring for a target (writes to data/monitor_registry.json)")
+  .requiredOption("--kind <kind>", "Target kind: fa | coin | wallet")
+  .requiredOption("--target <value>", "FA address, coin type, or wallet address")
+  .option("--cadence <hours>", "Cadence in hours (default: 6)", "6")
+  .option("--registry <path>", `Registry path (default: ${DEFAULT_REGISTRY_REL_PATH})`)
+  .action((opts) => {
+    const kind = String(opts.kind).toLowerCase() as MonitoringKind;
+    const target = String(opts.target);
+    const cadence = Math.max(1, Math.floor(Number(opts.cadence)));
+    const entry = enableMonitoring(kind, target, cadence, opts.registry);
+    console.log(
+      JSON.stringify(
+        {
+          ok: true,
+          action: "enable",
+          key: canonicalMonitorKey(kind, target),
+          entry,
+        },
+        null,
+        2
+      )
+    );
+  });
+
+monitor
+  .command("disable")
+  .description("Disable monitoring for a target (does not delete the entry)")
+  .requiredOption("--kind <kind>", "Target kind: fa | coin | wallet")
+  .requiredOption("--target <value>", "FA address, coin type, or wallet address")
+  .option("--registry <path>", `Registry path (default: ${DEFAULT_REGISTRY_REL_PATH})`)
+  .action((opts) => {
+    const kind = String(opts.kind).toLowerCase() as MonitoringKind;
+    const target = String(opts.target);
+    const ok = disableMonitoring(kind, target, opts.registry);
+    console.log(
+      JSON.stringify(
+        {
+          ok,
+          action: "disable",
+          key: canonicalMonitorKey(kind, target),
+        },
+        null,
+        2
+      )
+    );
+  });
+
+monitor
+  .command("status")
+  .description("Show monitoring status for a target (customer-defensible)")
+  .requiredOption("--kind <kind>", "Target kind: fa | coin | wallet")
+  .requiredOption("--target <value>", "FA address, coin type, or wallet address")
+  .option("--registry <path>", `Registry path (default: ${DEFAULT_REGISTRY_REL_PATH})`)
+  .action((opts) => {
+    const kind = String(opts.kind).toLowerCase() as MonitoringKind;
+    const target = String(opts.target);
+    const status = computeMonitoringStatus(kind, target, opts.registry);
+    console.log(JSON.stringify({ ok: true, status }, null, 2));
+  });
+
+monitor
+  .command("list")
+  .description("List all registry entries")
+  .option("--registry <path>", `Registry path (default: ${DEFAULT_REGISTRY_REL_PATH})`)
+  .action((opts) => {
+    const { path, registry } = loadRegistry(opts.registry);
+    console.log(JSON.stringify({ ok: true, path, registry }, null, 2));
+  });
 
 /**
  * List all modules for an account address
@@ -118,11 +205,7 @@ async function listAccountModules(
             };
           };
         };
-      }>(
-        query,
-        { address, blockchainEnvironment: "mainnet" },
-        { env: "mainnet", timeoutMs: 8000 }
-      );
+      }>(query, { address, blockchainEnvironment: "mainnet" }, { env: "mainnet", timeoutMs: 8000 });
 
       // Parse resources to extract module names
       const resourcesStr = data.data?.addressDetail?.addressDetailSupra?.resources;
@@ -447,7 +530,6 @@ program
         }
         target = options.address;
       }
-
       if (!target) {
         console.error("Error: Invalid target for scan kind");
         process.exit(1);
@@ -536,6 +618,43 @@ program
         }
       }
 
+      // ------------------------------------------------------------------
+      // Monitoring (Level 5+) — customer-defensible proof
+      // - Monitoring is opt-in (registry-driven)
+      // - Scans NEVER auto-register
+      // - A Level 5 scan may record a run only if monitoring is already enabled
+      // ------------------------------------------------------------------
+      try {
+        const monKind = normalizedKind as MonitoringKind;
+
+        if ((monKind === "fa" || monKind === "coin") && level >= 5) {
+          // Only update last_run_utc if the target is already enabled in registry
+          recordMonitorRun(monKind, target, scanResult.request_id);
+        }
+
+        const monStatus =
+          monKind === "fa" || monKind === "coin"
+            ? computeMonitoringStatus(monKind, target)
+            : {
+                enabled: false,
+                reason: "Monitoring not applicable for this target kind",
+                kind: monKind,
+                target,
+              };
+
+        (scanResult.meta as any).monitoring_enabled = monStatus.enabled === true;
+        (scanResult.meta as any).monitoring = monStatus;
+      } catch (e) {
+        // Safe default: never assume monitoring
+        (scanResult.meta as any).monitoring_enabled = false;
+        (scanResult.meta as any).monitoring = {
+          enabled: false,
+          reason: `Monitoring status error: ${e instanceof Error ? e.message : String(e)}`,
+          kind: normalizedKind,
+          target,
+        };
+      }
+
       // Derive badge using authoritative policy
       const badgeResult = deriveBadge(scanResult);
 
@@ -620,6 +739,8 @@ program
   });
 
 program.parse(process.argv);
+
+
 
 
 
