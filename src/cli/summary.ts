@@ -42,6 +42,8 @@ export interface SummaryJson {
   meta?: Record<string, any>;
 }
 
+type EngineVerdict = "pass" | "warn" | "fail" | "inconclusive";
+
 /**
  * Generates the user-facing summary.json.
  * IMPORTANT: Must be exported (ssa.ts imports it).
@@ -65,33 +67,34 @@ export function generateSummaryJson(
     (scanResult as any)?.summary?.score ??
     0;
 
-  // If your pipeline writes a “total score” elsewhere, prefer it
-  // (this keeps it resilient across formats).
   const score = Number.isFinite(Number(riskScore)) ? Number(riskScore) : 0;
 
-  // Basic verdict mapping:
-  // - if score >= 90 => excellent
-  // - else show score and preserve engine verdict when present
-  let verdict: SummaryVerdict = "good";
-  if (score >= 90) verdict = "excellent";
-  else if (score >= 75) verdict = "good";
-  else if (score >= 60) verdict = "fair";
-  else verdict = "poor";
+  // Score bucket (cosmetic verdict)
+  let scoreVerdict: SummaryVerdict;
+  if (score >= 90) scoreVerdict = "excellent";
+  else if (score >= 75) scoreVerdict = "good";
+  else if (score >= 60) scoreVerdict = "fair";
+  else scoreVerdict = "poor";
 
-  const engineVerdict = (scanResult as any)?.summary?.verdict;
-  if (
-    engineVerdict === "fail" ||
-    engineVerdict === "warn" ||
-    engineVerdict === "pass" ||
-    engineVerdict === "inconclusive"
-  ) {
-    // If engine explicitly says fail, it overrides the cosmetic score bucket
-    if (engineVerdict === "fail") verdict = "fail";
-    else if (engineVerdict === "warn" && verdict !== "fail") verdict = "warn";
-    else if (engineVerdict === "inconclusive" && verdict !== "fail" && verdict !== "warn") verdict = "inconclusive";
-    // NOTE: we intentionally don't force "pass" here because score buckets
-    // are more informative for the UI; pass is still reflected in meta.engine below.
-  }
+  // Engine verdict (authoritative)
+  const rawEngineVerdict = (scanResult as any)?.summary?.verdict;
+  const engineVerdict: EngineVerdict | null =
+    rawEngineVerdict === "pass" ||
+    rawEngineVerdict === "warn" ||
+    rawEngineVerdict === "fail" ||
+    rawEngineVerdict === "inconclusive"
+      ? rawEngineVerdict
+      : null;
+
+  // Final verdict: engine verdict overrides buckets when meaningful.
+  // - fail always wins
+  // - warn overrides score bucket
+  // - inconclusive overrides score bucket
+  // - pass does NOT override (we prefer bucket for UI), but is preserved in meta.
+  let verdict: SummaryVerdict = scoreVerdict;
+  if (engineVerdict === "fail") verdict = "fail";
+  else if (engineVerdict === "warn") verdict = "warn";
+  else if (engineVerdict === "inconclusive") verdict = "inconclusive";
 
   const monitoring = (scanResult as any)?.meta?.monitoring;
   const monitoring_enabled = (scanResult as any)?.meta?.monitoring_enabled === true;
@@ -124,11 +127,12 @@ export function generateSummaryJson(
     meta: {
       engine: (scanResult as any)?.engine ?? undefined,
       severity_counts: (scanResult as any)?.summary?.severity_counts ?? undefined,
-      // keep the "engine verdict" for debugging / UI chips
       engine_verdict: engineVerdict ?? undefined,
     },
   };
 }
+
+
 
 
 
