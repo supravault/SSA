@@ -467,13 +467,13 @@ async function scanWallet(
 
       moduleScans.push({
         module_id: `${moduleId.address}::${moduleId.module_name}`,
-        module_profile: scanResult.meta?.module_profile,
-        module_profile_reason: scanResult.meta?.module_profile_reason,
+        module_profile: (scanResult as any).meta?.module_profile,
+        module_profile_reason: (scanResult as any).meta?.module_profile_reason,
         verdict: scanResult.summary?.verdict,
         risk_score: scanResult.summary?.risk_score,
         summary: scanResult.summary,
         findings: annotatedFindings,
-        meta: scanResult.meta,
+        meta: (scanResult as any).meta,
       });
     } catch (error) {
       console.warn(
@@ -732,9 +732,14 @@ program
           // directed evidence for summary.json
           const changes: Record<string, any> = {};
           if (diff && typeof diff === "object") {
-            const maybeCounts = diff.counts || diff.summary || diff.stats || (diff.changes && typeof diff.changes === "object" ? diff.changes : null);
+            const maybeCounts =
+              (diff as any).counts ||
+              (diff as any).summary ||
+              (diff as any).stats ||
+              ((diff as any).changes && typeof (diff as any).changes === "object" ? (diff as any).changes : null);
+
             if (maybeCounts && typeof maybeCounts === "object") {
-              for (const [k, v] of Object.entries(maybeCounts)) {
+              for (const [k, v] of Object.entries(maybeCounts as any)) {
                 if (typeof v === "number" || typeof v === "boolean" || typeof v === "string") changes[k] = v;
               }
             }
@@ -768,7 +773,7 @@ program
           touchRun(monKind, target, scanResult.request_id);
         }
 
-        const entry = (monKind === "fa" || monKind === "coin" || monKind === "wallet") ? getEntry(monKind, target) : undefined;
+        const entry = monKind === "fa" || monKind === "coin" || monKind === "wallet" ? getEntry(monKind, target) : undefined;
         const status = computeMonitoringStatus(entry);
 
         // monitoring_enabled must reflect ACTIVE monitoring for badge eligibility
@@ -877,6 +882,8 @@ program
   });
 
 program.parse(process.argv);
+
+
 
 
 
