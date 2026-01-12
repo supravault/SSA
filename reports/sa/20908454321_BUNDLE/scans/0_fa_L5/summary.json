@@ -1,0 +1,46 @@
+{
+  "scan_id": "bc8129c1-97df-4c65-ae1a-af9393c948ab",
+  "created_utc": "2026-01-12T04:53:19.273Z",
+  "kind": "fa",
+  "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+  "level": 5,
+  "verdict": "poor",
+  "score": 14,
+  "badge": {
+    "tier": "SECURITY_VERIFIED",
+    "label": "SSA · Security Verified",
+    "expires_at_iso": "2026-02-11T04:53:19.272Z",
+    "continuously_monitored": false
+  },
+  "signed_badge": null,
+  "monitoring": {
+    "kind": "fa",
+    "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+    "key": "fa:0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+    "enabled": false,
+    "monitoring_active": false,
+    "reason": "not_registered"
+  },
+  "monitoring_enabled": false,
+  "pulse": null,
+  "files": {
+    "report_json": "report.json",
+    "summary_json": "summary.json",
+    "pdf": "report.pdf"
+  },
+  "meta": {
+    "engine": {
+      "name": "ssa-scanner",
+      "version": "0.1.0",
+      "ruleset_version": "move-ruleset-0.1.0"
+    },
+    "severity_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 2,
+      "low": 1,
+      "info": 5
+    },
+    "engine_verdict": "pass"
+  }
+}
