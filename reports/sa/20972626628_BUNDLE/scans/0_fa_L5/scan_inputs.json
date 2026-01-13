@@ -1,0 +1,9 @@
+{
+  "kind": "fa",
+  "level": 5,
+  "target": "0x82ed1f483b5fc4ad105cef5330e480136d58156c30dc70cd2b9c342981997cee",
+  "wallet_modules_allowlist": "",
+  "rpc": "https://rpc-mainnet.supra.com",
+  "pulse_attached": false,
+  "pulse_tier": ""
+}
