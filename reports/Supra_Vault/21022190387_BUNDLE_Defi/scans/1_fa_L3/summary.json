@@ -1,0 +1,51 @@
+{
+  "scan_id": "f96165e6-ff79-42a5-8b22-50f11d7f7247",
+  "created_utc": "2026-01-15T06:39:15.639Z",
+  "kind": "fa",
+  "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+  "level": 3,
+  "verdict": "poor",
+  "score": 14,
+  "badge": {
+    "tier": "SECURITY_VERIFIED",
+    "label": "SSA · Security Verified",
+    "expires_at_iso": "2026-02-14T06:39:15.636Z",
+    "continuously_monitored": false
+  },
+  "signed_badge": null,
+  "monitoring": {
+    "kind": "fa",
+    "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+    "key": "fa:0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+    "enabled": false,
+    "monitoring_active": false,
+    "reason": "not_registered"
+  },
+  "monitoring_enabled": false,
+  "pulse": {
+    "attached": true,
+    "kind": "pdf",
+    "sha256": "c2f349f10e9a7eadf5aaa3a6cb73e288a87e4434df6945fade97ee15cc68e713",
+    "filename": "supra_pulse.pdf"
+  },
+  "files": {
+    "report_json": "report.json",
+    "summary_json": "summary.json",
+    "pdf": "report.pdf"
+  },
+  "meta": {
+    "engine": {
+      "name": "ssa-scanner",
+      "version": "0.1.0",
+      "ruleset_version": "move-ruleset-0.1.0"
+    },
+    "severity_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 2,
+      "low": 1,
+      "info": 5
+    },
+    "engine_verdict": "pass"
+  }
+}

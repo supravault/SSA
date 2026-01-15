@@ -1,0 +1,51 @@
+{
+  "scan_id": "aa5e1811-129d-4b36-aedf-9763e3860948",
+  "created_utc": "2026-01-15T06:39:05.773Z",
+  "kind": "wallet",
+  "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+  "level": 3,
+  "verdict": "poor",
+  "score": 0,
+  "badge": {
+    "tier": "WALLET_VERIFIED",
+    "label": "SSA · Wallet Verified",
+    "expires_at_iso": "2026-01-22T06:39:05.770Z",
+    "continuously_monitored": false
+  },
+  "signed_badge": null,
+  "monitoring": {
+    "kind": "wallet",
+    "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+    "key": "wallet:0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+    "enabled": false,
+    "monitoring_active": false,
+    "reason": "not_registered"
+  },
+  "monitoring_enabled": false,
+  "pulse": {
+    "attached": true,
+    "kind": "pdf",
+    "sha256": "c2f349f10e9a7eadf5aaa3a6cb73e288a87e4434df6945fade97ee15cc68e713",
+    "filename": "supra_pulse.pdf"
+  },
+  "files": {
+    "report_json": "report.json",
+    "summary_json": "summary.json",
+    "pdf": "report.pdf"
+  },
+  "meta": {
+    "engine": {
+      "name": "ssa-scanner",
+      "version": "0.1.0",
+      "ruleset_version": "move-ruleset-0.1.0"
+    },
+    "severity_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "engine_verdict": "pass"
+  }
+}
