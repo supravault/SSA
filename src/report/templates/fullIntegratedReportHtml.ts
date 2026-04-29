@@ -445,17 +445,38 @@ export function renderFullIntegratedHtml(
     <div class="page">
       <h2>Supra Pulse Integration</h2>
       <div class="pulse-section">
-        <h3>Pulse Tier: ${pulse.tier}</h3>
-        ${pulse.score !== undefined ? `<p><strong>Pulse Score:</strong> ${pulse.score}</p>` : ''}
-        ${pulse.timestamp ? `<p><strong>Pulse Timestamp:</strong> ${pulse.timestamp}</p>` : ''}
-        ${pulse.summary ? `<p>${pulse.summary}</p>` : ''}
+        <div style="display:flex; align-items:center; gap:20px; margin-bottom:20px; flex-wrap:wrap;">
+          <div>
+            <div style="font-size:11px; color:#666; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Pulse Tier</div>
+            <div style="font-size:20px; font-weight:700; color:#2c3e50; background:#e8f4fd; padding:6px 16px; border-radius:20px; display:inline-block;">${pulse.tier}</div>
+          </div>
+          ${pulse.score !== undefined ? `
+          <div style="margin-left:auto; text-align:center; background:#fff; border:3px solid #3498db; border-radius:12px; padding:14px 28px; min-width:120px;">
+            <div style="font-size:40px; font-weight:700; color:#2c3e50; line-height:1;">${pulse.score}</div>
+            <div style="font-size:10px; color:#999; margin-top:2px; text-transform:uppercase; letter-spacing:1px;">out of 100</div>
+          </div>` : ''}
+        </div>
+
+        ${pulse.verdict ? `
+        <div style="margin-bottom:16px;">
+          <span style="display:inline-block; background:#d4edda; color:#155724; font-weight:600; padding:6px 18px; border-radius:20px; font-size:12px; letter-spacing:0.5px;">
+            ✓ ${pulse.verdict}
+          </span>
+        </div>` : ''}
+
+        ${pulse.timestamp ? `
+        <div style="font-size:10pt; color:#666; margin-bottom:16px;">
+          <strong>Analysis Date:</strong> ${pulse.timestamp}
+        </div>` : ''}
+
         ${pulse.verdictDerived ? `
           <div class="warning-box">
-            Supra Pulse verdict derived from score (verdict not provided).
+            Supra Pulse verdict was derived from the score (no explicit verdict in source document).
           </div>
         ` : ''}
+
         <div class="pulse-disclosure">
-          ${pulse.disclosure || "Supra Pulse analysis is provided as a third-party supplemental signal and does not replace SSA findings."}
+          ${pulse.disclosure || "Supra Pulse analysis is a third-party supplemental signal and does not replace SSA findings."}
         </div>
       </div>
     </div>
@@ -477,10 +498,8 @@ export function renderFullIntegratedHtml(
         </p>
         ${pulse && (pulse.tier === "Premium" || pulse.tier === "Spotlight") ? `
           <p style="margin-bottom: 15px;">
-            <strong>Supra Pulse ${pulse.tier} Summary:</strong> 
-            ${pulse.score !== undefined ? `The Supra Pulse analysis assigned a score of <strong>${pulse.score}</strong> out of 100. ` : ''}
-            ${pulse.summary ? pulse.summary + ' ' : ''}
-            ${pulse.verdict ? `Verdict: <strong>${pulse.verdict}</strong>. ` : ''}
+            <strong>Supra Pulse ${pulse.tier} Summary:</strong>
+            ${pulse.score !== undefined ? `The Supra Pulse analysis assigned a score of <strong>${pulse.score}/100</strong>` : ''}${pulse.verdict ? ` with a verdict of <strong>${pulse.verdict}</strong>` : ''}.
             This supplemental analysis provides additional context but does not replace the SSA security findings above.
           </p>
         ` : ''}
