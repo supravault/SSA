@@ -1,0 +1,16 @@
+{
+  "run_id": "25128714896",
+  "run_attempt": "1",
+  "workflow": "SSA Scan",
+  "repo": "supravault/SSA",
+  "ref": "refs/heads/main",
+  "sha": "ef8b17d0e9377fefe7b6b48f93cf31d2335187d7",
+  "triggered_by": "supravault",
+  "ts_utc": "20260429T191324Z",
+  "kind": "fa",
+  "level": 5,
+  "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+  "project_name": "SVLT",
+  "project_label": "",
+  "rpc": "https://rpc-mainnet.supra.com"
+}
