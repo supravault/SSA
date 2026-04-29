@@ -63,7 +63,7 @@ jobs:
           set -euo pipefail
           echo "==== dist tree (top 200 files) ===="
           if [ -d dist ]; then
-            find dist -type f | head -n 200
+            find dist -type f | head -n 200 || true
           else
             echo "dist/ does not exist after build!"
             exit 1
