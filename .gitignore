@@ -6,7 +6,6 @@ dist/
 
 # Runtime artifacts
 tmp/
-reports/
 state/
 
 # Environment
@@ -27,4 +26,3 @@ Thumbs.db
 *.zip
 *.tar
 *.tgz
-*.pdf
