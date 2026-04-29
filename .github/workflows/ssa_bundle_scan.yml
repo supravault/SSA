@@ -135,8 +135,48 @@ jobs:
           pulse_timestamp="$(echo "${PULSE_TIMESTAMP:-}" | xargs || true)"
 
           if [[ "${EVENT_NAME:-}" == "schedule" ]]; then
-            if [[ -f "config/continuous_watch.json" ]]; then
-              echo "🕒 schedule trigger: loading config/continuous_watch.json"
+            watches_dir="config/watches"
+            if [[ -d "$watches_dir" ]]; then
+              mapfile -t watch_files < <(find "$watches_dir" -maxdepth 1 -name "*.json" | sort)
+              if [[ ${#watch_files[@]} -eq 0 ]]; then
+                echo "ℹ️ schedule trigger: config/watches/ exists but has no .json files; exiting cleanly."
+                exit 0
+              fi
+              echo "🕒 schedule trigger: found ${#watch_files[@]} watch file(s) in $watches_dir"
+              for watch_file in "${watch_files[@]}"; do
+                echo "▶ Processing: $watch_file"
+                _project="$(jq -r '.project_name // "CONTINUOUS"' "$watch_file" | xargs)"
+                _label="$(jq -r '.project_label // ""' "$watch_file" | xargs)"
+                _bundle_json="$(jq -c '.bundle_json // []' "$watch_file")"
+                _pulse_url="$(jq -r '.pulse_url // ""' "$watch_file" | xargs)"
+                _pulse_tier="$(jq -r '.pulse_tier // ""' "$watch_file" | xargs)"
+                _pulse_project="$(jq -r '.pulse_project // ""' "$watch_file" | xargs)"
+                _pulse_score="$(jq -r '.pulse_score // ""' "$watch_file" | xargs)"
+                _pulse_verdict="$(jq -r '.pulse_verdict // ""' "$watch_file" | xargs)"
+                _pulse_timestamp="$(jq -r '.pulse_timestamp // ""' "$watch_file" | xargs)"
+                _dispatch_id="$(jq -r '.dispatch_id // ""' "$watch_file" | xargs)"
+                if [[ -z "$_project" || "$_bundle_json" == "[]" || "$_bundle_json" == "{}" ]]; then
+                  echo "⚠️ Skipping $watch_file — missing project_name or empty bundle_json"
+                  continue
+                fi
+                echo "  Dispatching project=$_project"
+                gh workflow run ssa_bundle_scan.yml \
+                  --field project_name="$_project" \
+                  --field project_label="$_label" \
+                  --field bundle_json="$_bundle_json" \
+                  --field pulse_url="$_pulse_url" \
+                  --field pulse_tier="$_pulse_tier" \
+                  --field pulse_project="$_pulse_project" \
+                  --field pulse_score="$_pulse_score" \
+                  --field pulse_verdict="$_pulse_verdict" \
+                  --field pulse_timestamp="$_pulse_timestamp" \
+                  --field dispatch_id="$_dispatch_id" || \
+                  echo "⚠️ Failed to dispatch $_project — continuing"
+              done
+              echo "✅ All watch files dispatched."
+              exit 0
+            elif [[ -f "config/continuous_watch.json" ]]; then
+              echo "🕒 schedule trigger: loading legacy config/continuous_watch.json"
               project="$(jq -r '.project_name // "CONTINUOUS"' config/continuous_watch.json | xargs)"
               label="$(jq -r '.project_label // ""' config/continuous_watch.json | xargs)"
               bundle_json_raw="$(jq -c '.bundle_json // {}' config/continuous_watch.json)"
@@ -148,7 +188,7 @@ jobs:
               pulse_timestamp="$(jq -r '.pulse_timestamp // ""' config/continuous_watch.json | xargs)"
               dispatch_id="$(jq -r '.dispatch_id // ""' config/continuous_watch.json | xargs)"
             else
-              echo "ℹ️ schedule trigger but config/continuous_watch.json not found; exiting cleanly."
+              echo "ℹ️ schedule trigger: no config/watches/ dir and no config/continuous_watch.json; exiting cleanly."
               exit 0
             fi
           fi
@@ -751,8 +791,6 @@ jobs:
 
           git commit -m "SSA BUNDLE: $(basename "$(dirname "$bundle_dir")") run ${{ github.run_id }} (${{ github.event_name }})"
           git push
-
-
 
 
 
