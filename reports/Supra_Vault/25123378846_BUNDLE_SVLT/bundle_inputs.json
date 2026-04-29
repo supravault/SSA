@@ -1,0 +1,35 @@
+{
+  "dispatch_id": "",
+  "run_id": "25123378846",
+  "run_attempt": "1",
+  "workflow": "SSA Bundle Scan",
+  "repo": "supravault/SSA",
+  "ref": "refs/heads/main",
+  "sha": "54aa0f5aebc91fb0f1f037dcf44f11bfb801831d",
+  "triggered_by": "supravault",
+  "ts_utc": "2026-04-29T17:19:49Z",
+  "project_name": "Supra_Vault",
+  "project_label": "SVLT",
+  "rpc": "https://rpc-mainnet.supra.com",
+  "report_type": "SSA_FULL_INTEGRATED_REPORT",
+  "continuous_monitoring": {
+    "enabled": true,
+    "cadence": "24h"
+  },
+  "pulse": {
+    "attached": true,
+    "tier": "Spotlight",
+    "url": "https://base44.app/api/apps/696115a9afc894facb90128e/files/mp/public/696115a9afc894facb90128e/42d104b3f_Supra_Vault__Report1.pdf",
+    "error": ""
+  },
+  "bundle": {
+    "scans": [
+      {
+        "kind": "fa",
+        "level": 5,
+        "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+        "modulesAllowlist": ""
+      }
+    ]
+  }
+}
