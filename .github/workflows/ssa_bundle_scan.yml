@@ -160,18 +160,26 @@ jobs:
                   continue
                 fi
                 echo "  Dispatching project=$_project"
-                gh workflow run ssa_bundle_scan.yml \
-                  --field project_name="$_project" \
-                  --field project_label="$_label" \
-                  --field bundle_json="$_bundle_json" \
-                  --field pulse_url="$_pulse_url" \
-                  --field pulse_tier="$_pulse_tier" \
-                  --field pulse_project="$_pulse_project" \
-                  --field pulse_score="$_pulse_score" \
-                  --field pulse_verdict="$_pulse_verdict" \
-                  --field pulse_timestamp="$_pulse_timestamp" \
-                  --field dispatch_id="$_dispatch_id" || \
+                # Write bundle_json to a temp file to avoid shell quoting issues
+                _tmp_payload=$(mktemp)
+                jq -n \
+                  --arg project_name "$_project" \
+                  --arg project_label "$_label" \
+                  --argjson bundle_json "$_bundle_json" \
+                  --arg pulse_url "$_pulse_url" \
+                  --arg pulse_tier "$_pulse_tier" \
+                  --arg pulse_project "$_pulse_project" \
+                  --arg pulse_score "$_pulse_score" \
+                  --arg pulse_verdict "$_pulse_verdict" \
+                  --arg pulse_timestamp "$_pulse_timestamp" \
+                  --arg dispatch_id "$_dispatch_id" \
+                  '{project_name:$project_name,project_label:$project_label,bundle_json:($bundle_json|tostring),pulse_url:$pulse_url,pulse_tier:$pulse_tier,pulse_project:$pulse_project,pulse_score:$pulse_score,pulse_verdict:$pulse_verdict,pulse_timestamp:$pulse_timestamp,dispatch_id:$dispatch_id}' > "$_tmp_payload"
+                gh api repos/{owner}/{repo}/actions/workflows/ssa_bundle_scan.yml/dispatches \
+                  --method POST \
+                  --field ref=main \
+                  --field inputs=@"$_tmp_payload" || \
                   echo "⚠️ Failed to dispatch $_project — continuing"
+                rm -f "$_tmp_payload"
               done
               echo "✅ All watch files dispatched."
               exit 0
@@ -791,7 +799,6 @@ jobs:
 
           git commit -m "SSA BUNDLE: $(basename "$(dirname "$bundle_dir")") run ${{ github.run_id }} (${{ github.event_name }})"
           git push
-
 
 
 
