@@ -160,26 +160,21 @@ jobs:
                   continue
                 fi
                 echo "  Dispatching project=$_project"
-                # Use curl to dispatch with proper workflow_dispatch format
-                # gh api --input sends raw body; curl gives us full control
+                # Build payload using jq to avoid heredoc YAML conflicts
                 _tmp_payload=$(mktemp)
-                cat > "$_tmp_payload" <<DISPATCH_EOF
-{
-  "ref": "main",
-  "inputs": {
-    "project_name": $(jq -Rn --arg v "$_project" '$v'),
-    "project_label": $(jq -Rn --arg v "$_label" '$v'),
-    "bundle_json": $(jq -Rn --arg v "$_bundle_json" '$v'),
-    "pulse_url": $(jq -Rn --arg v "$_pulse_url" '$v'),
-    "pulse_tier": $(jq -Rn --arg v "$_pulse_tier" '$v'),
-    "pulse_project": $(jq -Rn --arg v "$_pulse_project" '$v'),
-    "pulse_score": $(jq -Rn --arg v "$_pulse_score" '$v'),
-    "pulse_verdict": $(jq -Rn --arg v "$_pulse_verdict" '$v'),
-    "pulse_timestamp": $(jq -Rn --arg v "$_pulse_timestamp" '$v'),
-    "dispatch_id": $(jq -Rn --arg v "$_dispatch_id" '$v')
-  }
-}
-DISPATCH_EOF
+                jq -n \
+                  --arg project_name "$_project" \
+                  --arg project_label "$_label" \
+                  --arg bundle_json "$_bundle_json" \
+                  --arg pulse_url "$_pulse_url" \
+                  --arg pulse_tier "$_pulse_tier" \
+                  --arg pulse_project "$_pulse_project" \
+                  --arg pulse_score "$_pulse_score" \
+                  --arg pulse_verdict "$_pulse_verdict" \
+                  --arg pulse_timestamp "$_pulse_timestamp" \
+                  --arg dispatch_id "$_dispatch_id" \
+                  '{ref:"main",inputs:{project_name:$project_name,project_label:$project_label,bundle_json:$bundle_json,pulse_url:$pulse_url,pulse_tier:$pulse_tier,pulse_project:$pulse_project,pulse_score:$pulse_score,pulse_verdict:$pulse_verdict,pulse_timestamp:$pulse_timestamp,dispatch_id:$dispatch_id}}' \
+                  > "$_tmp_payload"
                 _dispatch_http=$(curl -s -o /dev/null -w "%{http_code}" \
                   -X POST \
                   -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
@@ -813,8 +808,6 @@ DISPATCH_EOF
 
           git commit -m "SSA BUNDLE: $(basename "$(dirname "$bundle_dir")") run ${{ github.run_id }} (${{ github.event_name }})"
           git push
-
-
 
 
 
