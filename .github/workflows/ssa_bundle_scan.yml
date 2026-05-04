@@ -210,6 +210,9 @@ jobs:
             fi
           fi
 
+          # Debug: show what we received
+          echo "DEBUG event=$EVENT_NAME project=${project:-EMPTY} bundle_json_raw=${bundle_json_raw:-EMPTY}"
+
           if [[ -z "${project:-}" ]]; then
             echo "❌ project_name is required."
             exit 1
@@ -808,8 +811,6 @@ jobs:
 
           git commit -m "SSA BUNDLE: $(basename "$(dirname "$bundle_dir")") run ${{ github.run_id }} (${{ github.event_name }})"
           git push
-
-
 
 
 
