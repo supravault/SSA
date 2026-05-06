@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "schema_version": "3.0",
+    "timestamp_iso": "2026-05-06T06:07:06.272Z",
+    "rpc_url": "https://rpc-mainnet.supra.com",
+    "scanner_version": "0.1.0"
+  },
+  "identity": {
+    "faAddress": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+    "objectOwner": null
+  },
+  "supply": {
+    "supplyCurrentBase": null,
+    "supplyMaxBase": null,
+    "decimals": 6
+  },
+  "capabilities": {
+    "hasMintRef": false,
+    "hasBurnRef": false,
+    "hasTransferRef": false,
+    "hasDepositHook": false,
+    "hasWithdrawHook": false,
+    "hasDerivedBalanceHook": false
+  },
+  "control_surface": {
+    "relevantModules": [],
+    "modules": {},
+    "hookModules": [],
+    "hookModulePins": [],
+    "ownerModulesCount": 0
+  },
+  "coverage": {
+    "coverage": "partial",
+    "reasons": [
+      "Level-2 analysis not available"
+    ]
+  },
+  "findings": [
+    {
+      "id": "FA-FREEZE-001",
+      "severity": "info",
+      "title": "Freeze/Blacklist/Pause Capability Unknown"
+    },
+    {
+      "id": "FA-UPGRADE-001",
+      "severity": "info",
+      "title": "Upgrade/Admin Controls Unknown"
+    },
+    {
+      "id": "FA-META-001",
+      "severity": "low",
+      "title": "Missing or Incomplete Metadata"
+    }
+  ],
+  "hashes": {
+    "moduleSurfaceHash": {},
+    "overallSurfaceHash": "e3b0c44298fc1c14"
+  },
+  "evidence": {
+    "sourcesUsed": [
+      "rpc_v3",
+      "suprascan"
+    ],
+    "parity": [
+      {
+        "id": "SUPPLY_PARITY",
+        "status": "unknown",
+        "detail": "One or both supply sources unavailable",
+        "evidence": {
+          "rpcSupply": null,
+          "suprascanSupply": null
+        }
+      },
+      {
+        "id": "OWNER_PARITY",
+        "status": "unknown",
+        "detail": "One or both owner sources unavailable",
+        "evidence": {
+          "rpcOwner": null,
+          "suprascanOwner": null
+        }
+      }
+    ]
+  }
+}
