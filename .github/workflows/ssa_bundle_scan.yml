@@ -143,10 +143,11 @@ jobs:
                 exit 0
               fi
               echo "🕒 schedule trigger: found ${#watch_files[@]} watch file(s) in $watches_dir"
-              # Only process first watch file per cron run (one project per execution)
-              # Multi-project support: each project gets its own daily run window
-              watch_file="${watch_files[0]}"
-              echo "▶ Processing: $watch_file"
+              # Rotation logic: use day-of-year modulo to pick which project runs today
+              # Each project gets scanned once per rotation cycle (no child dispatches needed)
+              _day_index=$(( $(date +%j) % ${#watch_files[@]} ))
+              watch_file="${watch_files[$_day_index]}"
+              echo "▶ Processing watch file [$_day_index/${#watch_files[@]}]: $watch_file"
               project="$(jq -r '.project_name // "CONTINUOUS"' "$watch_file" | xargs)"
               label="$(jq -r '.project_label // ""' "$watch_file" | xargs)"
               bundle_json_raw="$(jq -c '.bundle_json // []' "$watch_file")"
@@ -780,7 +781,6 @@ jobs:
 
           git commit -m "SSA BUNDLE: $(basename "$(dirname "$bundle_dir")") run ${{ github.run_id }} (${{ github.event_name }})"
           git push
-
 
 
 
