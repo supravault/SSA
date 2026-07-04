@@ -1,0 +1,35 @@
+{
+  "dispatch_id": "",
+  "run_id": "28697536752",
+  "run_attempt": "1",
+  "workflow": "SSA Bundle Scan",
+  "repo": "supravault/SSA",
+  "ref": "refs/heads/main",
+  "sha": "61fbd85dbc5f29f8595262269a9be939b6ee3bd5",
+  "triggered_by": "supravault",
+  "ts_utc": "2026-07-04T06:21:55Z",
+  "project_name": "SVLT",
+  "project_label": "continuous",
+  "rpc": "https://rpc-mainnet.supra.com",
+  "report_type": "SSA_REPORT",
+  "continuous_monitoring": {
+    "enabled": true,
+    "cadence": "24h"
+  },
+  "pulse": {
+    "attached": false,
+    "tier": "",
+    "url": "",
+    "error": ""
+  },
+  "bundle": {
+    "scans": [
+      {
+        "kind": "fa",
+        "level": 5,
+        "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+        "modulesAllowlist": ""
+      }
+    ]
+  }
+}
