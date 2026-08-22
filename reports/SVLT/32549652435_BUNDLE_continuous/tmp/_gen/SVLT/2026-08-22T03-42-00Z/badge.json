@@ -1,0 +1,6 @@
+{
+  "tier": "CONTINUOUSLY_MONITORED",
+  "label": "SSA · Continuously Monitored",
+  "expires_at_iso": "2026-08-29T03:42:00.365Z",
+  "continuously_monitored": true
+}
