@@ -1,0 +1,10 @@
+{
+  "scans": [
+    {
+      "kind": "fa",
+      "level": 5,
+      "target": "0x2a0f3e6fb5d0f25c0d75cc4ffb93ace26757939fd4aa497c7f1dbaff7e3c6358",
+      "modulesAllowlist": ""
+    }
+  ]
+}
